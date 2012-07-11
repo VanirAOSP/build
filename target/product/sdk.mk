@@ -22,15 +22,10 @@ PRODUCT_PACKAGES := \
 	DeskClock \
 	Email \
 	Exchange2 \
-	Gallery \
-	Music \
 	Mms \
-	OpenWnn \
 	libWnnEngDic \
-	libWnnJpnDic \
 	libwnndict \
 	Phone \
-	PinyinIME \
 	Protips \
 	SoftKeyboard \
 	SystemUI \
