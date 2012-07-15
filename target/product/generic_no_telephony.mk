@@ -32,7 +32,6 @@ PRODUCT_PACKAGES := \
     LatinIME \
     Launcher2 \
     MusicFX \
-    Provision \
     Phone \
     QuickSearchBox \
     Settings \
