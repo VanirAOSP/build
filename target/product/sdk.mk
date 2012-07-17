@@ -23,11 +23,7 @@ PRODUCT_PACKAGES := \
 	Email \
 	Exchange2 \
 	Mms \
-	libWnnEngDic \
-	libwnndict \
 	Phone \
-	Protips \
-	SoftKeyboard \
 	SystemUI \
 	Launcher2 \
 	Development \
@@ -44,7 +40,6 @@ PRODUCT_PACKAGES := \
 	ApiDemos \
 	GestureBuilder \
 	CubeLiveWallpapers \
-	QuickSearchBox \
 	WidgetPreview \
 	monkeyrunner \
 	guavalib \

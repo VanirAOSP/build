@@ -31,8 +31,6 @@ PRODUCT_PACKAGES := \
     Exchange \
     LatinIME \
     Launcher2 \
-    Provision \
-    QuickSearchBox \
     Settings \
     Sync \
     Updater \
