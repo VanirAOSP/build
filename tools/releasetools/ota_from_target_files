@@ -379,6 +379,19 @@ def WriteFullOTAPackage(input_zip, output_zip):
   device_specific.FullOTA_InstallBegin()
 
   script.ShowProgress(0.5, 0)
+  script.Print("")
+  script.Print("")
+  script.Print("")
+  script.Print("")
+  script.Print("")
+  script.Print("")
+  script.Print("")
+  script.Print("Vanir AOSP")
+  script.Print("JellyBean")
+  script.Print("Sonicxml, DHO, PrimeDirective")
+  script.Print("")
+  script.Print("")
+  script.Print("Installing the ROM...")
 
   if OPTIONS.wipe_user_data:
     script.FormatPartition("/data")
@@ -388,7 +401,9 @@ def WriteFullOTAPackage(input_zip, output_zip):
 
   script.FormatPartition("/system")
   script.Mount("/system")
+  script.Mount("/data")
   script.UnpackPackageDir("system", "/system")
+  script.UnpackPackageDir("data", "/data")
 
   symlinks = CopySystemFiles(input_zip, output_zip)
   script.MakeSymlinks(symlinks)
@@ -398,7 +413,8 @@ def WriteFullOTAPackage(input_zip, output_zip):
 
   Item.GetMetadata(input_zip)
   Item.Get("system").SetPermissions(script)
-
+  script.SetPermissionsRecursive("/system/etc/init.d", 0, 0, 0755, 0555)
+  
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
   script.ShowProgress(0.2, 0)
