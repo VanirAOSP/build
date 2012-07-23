@@ -21,4 +21,4 @@
 
 # Those are all the locales that have translations and are displayable
 # by TextView in this branch.
-PRODUCT_LOCALES := en_US
+PRODUCT_LOCALES := en_US it_IT de_DE es_ES
