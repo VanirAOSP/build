@@ -388,7 +388,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("")
   script.Print("Vanir AOSP")
   script.Print("JellyBean")
-  script.Print("Sonicxml, DHO, PrimeDirective")
+  script.Print("Sonicxml, DHO, PrimeDirective, Nuclearmistake")
   script.Print("")
   script.Print("")
   script.Print("Installing the ROM...")
