@@ -21,4 +21,4 @@
 
 # This is the list of languages that originally shipped on ADP1
 
-PRODUCT_LOCALES := en_US
+PRODUCT_LOCALES := en_US it_IT de_DE es_ES
