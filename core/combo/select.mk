@@ -94,6 +94,6 @@ ifneq ($(USE_CCACHE),)
     ifneq ($(ccache),$(firstword $($(combo_target)CXX)))
       $(combo_target)CXX := $(ccache) $($(combo_target)CXX)
     endif
-    ccache =
+    ccache = 1
   endif
 endif
