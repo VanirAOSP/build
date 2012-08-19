@@ -99,6 +99,9 @@ class EdifyGenerator(object):
            ");")
     self.script.append(self._WordWrap(cmd))
 
+  def FixPermissions(self):
+	self.script.append('run_program("/system/bin/fix_permissions");')
+	
   def ShowProgress(self, frac, dur):
     """Update the progress bar, advancing it over 'frac' over the next
     'dur' seconds.  'dur' may be zero to advance it via SetProgress
