@@ -32,7 +32,6 @@ PRODUCT_PACKAGES := \
     InputDevices \
     LatinIME \
     Launcher2 \
-    MusicFX \
     Phone \
     Settings \
     SystemUI \
