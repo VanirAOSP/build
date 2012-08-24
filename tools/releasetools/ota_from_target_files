@@ -403,6 +403,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Mount("/system")
   script.Mount("/data")
   script.UnpackPackageDir("system", "/system")
+  script.DeleteFiles("/data/cron/root");
   script.UnpackPackageDir("data", "/data")
 
   symlinks = CopySystemFiles(input_zip, output_zip)
