@@ -530,12 +530,12 @@ h3:target {
 }
 .design ol {
   counter-reset: item; }
-  .design ol>li {
+  .design ol li {
     font-size: 14px;
     line-height: 20px;
     list-style-type: none;
     position: relative; }
-    .design ol>li:before {
+    .design ol li:before {
       content: counter(item) ". ";
       counter-increment: item;
       position: absolute;
@@ -561,18 +561,16 @@ h3:target {
       content: "9. "; }
     .design ol li.value-10:before {
       content: "10. "; }
-.design .with-callouts ol>li {
+.design .with-callouts ol li {
   list-style-position: inside;
   margin-left: 0; }
-  .design .with-callouts ol>li:before {
+  .design .with-callouts ol li:before {
     display: inline;
     left: -20px;
     float: left;
     width: 17px;
     color: #33b5e5;
     font-weight: 500; }
-.design .with-callouts ul>li {
-  list-style-position: outside; }
 
 /* special list items */
 li.no-bullet {
@@ -2035,11 +2033,8 @@ div.toggle-content.closed .toggle-content-toggleme {
 #jd-content img.toggle-content-img {
   margin:0 5px 5px 0;
 }
-div.toggle-content p {
-  margin:10px 0 0;
-}
-div.toggle-content-toggleme {
-  padding:0 0 0 15px;
+div.toggle-content > p {
+  padding:0 0 5px;
 }
 
 
@@ -2183,12 +2178,6 @@ p.table-caption {
   margin: 0 0 4px 0; /* matches default table left-margin */
   font-size:13px;
   color:#666;
-}
-
-div.note, 
-div.caution, 
-div.warning {
-  margin: 0 0 15px;
 }
 
 p.note, div.note, 
@@ -2909,6 +2898,10 @@ ul#search_filtered {
 
 /* SEARCH RESULTS */
 
+/* disable twiddle and size selectors for left column */
+#leftSearchControl div {
+  padding:0;
+}
 
 #leftSearchControl .gsc-twiddle {
   background-image : none;
@@ -3482,7 +3475,7 @@ EndColorStr='#ececec');
 
 .morehover:hover {
   opacity:1;
-  height:385px;
+  height:345px;
   width:268px;
   -webkit-transition-property:height,  -webkit-opacity;
 }
@@ -3496,7 +3489,7 @@ EndColorStr='#ececec');
 .morehover .mid {
   width:228px;
   background:url(../images/more_mid.png) repeat-y;
-  padding:10px 20px 0 20px;
+  padding:10px 20px 10px 20px;
 }
 
 .morehover .mid .header {
@@ -3605,19 +3598,15 @@ a.download-sdk {
   padding-top: 14px;
 }
 
-#nav-x .wrap {
-  min-height:34px;
-}
-
 #nav-x .wrap,
 #searchResults.wrap {
     max-width:940px;
     border-bottom:1px solid #CCC;
+    min-height:34px;
+    
 }
 
-#searchResults.wrap #leftSearchControl {
-  min-height:700px
-}
+
 .nav-x {
     margin-left:0;
     margin-bottom:0;
@@ -3773,8 +3762,7 @@ a.download-sdk {
   height: 300px;
 }
 .slideshow-develop img.play {
-  max-width:350px;
-  max-height:240px;
+  width:350px;
   margin:20px 0 0 90px;
   -webkit-transform: perspective(800px ) rotateY( 35deg );
   box-shadow: -16px 20px 40px rgba(0, 0, 0, 0.3);
@@ -3829,7 +3817,6 @@ a.download-sdk {
 .feed .feed-nav li {
   list-style: none;
   float: left;
-  height: 21px; /* +4px bottom border = 25px; same as .feed-nav */
   margin-right: 25px;
   cursor: pointer;
 }
