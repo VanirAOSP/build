@@ -2,7 +2,6 @@
 /* =============================================================================
    Columns
    ========================================================================== */
-/* Applied to body to debug layout alignments
 .grid {
   width:100%;
   height:100%;
@@ -11,7 +10,6 @@
   margin:auto;
   position:absolute;
 }   
-*/
 
 @media screen, projection, print {
 .full {
