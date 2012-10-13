@@ -67,7 +67,7 @@ $(eval $(call check-api, \
 
 .PHONY: update-api
 update-api: $(INTERNAL_PLATFORM_API_FILE) | $(ACP)
-	@echo Copying current.txt
+	@echo -e ${CL_GRN}"Copying current.txt"${CL_RST}
 	$(hide) $(ACP) $(INTERNAL_PLATFORM_API_FILE) $(SRC_API_DIR)/current.txt
 
 endif
