@@ -1081,10 +1081,14 @@ function godir () {
 function mka() {
     case `uname -s` in
         Darwin)
-            make -j `sysctl hw.ncpu|cut -d" " -f2` "$@"
+            local threads=`sysctl hw.ncpu|cut -d" " -f2`
+            local load=`expr $threads \* 2`
+            make -j -l $load  "$@"
             ;;
         *)
-            schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` "$@"
+            local threads=`grep "^processor" /proc/cpuinfo | wc -l`
+            local load=`expr $threads \* 2`
+            schedtool -B -n 1 -e ionice -n 1 make -j -l $load "$@"
             ;;
     esac
 }
