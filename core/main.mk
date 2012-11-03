@@ -129,16 +129,16 @@ java_version :=
 endif
 ifeq ($(strip $(java_version)),)
 $(info ************************************************************)
-$(info You are attempting to build with the incorrect version)
-$(info of java.)
+$(info You are attempting to build with the unsupported version of java.)
 $(info $(space))
 $(info Your version is: $(shell java -version 2>&1 | head -n 1).)
-$(info The correct version is: Java SE 1.6.)
+$(info The AOSP version is: Java SE 1.6.)
 $(info $(space))
-$(info Please follow the machine setup instructions at)
+$(info Vanir will now build with open JDK. WTF-BBQ??)
+$(info oontz oontz oontz rinse and repeat.)
 $(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
 $(info ************************************************************)
-$(error stop)
+#$(error stop)
 endif
 
 # Check for the correct version of javac
