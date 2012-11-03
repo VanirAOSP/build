@@ -11,6 +11,7 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - godir:   Go to the directory containing a file.
 - mka:      Builds using SCHED_BATCH on all processors
 - mkaflash: Same as mka in the top of the tree with the addition of flashing the rom, gapps, and addon zips.
+- mkapush:  Same as mka with the addition of adb pushing to the device.
 - reposync: Parallel repo sync using ionice and SCHED_BATCH
 
 Look at the source to view more functions. The complete list is:
@@ -1138,6 +1139,58 @@ mkaflash() {
             echo "If your phone winds up sitting at the CWMR main menu, choose \"reboot phone\", and install an openrecoveryscript capable recovery, suckah"
         done
     fi
+}
+
+function mkapush() {
+    # There's got to be a better way to do this stupid shit.
+    case `uname -s` in
+        Darwin)
+            if [ ! -f $ANDROID_PRODUCT_OUT/installed-files.txt ]; then
+			make -j `sysctl hw.ncpu|cut -d" " -f2` installed-file-list
+            fi
+			make -j `sysctl hw.ncpu|cut -d" " -f2` "$@"
+            ;;
+        *)
+            if [ ! -f $ANDROID_PRODUCT_OUT/installed-files.txt ]; then
+			schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` installed-file-list
+            fi
+			schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` "$@"
+            ;;
+    esac
+	case $@ in
+        *\ * )
+            echo $@ | awk 'gsub(/ /,"\n") {print}' | while read line; do
+			blackmagic=`sed -n "/$line/{p;q;}" $ANDROID_PRODUCT_OUT/installed-files.txt | awk {'print $2'}`
+                if [ `echo $blackmagic | cut -f3 -d "/" = framework ];
+                elif [ `echo $blackmagic | cut -f4 -d "/" = SystemUI.apk ]; then
+				adb_stop=true
+				fi
+				adb remount
+                if [ $adb_stop = true ]; then
+				adb shell stop
+                fi
+				adb push $ANDROID_PRODUCT_OUT$blackmagic $blackmagic
+                if [ $adb_stop = true ]; then
+				adb shell start
+                fi
+			done
+            ;;
+        *)
+            blackmagic=`sed -n "/$@/{p;q;}" $ANDROID_PRODUCT_OUT/installed-files.txt | awk {'print $2'}`
+            if [ `echo $blackmagic | cut -f3 -d "/" = framework ];
+            elif [ `echo $blackmagic | cut -f4 -d "/" = SystemUI.apk ]; then
+				adb_stop=true
+			fi
+			adb remount
+            if [ $adb_stop = true ]; then
+				adb shell stop
+            fi
+			adb push $ANDROID_PRODUCT_OUT$blackmagic $blackmagic
+            if [ $adb_stop = true ]; then
+				adb shell start
+            fi
+            ;;
+    esac
 }
 
 function reposync() {
