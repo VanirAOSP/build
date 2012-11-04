@@ -10,6 +10,7 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - resgrep: Greps on all local res/*.xml files.
 - godir:   Go to the directory containing a file.
 - mka:      Builds using SCHED_BATCH on all processors
+- mkaflash: Same as mka in the top of the tree with the addition of flashing the rom, gapps, and addon zips.
 - reposync: Parallel repo sync using ionice and SCHED_BATCH
 
 Look at the source to view more functions. The complete list is:
@@ -1091,6 +1092,51 @@ function mka() {
             schedtool -B -n 1 -e ionice -n 1 make -j -l $load "$@"
             ;;
     esac
+}
+
+mkaflash() {
+    if [ $# -gt 0 ]; then
+        echo "It seems as though you wanted to build something other than bacon. TOO BAD!"
+        echo "Just \"mkaflash\" runs mka bacon and flashes your shizz"
+        return 1
+    fi
+    croot
+    # this voodoo will build the entire ROM from any directory on your PC without changing your current directory
+    if mka bacon; then
+        echo ""
+        echo "-------------------"
+        echo "\\\\===\\\\   || //=\\\\"
+        echo " \\\\   \\\\  ||//===\\\\"
+        echo " //   //  ||\\\\"
+        echo "//   //===|| \\\\==="
+        echo "-------------------"
+        echo ""        
+        echo "Your gapps better be moved to /sdcard/vanir_gapps.zip!"
+        echo "CTRL-C in the next 5 seconds to abort flashing. If your phone turns inside-out or becomes a stripper, no one is to blame BUT YOU."
+        sleep 5
+        echo "Commence teh flazhing"        
+        for x in `ls $ANDROID_PRODUCT_OUT | grep -i .zip | grep -vi md5sum | grep -vi ota`; do
+            echo "Pushing $ANDROID_PRODUCT_OUT/$x to /sdcard/vanir_rom.zip"
+            adb push $ANDROID_PRODUCT_OUT/$x /sdcard/vanir_rom.zip
+            echo "Generating auto-flash script."
+            adb shell su -c 'echo set tw_signed_zip_verify 0 > /cache/recovery/openrecoveryscript'
+            for C in "wipe cache" "wipe dalvik" "install /sdcard/vanir_rom.zip" "install /sdcard/vanir_gapps.zip"; do
+                adb shell su -c 'echo "'$C'" >> /cache/recovery/openrecoveryscript'
+            done
+            if  [ `adb shell bash -c "[ -e /sdcard/vanir_addons/ ] && echo 1 || echo 0"` ]; then
+                for X in `adb shell 'for i in /sdcard/vanir_addons/*.zip; do echo $i; done'`
+                do
+                    P="`echo $X | sed 's/.*\///g' | sed 's/\n//g' | sed 's/\r//g'`"
+                    adb shell su -c 'echo install /sdcard/vanir_addons/'$P' >> /cache/recovery/openrecoveryscript'
+                done
+            else
+                echo "If you want to flash stuff other than the rom and gapps, you can copy them to /sdcard/vanir_addons/, and it will be done automatically"
+            fi
+            echo "THIS IS HAPPENING. COME TO TERMS WITH IT!"                
+            adb shell sync && adb reboot recovery
+            echo "If your phone winds up sitting at the CWMR main menu, choose \"reboot phone\", and install an openrecoveryscript capable recovery, suckah"
+        done
+    fi
 }
 
 function reposync() {
