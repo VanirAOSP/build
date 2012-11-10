@@ -1123,7 +1123,8 @@ mkaflash() {
             for C in "wipe cache" "wipe dalvik" "install /sdcard/vanir_rom.zip" "install /sdcard/vanir_gapps.zip"; do
                 adb shell su -c 'echo "'$C'" >> /cache/recovery/openrecoveryscript'
             done
-            if  [ `adb shell bash -c "[ -e /sdcard/vanir_addons/ ] && echo 1 || echo 0"` ]; then
+            DOESITEXIST=`adb shell bash -c "[ -e /sdcard/vanir_addons/ ] && echo 1"`
+            if [ $DOESITEXIST ]; then
                 for X in `adb shell 'for i in /sdcard/vanir_addons/*.zip; do echo $i; done'`
                 do
                     P="`echo $X | sed 's/.*\///g' | sed 's/\n//g' | sed 's/\r//g'`"
