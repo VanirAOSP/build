@@ -74,35 +74,6 @@ ifneq ($(filter-out user debug eng tests optional samples shell_ash shell_mksh,$
 $(warning unusual tags $(LOCAL_MODULE_TAGS) on $(LOCAL_MODULE) at $(LOCAL_PATH))
 endif
 
-ifneq ($(filter $(LOCAL_MODULE_TAGS),user),)
-  ifeq ($(filter $(GRANDFATHERED_USER_MODULES),$(LOCAL_MODULE)),)
-    $(warning *** Module name: $(LOCAL_MODULE))
-    $(warning *** Makefile location: $(LOCAL_PATH))
-    $(warning * )
-    $(warning * Each module must use a LOCAL_MODULE_TAGS in its)
-    $(warning * Android.mk. Possible tags declared by a module:)
-    $(warning * )
-    $(warning *     optional, debug, eng, tests, samples)
-    $(warning * )
-    $(warning * If the module is expected to be in all builds)
-    $(warning * of a product, then it should use the)
-    $(warning * "optional" tag: )
-    $(warning * )
-    $(warning *    Add "LOCAL_MODULE_TAGS := optional" in the)
-    $(warning *    Android.mk for the affected module, and add)
-    $(warning *    the LOCAL_MODULE value for that component)
-    $(warning *    into the PRODUCT_PACKAGES section of product)
-    $(warning *    makefile(s) where it's necessary, if)
-    $(warning *    appropriate.)
-    $(warning * )
-    $(warning * If the component should be in EVERY build of ALL)
-    $(warning * products, then add its LOCAL_MODULE value to the)
-    $(warning * PRODUCT_PACKAGES section of)
-    $(warning * build/target/product/core.mk)
-    $(warning * )
-    $(error user tag detected on new module - user tags are only supported on legacy modules)
-  endif
-endif
 
 # Add implicit tags.
 #
