@@ -220,7 +220,7 @@ function settitle()
         if [ -z "$apps" ]; then
             export PROMPT_COMMAND="echo -ne \"\033]0;[${arch}-${product}-${variant}] ${USER}@${HOSTNAME}: ${PWD}\007\""
         else
-            export PROMPT_COMMAND="echo -ne \"\033]0;[$apps $variant] ${USER}@${HOSTNAME}: ${PWD}\007\""
+            export PROMPT_COMMAND="echo -ne \"\033]0;[$arch $apps $variant] ${USER}@${HOSTNAME}: ${PWD}\007\"" 
         fi
     fi
 }
@@ -864,7 +864,7 @@ case `uname -s` in
     *)
         function mgrep()
         {
-            find . -name .repo -prune -o -name .git -prune -o -path ./out -prune -o -regextype posix-egrep -iregex '(.*\/Makefile|.*\/Makefile\..*|.*\.make|.*\.mak|.*\.mk)' -type f -print0 | xargs -0 grep --color 
+            find . -name .repo -prune -o -name .git -prune -o -path ./out -prune -o -regextype posix-egrep -iregex '(.*\/Makefile|.*\/Makefile\..*|.*\.make|.*\.mak|.*\.mk)' -type f -print0 | xargs -0 grep --color -n "$@"
         }
 
         function treegrep()
@@ -997,6 +997,28 @@ function getbugreports()
         adb pull /sdcard/bugreports/${report} ${report}
         gunzip ${report}
     done
+}
+
+function getsdcardpath()
+{
+    adb ${adbOptions} shell echo -n \$\{EXTERNAL_STORAGE\}
+}
+
+function getscreenshotpath()
+{
+    echo "$(getsdcardpath)/Pictures/Screenshots"
+}
+
+function getlastscreenshot()
+{
+    local screenshot_path=$(getscreenshotpath)
+    local screenshot=`adb ${adbOptions} ls ${screenshot_path} | grep Screenshot_[0-9-]*.*\.png | sort -rk 3 | cut -d " " -f 4 | head -n 1`
+    if [ "$screenshot" = "" ]; then
+        echo "No screenshots found."
+        return
+    fi
+    echo "${screenshot}"
+    adb ${adbOptions} pull ${screenshot_path}/${screenshot}
 }
 
 function startviewserver()
