@@ -29,7 +29,7 @@ PRODUCT_PACKAGES := \
     Email2 \
     Exchange2 \
     FusedLocation \
-    Gallery2 \
+    Gallery \
     InputDevices \
     LatinIME \
     Launcher2 \
