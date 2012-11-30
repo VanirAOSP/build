@@ -146,4 +146,3 @@ PRODUCT_PACKAGES += \
     toolbox \
     vdc \
     vold
-

@@ -166,4 +166,3 @@ ifeq ($(HAVE_SELINUX),true)
 endif
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/base.mk)
-
