@@ -32,8 +32,8 @@ _vendor_owner_whitelist := \
         samsung_arm \
         ti \
         trusted_logic \
-        widevine \
-	vanir
+    	widevine \
+		vanir
 
 
 ifneq (,$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_RESTRICT_VENDOR_FILES))
@@ -45,10 +45,6 @@ _vendor_module_owner_info :=
 # Restrict owners
 ifneq (,$(filter true owner all, $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_RESTRICT_VENDOR_FILES)))
 
-ifneq (,$(filter vendor/%, $(PRODUCT_PACKAGE_OVERLAYS) $(DEVICE_PACKAGE_OVERLAYS)))
-$(error Error: Product "$(TARGET_PRODUCT)" cannot have overlay in vendor tree: \
-    $(filter vendor/%, $(PRODUCT_PACKAGE_OVERLAYS) $(DEVICE_PACKAGE_OVERLAYS)))
-endif
 _vendor_check_copy_files := $(filter vendor/%, $(PRODUCT_COPY_FILES))
 ifneq (,$(_vendor_check_copy_files))
 $(foreach c, $(_vendor_check_copy_files), \
