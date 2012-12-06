@@ -293,6 +293,9 @@ ifneq (,$(user_variant))
     # Pick up some extra useful tools
     tags_to_install += debug
 
+    # FORCE DEBUGGING IN USER_DEBUG BUILDS MUAHAHAHA
+    enable_target_debugging := true
+
     # Enable Dalvik lock contention logging for userdebug builds.
     ADDITIONAL_BUILD_PROPERTIES += dalvik.vm.lockprof.threshold=500
   else
