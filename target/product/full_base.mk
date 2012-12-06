@@ -21,14 +21,10 @@
 
 PRODUCT_PACKAGES := \
     libfwdlockengine \
-    libWnnEngDic \
-    libWnnJpnDic \
-    libwnndict \
     WAPPushManager
 
 PRODUCT_PACKAGES += \
-    LiveWallpapersPicker \
-    MagicSmokeWallpapers 
+    LiveWallpapersPicker
 
 # Additional settings used in all AOSP builds
 PRODUCT_PROPERTY_OVERRIDES := \
