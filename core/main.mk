@@ -287,7 +287,7 @@ enable_target_debugging := true
 tags_to_install :=
 ifneq (,$(user_variant))
   # Target is secure in user builds.
-  ADDITIONAL_DEFAULT_PROPERTIES += ro.secure=1
+  ADDITIONAL_DEFAULT_PROPERTIES += ro.secure=0
 
   ifeq ($(user_variant),userdebug)
     # Pick up some extra useful tools
@@ -303,13 +303,8 @@ ifneq (,$(user_variant))
   # Turn on Dalvik preoptimization for user builds, but only if not
   # explicitly disabled and the build is running on Linux (since host
   # Dalvik isn't built for non-Linux hosts).
-  ifneq (true,$(DISABLE_DEXPREOPT))
-    ifeq ($(user_variant),user)
-      ifeq ($(HOST_OS),linux)
-        WITH_DEXPREOPT := true
-      endif
-    endif
-  endif
+  # Forcefully turn off odex
+  WITH_DEXPREOPT := false
 
   # Disallow mock locations by default for user builds
   ADDITIONAL_DEFAULT_PROPERTIES += ro.allow.mock.location=0
