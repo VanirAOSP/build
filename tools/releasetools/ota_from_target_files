@@ -386,7 +386,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("")
   script.Print("")
   script.Print("")
-  script.Print("VanirAOSP - JellyBean")
+  script.Print("Vanir - JellyBean")
   script.Print("Brought to you by Team Vanir:")
   script.Print("    Sonicxml")
   script.Print("    DHO")
