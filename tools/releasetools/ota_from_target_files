@@ -384,10 +384,8 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("")
   script.Print("")
   script.Print("")
-  script.Print("")
-  script.Print("")
   script.Print("Vanir - JellyBean")
-  script.Print("Brought to you by Team Vanir:")
+  script.Print("  by Team Vanir:")
   script.Print("    Sonicxml")
   script.Print("    DHO")
   script.Print("    PrimeDirective")
@@ -413,33 +411,42 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.DeleteFiles(["/data/dalvik-cache"])
   script.DeleteFiles(["/data/media/0/Android/data/com.amazon.venezia"])
   
-  script.Print("Proceeding with the install")
+  script.Print("Copying files")
   script.UnpackPackageDir("system", "/system")
   script.DeleteFiles(["/data/cron/root"])
   script.UnpackPackageDir("data", "/data")
 
-  script.Print("Symlinking!")
+  script.Print("Symlinking")
   symlinks = CopySystemFiles(input_zip, output_zip)
   script.MakeSymlinks(symlinks)
 
   boot_img = common.GetBootableImage("boot.img", "boot.img",
                                      OPTIONS.input_tmp, "BOOT")
 
-  script.Print("Setting Permissions")
+  script.Print("Setting permissions...")
+  script.Print("   -rw-r--r-- means -rwxrwxrwx")
   Item.GetMetadata(input_zip)
   Item.Get("system").SetPermissions(script)
   script.SetPermissionsRecursive("/system/etc/init.d", 0, 0, 0755, 0555)
   script.SetPermissionsRecursive("/data/cron", 0, 0, 0755, 0555)
   script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0555)
 
-  script.Print("Finally,... The Kernel is present")
+  script.Print("Zen kernel 14.1 in the hizouse")
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
   script.ShowProgress(0.2, 0)
-
   script.ShowProgress(0.2, 10)
   script.WriteRawImage("/boot", "boot.img")
   
+  #says: VANIR
+  script.Print("\\\\   //\\ ||\\||====||=\\\\")
+  script.Print(" \\\\ //=\\\\||\\\\| || ||=//")
+  script.Print("\\//   \\\\| \\|====|| \\\\")
+
+  script.Print("")
+  script.Print("CLEAN UP THE BLOOD!")
+  script.Print("YOU SHOULD PROBABLY GET TESTED!");
+
   script.ShowProgress(0.1, 0)
   device_specific.FullOTA_InstallEnd()
 
