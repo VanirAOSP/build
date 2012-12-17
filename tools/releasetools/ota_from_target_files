@@ -51,7 +51,6 @@ Usage:  ota_from_target_files [flags] input_target_files output_ota_package
 
   -a  (--aslr_mode)  <on|off>
       Specify whether to turn on ASLR for the package (on by default).
-
 """
 
 import sys
@@ -96,7 +95,6 @@ def MostPopularKey(d, default):
   if not x: return default
   x.sort()
   return x[-1][1]
-
 
 def IsSymlink(info):
   """Return true if the zipfile.ZipInfo object passed in represents a
@@ -294,7 +292,6 @@ def CopySystemFiles(input_zip, output_zip=None,
   symlinks.sort()
   return symlinks
 
-
 def SignOutput(temp_zip_name, output_zip_name):
   key_passwords = common.GetKeyPasswords([OPTIONS.package_key])
   pw = key_passwords[OPTIONS.package_key]
@@ -302,11 +299,9 @@ def SignOutput(temp_zip_name, output_zip_name):
   common.SignFile(temp_zip_name, output_zip_name, OPTIONS.package_key, pw,
                   whole_file=True)
 
-
 def AppendAssertions(script, input_zip):
   device = GetBuildProp("ro.product.device", input_zip)
   script.AssertDevice(device)
-
 
 def MakeRecoveryPatch(output_zip, recovery_img, boot_img):
   """Generate a binary patch that creates the recovery image starting
@@ -349,7 +344,6 @@ fi
   common.ZipWriteStr(output_zip, "recovery/etc/install-recovery.sh", sh)
   return Item.Get("system/etc/install-recovery.sh", dir=False)
 
-
 def WriteFullOTAPackage(input_zip, output_zip):
   # TODO: how to determine this?  We don't know what version it will
   # be installed on top of.  For now, we expect the API just won't
@@ -379,18 +373,19 @@ def WriteFullOTAPackage(input_zip, output_zip):
   device_specific.FullOTA_InstallBegin()
 
   script.ShowProgress(0.5, 0)
+
+  #says: VANIR
+  script.Print("\\\\\\\\   //\\\\ ||\\\\||====||=\\\\\\\\")
+  script.Print(" \\\\\\\\ //=\\\\\\\\||\\\\\\\\| || ||=//")
+  script.Print("  \\\\//   \\\\\\\\| \\\\|====|| \\\\\\\\")
   script.Print("")
-  script.Print("")
-  script.Print("")
-  script.Print("")
-  script.Print("")
-  script.Print("Vanir - JellyBean")
-  script.Print("  by Team Vanir:")
-  script.Print("    Sonicxml")
-  script.Print("    DHO")
-  script.Print("    PrimeDirective")
-  script.Print("    Nuclearmistake")
-  script.Print("    ChevyCam94")
+  script.Print("  Vanir - JellyBean")
+  script.Print("    by Team Vanir:")
+  script.Print("      Sonicxml")
+  script.Print("      DHO")
+  script.Print("      PrimeDirective")
+  script.Print("      Nuclearmistake")
+  script.Print("      ChevyCam94")
   script.Print("")
   script.Print("")
   script.Print("Installing the ROM...")
@@ -436,12 +431,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
   script.ShowProgress(0.2, 0)
   script.ShowProgress(0.2, 10)
-  script.WriteRawImage("/boot", "boot.img")
-  
-  #says: VANIR
-  script.Print("\\\\   //\\ ||\\||====||=\\\\")
-  script.Print(" \\\\ //=\\\\||\\\\| || ||=//")
-  script.Print("\\//   \\\\| \\|====|| \\\\")
+  script.WriteRawImage("/boot", "boot.img")  
 
   script.Print("")
   script.Print("CLEAN UP THE BLOOD!")
