@@ -375,10 +375,17 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.ShowProgress(0.5, 0)
 
   #says: VANIR
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
   script.Print("\\\\\\\\   //\\\\ ||\\\\||====||=\\\\\\\\")
   script.Print(" \\\\\\\\ //=\\\\\\\\||\\\\\\\\| || ||=//")
   script.Print("  \\\\//   \\\\\\\\| \\\\|====|| \\\\\\\\")
-  script.Print("")
+  script.Print(" ")
   script.Print("  Vanir - JellyBean")
   script.Print("    by Team Vanir:")
   script.Print("      Sonicxml")
@@ -386,8 +393,8 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("      PrimeDirective")
   script.Print("      Nuclearmistake")
   script.Print("      ChevyCam94")
-  script.Print("")
-  script.Print("")
+  script.Print(" ")
+  script.Print(" ")
   script.Print("Installing the ROM...")
 
   if OPTIONS.wipe_user_data:
@@ -400,17 +407,20 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Mount("/system")
   script.Mount("/data")
 
+  script.Print(" ")
   script.Print("De Novo Lite Wipe In Progress")
   script.DeleteFiles(["/cache"])
   script.DeleteFiles(["/data/cron"])
   script.DeleteFiles(["/data/dalvik-cache"])
   script.DeleteFiles(["/data/media/0/Android/data/com.amazon.venezia"])
   
+  script.Print(" ")
   script.Print("Copying files")
   script.UnpackPackageDir("system", "/system")
   script.DeleteFiles(["/data/cron/root"])
   script.UnpackPackageDir("data", "/data")
 
+  script.Print(" ")
   script.Print("Symlinking")
   symlinks = CopySystemFiles(input_zip, output_zip)
   script.MakeSymlinks(symlinks)
@@ -418,6 +428,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   boot_img = common.GetBootableImage("boot.img", "boot.img",
                                      OPTIONS.input_tmp, "BOOT")
 
+  script.Print(" ")
   script.Print("Setting permissions...")
   script.Print("   -rw-r--r-- means -rwxrwxrwx")
   Item.GetMetadata(input_zip)
@@ -426,6 +437,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.SetPermissionsRecursive("/data/cron", 0, 0, 0755, 0555)
   script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0555)
 
+  script.Print(" ")
   script.Print("Zen kernel 14.1 in the hizouse")
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
@@ -433,9 +445,16 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.ShowProgress(0.2, 10)
   script.WriteRawImage("/boot", "boot.img")  
 
-  script.Print("")
+  vanirinitlinks = []
+  vanirinitlinks.append(("/init.vanir.rc", "/init.cm.rc"))
+  vanirinitlinks.append(("/init.vanir.rc", "/system/etc/init.local.rc"))
+  script.MakeSymlinks(vanirinitlinks)
+
+  script.Print(" ")
   script.Print("CLEAN UP THE BLOOD!")
   script.Print("YOU SHOULD PROBABLY GET TESTED!");
+  script.Print(" ")
+  script.Print(" ")
 
   script.ShowProgress(0.1, 0)
   device_specific.FullOTA_InstallEnd()
