@@ -1135,7 +1135,7 @@ function mka() {
         Darwin)
             local threads=`sysctl hw.ncpu|cut -d" " -f2`
             local load=`expr $threads \* 2`
-            make -j -l $load  "$@"
+            make -j -l $load "$@"
             ;;
         *)
             local threads=`grep "^processor" /proc/cpuinfo | wc -l`
@@ -1143,6 +1143,13 @@ function mka() {
             schedtool -B -n 1 -e ionice -n 1 make -j -l $load "$@"
             ;;
     esac
+#!/bin/bash
+j=0
+
+while [ $((j++)) -lt 18 ]
+do
+  notify-send "$TARGET_PRODUCT build completed." -t 5000 -u critical
+done
 }
 
 mkaflash() {
