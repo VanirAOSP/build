@@ -1131,25 +1131,27 @@ function godir () {
 }
 
 function mka() {
+retval=0
     case `uname -s` in
         Darwin)
             local threads=`sysctl hw.ncpu|cut -d" " -f2`
             local load=`expr $threads \* 2`
             make -j -l $load "$@"
+            retval=$?
             ;;
         *)
             local threads=`grep "^processor" /proc/cpuinfo | wc -l`
             local load=`expr $threads \* 2`
             schedtool -B -n 1 -e ionice -n 1 make -j -l $load "$@"
+            retval=$?
             ;;
     esac
-#!/bin/bash
-j=0
-
-while [ $((j++)) -lt 18 ]
-do
-  notify-send "$TARGET_PRODUCT build completed." -t 5000 -u critical
-done
+if [ $retval -eq 0 ]; then
+    bash -c 'j=0; while [ $j -lt 10 ]; do j=`expr $j + 1`; notify-send "'$TARGET_PRODUCT' build completed." -t 2000 -u normal; sleep 1; done' &
+else
+    bash -c 'j=0; while [ $j -lt 20 ]; do j=`expr $j + 1`; notify-send "'$TARGET_PRODUCT' build FAILED." -t 1000 -u critical; sleep 1; done' &
+fi
+return $retval
 }
 
 mkaflash() {
