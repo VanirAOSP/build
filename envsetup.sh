@@ -1153,9 +1153,9 @@ retval=0
             ;;
     esac
 if [ $retval -eq 0 ]; then
-    bash -c 'j=0; while [ $j -lt 10 ]; do j=`expr $j + 1`; notify-send "VANIR" "'$TARGET_PRODUCT' build completed." -i '$(gettop)/build/buildwin.png' -t 2000; sleep 1; done' &
+    notify-send "VANIR" "$TARGET_PRODUCT build completed." -i $(gettop)/build/buildwin.png -t 10000
 else
-    bash -c 'j=0; while [ $j -lt 20 ]; do j=`expr $j + 1`; notify-send "VANIR" "'$TARGET_PRODUCT' build FAILED." -i '$(gettop)/build/buildfailed.png' -t 1000; sleep 1; done' &
+    notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $(gettop)/build/buildfailed.png -t 10000
 fi
 return $retval
 }
