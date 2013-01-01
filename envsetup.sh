@@ -1149,23 +1149,16 @@ function linaroinit()
 
     UBUNTU=`cat /etc/issue.net | cut -d' ' -f2`
     HOST_ARCH=`uname -m`
+    echo "HOST_ARCH = ${HOST_ARCH}"
     if [ ${HOST_ARCH} == "x86_64" ] ; then
 	    PKGS='git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev g++-multilib mingw32 tofrodos python-markdown libxml2-utils xsltproc uboot-mkimage openjdk-6-jdk openjdk-6-jre vim-common'
     else
 	    echo "ERROR: Only 64bit Host(Build) machines are supported at the moment."
 	    exit 1
     fi
-    if [ ${UBUNTU} == "12.10" ]; then
-	    PKGS+=' lib32readline-gplv2-dev'
-    elif [ ${UBUNTU} == "12.04" ] ; then
-	    PKGS+=' lib32readline-gplv2-dev'
-    elif [ ${UBUNTU} == "10.04" ] ; then
-	    PKGS+=' ia32-libs lib32readline5-dev'
-    else
-	    echo
-	    echo "ERROR: Only Ubuntu 10.04, 12.04 and 12.10 versiona are supported."
-	    return 1
-    fi
+
+    PKGS+=' lib32readline-gplv2-dev'
+    echo "If you're not on ubuntu 12.04, this might not work."
 
     echo "Checking and installing missing dependencies if any .. .."
     sudo apt-get install ${PKGS}
@@ -1180,12 +1173,16 @@ function linaroinit()
 	    return 1
     fi
 
+    ## place a breadcrumb
+    touch .nukesballs
+
     popd >& /dev/null
     return 0
 }
 
 function mklinaro()
 {
+    [ ! -e $(gettop)/.nukesballs ] && linaroinit
     export TARGET_SIMULATOR=false
     export BUILD_TINY_ANDROID=
     export TOOLCHAIN_URL=http://snapshots.linaro.org/android/~linaro-android/toolchain-4.7-2012.12/2/android-toolchain-eabi-linaro-4.7-2012.12-2-2012-12-12_14-52-41-linux-x86.tar.bz2
