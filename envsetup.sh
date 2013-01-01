@@ -1180,27 +1180,22 @@ function linaroinit()
     return 0
 }
 
-function mklinaro()
-{
-    [ ! -e $(gettop)/.nukesballs ] && linaroinit
-    export TARGET_SIMULATOR=false
-    export BUILD_TINY_ANDROID=
-    export TOOLCHAIN_URL=http://snapshots.linaro.org/android/~linaro-android/toolchain-4.7-2012.12/2/android-toolchain-eabi-linaro-4.7-2012.12-2-2012-12-12_14-52-41-linux-x86.tar.bz2
-    export TARGET_TOOLS_PREFIX=$(gettop)/android-toolchain-eabi/bin/arm-linux-androideabi-
-    if [ ! -d $(gettop)/android-toolchain-eabi ]; then
-        pushd . >& /dev/null
-        cd $(gettop)
-        # download the toolchain to build with
-        curl -k ${TOOLCHAIN_URL} > $(gettop)/toolchain.tar.bz2
-        tar -jxf toolchain.tar.bz2
-        rm -f toolchain.tar.bz2
-        echo "Welcome to fuckville. Dong linarofication active."
-        popd >& /dev/null
-    fi
-    mka "$@"
-}
-
 function mka() {
+[ ! -e $(gettop)/.nukesballs ] && linaroinit
+export TARGET_SIMULATOR=false
+export BUILD_TINY_ANDROID=
+export TOOLCHAIN_URL=http://snapshots.linaro.org/android/~linaro-android/toolchain-4.7-2012.12/2/android-toolchain-eabi-linaro-4.7-2012.12-2-2012-12-12_14-52-41-linux-x86.tar.bz2
+export TARGET_TOOLS_PREFIX=$(gettop)/android-toolchain-eabi/bin/arm-linux-androideabi-
+if [ ! -d $(gettop)/android-toolchain-eabi ]; then
+    pushd . >& /dev/null
+    cd $(gettop)
+    # download the toolchain to build with
+    curl -k ${TOOLCHAIN_URL} > $(gettop)/toolchain.tar.bz2
+    tar -jxf toolchain.tar.bz2
+    rm -f toolchain.tar.bz2
+    echo "Welcome to fuckville. Dong linarofication active."
+    popd >& /dev/null
+fi
 retval=0
     case `uname -s` in
         Darwin)
