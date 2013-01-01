@@ -1136,6 +1136,75 @@ function godir () {
     cd $T/$pathname
 }
 
+function linaroinit()
+{
+    pushd . >& /dev/null
+    cd $(gettop)
+
+    if [ ! -d build-info ]; then
+        wget http://snapshots.linaro.org/android/binaries/open/20120716/build-info.tar.bz2
+        tar -x -a -f "build-info.tar.bz2" -C .
+        rm build-info.tar.bz2
+    fi
+
+    UBUNTU=`cat /etc/issue.net | cut -d' ' -f2`
+    HOST_ARCH=`uname -m`
+    if [ ${HOST_ARCH} == "x86_64" ] ; then
+	    PKGS='git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev g++-multilib mingw32 tofrodos python-markdown libxml2-utils xsltproc uboot-mkimage openjdk-6-jdk openjdk-6-jre vim-common'
+    else
+	    echo "ERROR: Only 64bit Host(Build) machines are supported at the moment."
+	    exit 1
+    fi
+    if [ ${UBUNTU} == "12.10" ]; then
+	    PKGS+=' lib32readline-gplv2-dev'
+    elif [ ${UBUNTU} == "12.04" ] ; then
+	    PKGS+=' lib32readline-gplv2-dev'
+    elif [ ${UBUNTU} == "10.04" ] ; then
+	    PKGS+=' ia32-libs lib32readline5-dev'
+    else
+	    echo
+	    echo "ERROR: Only Ubuntu 10.04, 12.04 and 12.10 versiona are supported."
+	    return 1
+    fi
+
+    echo "Checking and installing missing dependencies if any .. .."
+    sudo apt-get install ${PKGS}
+
+    MISSING=`dpkg-query -W -f='${Status}\n' ${PKGS} 2>&1 | grep 'No packages found matching' | cut -d' ' -f5`
+    if [ -n "$MISSING" ] ; then
+	    echo "Missing required packages:"
+	    for m in $MISSING ; do
+		    echo -n "${m%?} "
+	    done
+	    echo
+	    return 1
+    fi
+
+    popd >& /dev/null
+    return 0
+}
+
+function mklinaro()
+{
+    export TARGET_SIMULATOR=false
+    export BUILD_TINY_ANDROID=
+    export TOOLCHAIN_URL=http://snapshots.linaro.org/android/~linaro-android/toolchain-4.7-2012.12/2/android-toolchain-eabi-linaro-4.7-2012.12-2-2012-12-12_14-52-41-linux-x86.tar.bz2
+    export TARGET_TOOLS_PREFIX=$(gettop)/android-toolchain-eabi/bin/arm-linux-androideabi-
+    if [ ! -d $(gettop)/android-toolchain-eabi ]; then
+        pushd . >& /dev/null
+        cd $(gettop)
+        # download the toolchain to build with
+        curl -k ${TOOLCHAIN_URL} > $(gettop)/toolchain.tar.bz2
+        tar -jxf toolchain.tar.bz2
+        rm toolchain.tar.bz2
+        echo "Welcome to fuckville. Dong linarofication active."
+        popd >& /dev/null
+    fi
+
+    # extract the vendor's source overlay
+    tar -x -a -f "$SOURCE_OVERLAY" -C .
+}
+
 function mka() {
 retval=0
     case `uname -s` in
