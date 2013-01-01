@@ -1144,7 +1144,7 @@ function linaroinit()
     if [ ! -d build-info ]; then
         wget http://snapshots.linaro.org/android/binaries/open/20120716/build-info.tar.bz2
         tar -x -a -f "build-info.tar.bz2" -C .
-        rm build-info.tar.bz2
+        rm -f build-info.tar.bz2
     fi
 
     UBUNTU=`cat /etc/issue.net | cut -d' ' -f2`
@@ -1193,13 +1193,11 @@ function mklinaro()
         # download the toolchain to build with
         curl -k ${TOOLCHAIN_URL} > $(gettop)/toolchain.tar.bz2
         tar -jxf toolchain.tar.bz2
-        rm toolchain.tar.bz2
+        rm -f toolchain.tar.bz2
         echo "Welcome to fuckville. Dong linarofication active."
         popd >& /dev/null
     fi
-
-    # extract the vendor's source overlay
-    tar -x -a -f "$SOURCE_OVERLAY" -C .
+    mka "$@"
 }
 
 function mka() {
