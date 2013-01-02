@@ -15,6 +15,7 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - mkaflash: Same as mka in the top of the tree with the addition of flashing the rom, gapps, and addon zips.
 - mkapush:  Same as mka with the addition of adb pushing to the device.
 - reposync: Parallel repo sync using ionice and SCHED_BATCH
+- smash:    clean out the out directory of your lunched target only.
 
 Look at the source to view more functions. The complete list is:
 EOF
@@ -1217,6 +1218,31 @@ else
     notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $(gettop)/build/buildfailed.png -t 10000
 fi
 return $retval
+}
+
+smash() {
+#to do: add smash $anytarget, smashOTA, smash, smashVANIR
+DIR=$OUT
+#to do: fix the colors
+	if [ -d  "$DIR" ]; then
+	echo ""
+	echo $CL_RED" Removing" $CL_RST" $TARGET_PRODUCT out directory:"
+	echo " Location:"
+	echo " $OUT"
+	rm -R -f $OUT
+	echo "  ."
+	echo "  ."
+	echo "  ."
+	echo "  ."
+	echo "  ."
+	echo $CL_RST" Destroyed."
+	echo ""
+	return;
+	else 
+	echo ""
+	echo $CL_YLW" Already" $CL_RED" SMASHED it !!!" $CL_RST
+	echo ""
+	fi
 }
 
 mkaflash() {
