@@ -423,6 +423,9 @@ endif
 ifeq ($(MAKECMDGOALS),clobber)
 dont_bother := true
 endif
+ifeq ($(MAKECMDGOALS),novo)
+dont_bother := true
+endif
 ifeq ($(MAKECMDGOALS),dataclean)
 dont_bother := true
 endif
@@ -904,6 +907,12 @@ clean:
 
 .PHONY: clobber
 clobber: clean
+
+# This should be almost as good as a clobber but keeping many of the time intensive files - DHO
+.PHONY: novo
+novo:
+	@rm -rf $(OUT_DIR)/target/*
+	@echo -e ${CL_GRN}"Target directory removed."${CL_RST}
 
 # The rules for dataclean and installclean are defined in cleanbuild.mk.
 
