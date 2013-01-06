@@ -438,7 +438,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0555)
 
   script.Print(" ")
-  script.Print("LeanKernel 5.5 exp1 230 is rocking this bitch")
+  script.Print("LeanKernel 5.6 exp1 230 is rocking this bitch")
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
   script.ShowProgress(0.2, 0)
