@@ -900,22 +900,19 @@ samplecode: $(sample_APKS_COLLECTION)
 .PHONY: findbugs
 findbugs: $(INTERNAL_FINDBUGS_HTML_TARGET) $(INTERNAL_FINDBUGS_XML_TARGET)
 
-# Make "clean" leave the host stuff intact by default
 .PHONY: clean
-clean: novo
+clean:
+	@rm -rf $(OUT_DIR)/*
+	@echo -e ${CL_GRN}"Entire build directory removed."${CL_RST}
+
+.PHONY: clobber
+clobber: clean
 
 # This should be almost as good as a clobber but keeping many of the time intensive files - DHO
 .PHONY: novo
 novo:
 	@rm -rf $(OUT_DIR)/target/*
 	@echo -e ${CL_GRN}"Target directory removed."${CL_RST}
-
-# This is the more drastic cleaning method, so only do this when clobber is invoked explicitely
-.PHONY: clobber
-clobber:
-	@rm -rf $(OUT_DIR)/*
-	@echo -e ${CL_GRN}"Entire build directory removed."${CL_RST}
-
 
 # The rules for dataclean and installclean are defined in cleanbuild.mk.
 
