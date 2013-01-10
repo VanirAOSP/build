@@ -159,6 +159,13 @@ $(info ************************************************************)
 #$(error stop)
 endif
 
+#set BUILD_EMULATOR to true in product mk to build emulator... otherwise don't.
+ifeq (,$(strip $(BUILD_EMULATOR)))
+    BUILD_EMULATOR := false
+endif
+
+#if BUILD_EMULATOR is true, then check if we're building on mac and handle stuff accordingly
+ifeq ($(BUILD_EMULATOR), true)
 ifeq (darwin,$(HOST_OS))
 GCC_REALPATH = $(realpath $(shell which gcc))
 ifneq ($(findstring llvm-gcc,$(GCC_REALPATH)),)
@@ -197,6 +204,7 @@ $(shell echo 'VERSIONS_CHECKED := $(VERSION_CHECK_SEQUENCE_NUMBER)' \
         > $(OUT_DIR)/versions_checked.mk)
 $(shell echo 'BUILD_EMULATOR := $(BUILD_EMULATOR)' \
         >> $(OUT_DIR)/versions_checked.mk)
+endif
 endif
 
 # These are the modifier targets that don't do anything themselves, but
