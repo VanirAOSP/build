@@ -1308,13 +1308,13 @@ retval=0
         Darwin)
             local threads=`sysctl hw.ncpu|cut -d" " -f2`
             local load=`expr $threads \* 2`
-            make -j -l $load "$@"
+            time make -j -l $load "$@"
             retval=$?
             ;;
         *)
             local threads=`grep "^processor" /proc/cpuinfo | wc -l`
             local load=`expr $threads \* 2`
-            schedtool -B -n 1 -e ionice -n 1 make -j -l $load "$@"
+            time schedtool -B -n 1 -e ionice -n 1 make -j -l $load "$@"
             retval=$?
             ;;
     esac
