@@ -93,7 +93,11 @@ ifneq ($(USE_CCACHE),)
   ifeq ($(HOST_OS)-$(BUILD_OS),windows-linux)
     CCACHE_HOST_TAG := linux-$(BUILD_ARCH)
   endif
-  ccache := prebuilts/misc/$(CCACHE_HOST_TAG)/ccache/ccache
+  ccache := $(shell which ccache)
+  ccache := $(strip $(ccache))
+  ifeq ($(ccache),)
+	ccache := prebuilts/misc/$(CCACHE_HOST_TAG)/ccache/ccache
+  endif
   # Check that the executable is here.
   ccache := $(strip $(wildcard $(ccache)))
   ifdef ccache
