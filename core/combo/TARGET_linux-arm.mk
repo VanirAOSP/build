@@ -71,6 +71,15 @@ TARGET_arm_CFLAGS :=    -O3 \
                         -fstrict-aliasing    \
                         -funswitch-loops
 
+
+ifeq ($(TARGET_USE_GRAPHITE),true)
+TARGET_arm_CFLAGS +=    -floop-interchange \
+                        -floop-strip-mine \
+                        -floop-block \
+                        -ffast-math \
+                        -funsafe-loop-optimizations
+endif
+
 # Modules can choose to compile some source as thumb. As
 # non-thumb enabled targets are supported, this is treated
 # as a 'hint'. If thumb is not enabled, these files are just
@@ -82,6 +91,15 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -fstrict-aliasing \
                         -Wstrict-aliasing=2 \
                         -Werror=strict-aliasing
+
+
+ifeq ($(TARGET_USE_GRAPHITE),true)
+TARGET_thumb_CFLAGS +=    -floop-interchange \
+                        -floop-strip-mine \
+                        -floop-block \
+                        -ffast-math \
+                        -funsafe-loop-optimizations
+endif
 else
 TARGET_thumb_CFLAGS := $(TARGET_arm_CFLAGS)
 endif
