@@ -1146,57 +1146,71 @@ function linaroinit()
         wget http://snapshots.linaro.org/android/binaries/open/20120716/build-info.tar.bz2
         tar -x -a -f "build-info.tar.bz2" -C .
         rm -f build-info.tar.bz2
+
+        UBUNTU=`cat /etc/issue.net | cut -d' ' -f2`
+        HOST_ARCH=`uname -m`
+        echo "HOST_ARCH = ${HOST_ARCH}"
+        if [ ${HOST_ARCH} == "x86_64" ] ; then
+	        PKGS='git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev g++-multilib mingw32 tofrodos python-markdown libxml2-utils xsltproc uboot-mkimage openjdk-6-jdk openjdk-6-jre vim-common'
+        else
+	        echo "ERROR: Only 64bit Host(Build) machines are supported at the moment."
+	        exit 1
+        fi
+
+        PKGS+=' lib32readline-gplv2-dev'
+        echo "If you're not on ubuntu 12.04, this might not work."
+
+        echo "Checking and installing missing dependencies if any .. .."
+        sudo apt-get install ${PKGS}
+
+        MISSING=`dpkg-query -W -f='${Status}\n' ${PKGS} 2>&1 | grep 'No packages found matching' | cut -d' ' -f5`
+        if [ -n "$MISSING" ] ; then
+	        echo "Missing required packages:"
+	        for m in $MISSING ; do
+		        echo -n "${m%?} "
+	        done
+	        echo
+	        return 1
+        fi
     fi
-
-    UBUNTU=`cat /etc/issue.net | cut -d' ' -f2`
-    HOST_ARCH=`uname -m`
-    echo "HOST_ARCH = ${HOST_ARCH}"
-    if [ ${HOST_ARCH} == "x86_64" ] ; then
-	    PKGS='git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev g++-multilib mingw32 tofrodos python-markdown libxml2-utils xsltproc uboot-mkimage openjdk-6-jdk openjdk-6-jre vim-common'
-    else
-	    echo "ERROR: Only 64bit Host(Build) machines are supported at the moment."
-	    exit 1
-    fi
-
-    PKGS+=' lib32readline-gplv2-dev'
-    echo "If you're not on ubuntu 12.04, this might not work."
-
-    echo "Checking and installing missing dependencies if any .. .."
-    sudo apt-get install ${PKGS}
-
-    MISSING=`dpkg-query -W -f='${Status}\n' ${PKGS} 2>&1 | grep 'No packages found matching' | cut -d' ' -f5`
-    if [ -n "$MISSING" ] ; then
-	    echo "Missing required packages:"
-	    for m in $MISSING ; do
-		    echo -n "${m%?} "
-	    done
-	    echo
-	    return 1
-    fi
-
-    ## place a breadcrumb
-    touch .nukesballs
-
+    
     popd >& /dev/null
     return 0
 }
 
-function mka() {
-[ ! -e $(gettop)/.nukesballs ] && linaroinit
-export TARGET_SIMULATOR=false
-export BUILD_TINY_ANDROID=
-export TOOLCHAIN_URL=http://snapshots.linaro.org/android/~linaro-android/toolchain-4.7-2012.12/2/android-toolchain-eabi-linaro-4.7-2012.12-2-2012-12-12_14-52-41-linux-x86.tar.bz2
-export TARGET_TOOLS_PREFIX=$(gettop)/android-toolchain-eabi/bin/arm-linux-androideabi-
-if [ ! -d $(gettop)/android-toolchain-eabi ]; then
+function linaroupdate() {
     pushd . >& /dev/null
     cd $(gettop)
+
+    #if our toolchain is older than 1 day old, grab a fresh one
+    find -name .nukesballs -mtime +1 -delete
+    [ -e .nukesballs ] && [ `cat .nukesballs | grep trunk | wc -l` -gt 0 ] && [ ! $GCC_48 ] && rm .nukesballs
+    [ -e .nukesballs ] && [ `cat .nukesballs | grep trunk | wc -l` -eq 0 ] && [ $GCC_48 ] && rm .nukesballs
+    [ -e .nukesballs ] && return 0
+
+    rm -Rf android-toolchain-eabi
+
     # download the toolchain to build with
-    curl -k ${TOOLCHAIN_URL} > $(gettop)/toolchain.tar.bz2
+    if [ $GCC_48 ]; then
+        curl -k https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-trunk/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-trunk-daily-linux-x86.tar.bz2 > toolchain.tar.bz2
+        echo "android-toolchain-eabi-trunk-daily-linux-x86" > .nukesballs
+    else
+        curl -k https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2 > toolchain.tar.bz2
+        echo "android-toolchain-eabi-4.7-daily-linux-x86" > .nukesballs
+    fi
     tar -jxf toolchain.tar.bz2
     rm -f toolchain.tar.bz2
-    echo "Welcome to fuckville. Dong linarofication active."
+    echo "Fresh linarosauce in the hiznouse."
+
     popd >& /dev/null
-fi
+}
+
+function mka() {
+linaroinit || sleep 3
+export TARGET_SIMULATOR=false
+export BUILD_TINY_ANDROID=
+export TARGET_TOOLS_PREFIX=$(gettop)/android-toolchain-eabi/bin/arm-linux-androideabi-
+linaroupdate
 retval=0
     case `uname -s` in
         Darwin)

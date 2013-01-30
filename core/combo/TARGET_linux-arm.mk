@@ -92,7 +92,6 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -Wstrict-aliasing=2 \
                         -Werror=strict-aliasing
 
-
 ifeq ($(TARGET_USE_GRAPHITE),true)
 TARGET_thumb_CFLAGS +=    -floop-interchange \
                         -floop-strip-mine \
@@ -103,6 +102,15 @@ endif
 else
 TARGET_thumb_CFLAGS := $(TARGET_arm_CFLAGS)
 endif
+
+#SHUT THE F$#@ UP!
+TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
+                        -Wno-unused-value \
+                        -Wno-unused-function
+
+TARGET_thumb_CFLAGS +=  -Wno-unused-parameter \
+                        -Wno-unused-value \
+                        -Wno-unused-function
 
 # Turn off strict-aliasing if we're building an AOSP variant without the
 # patchset...
