@@ -1178,38 +1178,130 @@ function linaroinit()
     return 0
 }
 
-function linaroupdate() {
+function __grab() {
+    T=$(gettop)
+    if [ ! "$T" ]; then
+        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
+        return
+    fi
+    rm -Rf $T/$1    
+    mkdir -p $T/$1\_temp
     pushd . >& /dev/null
-    cd $(gettop)
+    cd $T/$1\_temp
+    curl -k $2 > toolchain.tar.bz2
+    tar -jxf toolchain.tar.bz2
+    mv android-toolchain-eabi $T/$1
+    popd >& /dev/null
+    rm -Rf $T/$1\_temp
+}
+
+function update47() {
+    T=$(gettop)
+    if [ ! "$T" ]; then
+        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
+        return
+    fi
+    pushd . >& /dev/null
+    cd $T
 
     #if our toolchain is older than 1 day old, grab a fresh one
-    find -name .nukesballs -mtime +1 -delete
-    [ -e .nukesballs ] && [ `cat .nukesballs | grep trunk | wc -l` -gt 0 ] && [ ! $GCC_48 ] && rm .nukesballs
-    [ -e .nukesballs ] && [ `cat .nukesballs | grep trunk | wc -l` -eq 0 ] && [ $GCC_48 ] && rm .nukesballs
-    [ -e .nukesballs ] && return 0
-
-    rm -Rf android-toolchain-eabi
-
-    # download the toolchain to build with
-    if [ $GCC_48 ]; then
-        curl -k https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-trunk/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-trunk-daily-linux-x86.tar.bz2 > toolchain.tar.bz2
-        echo "android-toolchain-eabi-trunk-daily-linux-x86" > .nukesballs
-    else
-        curl -k https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2 > toolchain.tar.bz2
-        echo "android-toolchain-eabi-4.7-daily-linux-x86" > .nukesballs
+    find -name .nukesballs -mtime +1 | xargs rm -f
+    if [ ! -d android-toolchain-eabi ]; then
+        rm -f .nukesballs >& /dev/null
     fi
-    tar -jxf toolchain.tar.bz2
-    rm -f toolchain.tar.bz2
-    echo "Fresh linarosauce in the hiznouse."
-
+    [ -e .nukesballs ] && return 0
+    touch .nukesballs #tee hee that tickles
+    echo "DOWNLOADING DAILY BUILD OF LINARO's ARM GCC4.7"
+    __grab android-toolchain-eabi https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
     popd >& /dev/null
+    return 0
+}
+
+function update48() {
+    T=$(gettop)
+    if [ ! "$T" ]; then
+        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
+        return
+    fi
+    pushd . >& /dev/null
+    cd $T    
+    
+    #if our toolchain is older than 1 day old, grab a fresh one
+    find -name .nukesballs48 -mtime +1 | xargs rm -f
+    if [ ! -e android-toolchain-eabi-gcc4.8-turboexperimental ]; then
+        rm -f .nukesballs48 >& /dev/null
+    fi    
+    [ -e .nukesballs48 ] && return 0
+    touch .nukesballs48 #tee hee that tickles
+    echo "DOWNLOADING DAILY BUILD OF LINARO's ARM GCC4.8"
+    __grab android-toolchain-eabi-gcc4.8-turboexperimental https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-trunk/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-trunk-daily-linux-x86.tar.bz2
+    popd >& /dev/null
+    return 0
+}
+
+function linaroupdate() {
+    T=$(gettop)
+    if [ ! "$T" ]; then
+        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
+        return
+    fi
+    [ ! -e $T/.usinggcc48 ] && update47 || update48
+    
+    echo "Fresh linarosauce in the hiznouse."    
+}
+
+function usegcc48() {
+    T=$(gettop)
+    if [ ! "$T" ]; then
+        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
+        return
+    fi
+    if [ ! -e $T/.usinggcc48 ]; then
+        echo "You're changing from gcc4.7 to gcc4.8, so it's clobbering time."
+        pushd . >& /dev/null
+        cd $T
+        make clobber
+        popd >& /dev/null
+        touch $T/.usinggcc48
+    fi    
+
+    linaroupdate
+}
+
+function usegcc47() {
+    T=$(gettop)
+    if [ ! "$T" ]; then
+        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
+        return
+    fi
+    if [ -e $T/.usinggcc48 ]; then
+        echo "You're changing from gcc4.8 to gcc4.7, so it's clobbering time."
+        pushd . >& /dev/null
+        cd $T
+        make clobber
+        popd >& /dev/null
+        rm -f $T/.usinggcc48
+    fi
+    
+    linaroupdate
 }
 
 function mka() {
+T=$(gettop)
+if [ ! "$T" ]; then
+    echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
+    return
+fi
 linaroinit || sleep 3
 export TARGET_SIMULATOR=false
 export BUILD_TINY_ANDROID=
-export TARGET_TOOLS_PREFIX=$(gettop)/android-toolchain-eabi/bin/arm-linux-androideabi-
+if [ ! -e $T/.usinggcc48 ]; then
+    export TARGET_TOOLS_PREFIX=$T/android-toolchain-eabi/bin/arm-linux-androideabi-
+    echo "Building with GCC4.7"
+else
+    export TARGET_TOOLS_PREFIX=$T/android-toolchain-eabi-gcc4.8-turboexperimental/bin/arm-linux-androideabi-
+    echo "Building with GCC4.8... you must be straight out your gourd, brah."
+fi
 linaroupdate
 retval=0
     case `uname -s` in
@@ -1227,9 +1319,9 @@ retval=0
             ;;
     esac
 if [ $retval -eq 0 ]; then
-    notify-send "VANIR" "$TARGET_PRODUCT build completed." -i $(gettop)/build/buildwin.png -t 10000
+    notify-send "VANIR" "$TARGET_PRODUCT build completed." -i $T/build/buildwin.png -t 10000
 else
-    notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $(gettop)/build/buildfailed.png -t 10000
+    notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $T/build/buildfailed.png -t 10000
 fi
 return $retval
 }
