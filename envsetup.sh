@@ -1190,7 +1190,7 @@ function __grab() {
     cd $T/$1\_temp
     curl -k $2 > toolchain.tar.bz2
     tar -jxf toolchain.tar.bz2
-    mv android-toolchain-eabi $T/$1
+    mv $T/$1\_temp/android-toolchain-eabi $T/$1
     popd >& /dev/null
     rm -Rf $T/$1\_temp
 }
@@ -1205,12 +1205,12 @@ function update47() {
     cd $T
 
     #if our toolchain is older than 1 day old, grab a fresh one
-    find -name .nukesballs -mtime +1 | xargs rm -f
-    if [ ! -d android-toolchain-eabi ]; then
-        rm -f .nukesballs >& /dev/null
+#    find -name .nukesballs -mtime +1 | xargs rm -f
+    if [ ! -d $T/android-toolchain-eabi ]; then
+        rm -f $T/.nukesballs >& /dev/null
     fi
-    [ -e .nukesballs ] && return 0
-    touch .nukesballs #tee hee that tickles
+    [ -e $T/.nukesballs ] && return 0
+    touch $T/.nukesballs #tee hee that tickles
     echo "DOWNLOADING DAILY BUILD OF LINARO's ARM GCC4.7"
     __grab android-toolchain-eabi https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
     popd >& /dev/null
@@ -1227,12 +1227,12 @@ function update48() {
     cd $T    
     
     #if our toolchain is older than 1 day old, grab a fresh one
-    find -name .nukesballs48 -mtime +1 | xargs rm -f
-    if [ ! -e android-toolchain-eabi-gcc4.8-turboexperimental ]; then
-        rm -f .nukesballs48 >& /dev/null
+ #   find -name .nukesballs48 -mtime +1 | xargs rm -f
+    if [ ! -e $T/android-toolchain-eabi-gcc4.8-turboexperimental ]; then
+        rm -f $T/.nukesballs48 >& /dev/null
     fi    
-    [ -e .nukesballs48 ] && return 0
-    touch .nukesballs48 #tee hee that tickles
+    [ -e $T/.nukesballs48 ] && return 0
+    touch $T/.nukesballs48 #tee hee that tickles
     echo "DOWNLOADING DAILY BUILD OF LINARO's ARM GCC4.8"
     __grab android-toolchain-eabi-gcc4.8-turboexperimental https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-trunk/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-trunk-daily-linux-x86.tar.bz2
     popd >& /dev/null
