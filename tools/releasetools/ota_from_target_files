@@ -438,8 +438,11 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0555)
 
   script.Print(" ")
-  script.Print("Popcorn Kernel v12 just rolled up in a retro custom van with an airbrushed wizard on the side.")
-  script.Print("What's in back of the van? ... COPIOUS AMOUNTS OF PAIN.")
+  if GetBuildProp("ro.product.device", input_zip) == "grouper":
+    script.Print("Faux Kernel v013u IN THE HIZNOUSE")
+  else:
+    script.Print("Popcorn Kernel v12 just rolled up in a retro custom van with an airbrushed wizard on the side.")
+    script.Print("What's in back of the van? ... COPIOUS AMOUNTS OF PAIN.")
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
   script.ShowProgress(0.2, 0)

@@ -1186,10 +1186,10 @@ $(INTERNAL_OTA_PACKAGE_TARGET): KEY_CERT_PAIR := $(DEFAULT_KEY_CERT_PAIR)
 
 $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
 	@echo -e ${CL_YLW}"Package OTA:"${CL_RST}" $@"
-	$(hide) ./build/tools/releasetools/ota_from_target_files -v \
-	   -p $(HOST_OUT) \
-	   -k $(KEY_CERT_PAIR) \
-	   $(BUILT_TARGET_FILES_PACKAGE) $@
+	$(hide) ./build/tools/releasetools/ota_from_target_files \
+		-p $(HOST_OUT) \
+		-k $(KEY_CERT_PAIR) \
+		$(BUILT_TARGET_FILES_PACKAGE) $@
 
 .PHONY: otapackage bacon
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
