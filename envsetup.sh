@@ -1286,6 +1286,15 @@ function usegcc47() {
     linaroupdate
 }
 
+function nukerules() {
+T=$(gettop)
+if [ ! "$T" ]; then
+    echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
+    return
+fi
+rm -f $T/.cached*makefiles
+}
+
 function mka() {
 T=$(gettop)
 if [ ! "$T" ]; then
