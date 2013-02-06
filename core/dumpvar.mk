@@ -104,6 +104,6 @@ $(info   HOST_OS_EXTRA=$(HOST_OS_EXTRA))
 $(info   HOST_BUILD_TYPE=$(HOST_BUILD_TYPE))
 $(info   BUILD_ID=$(BUILD_ID))
 $(info   OUT_DIR=$(OUT_DIR))
-$(info   *** CACHING MAKEFILE LOCATIONS - TO CLEAR, RUN "nukerules" - YOU WILL NEED TO DO THIS WHEN ADDING A NEW PRODUCT OR PACKAGE ***)
+$(info   *** CACHING MAKEFILE LOCATIONS - cleared automagically by repo sync - TO CLEAR MANUALLY, RUN "nukerules" ***)
 $(info ============================================)
 endif
