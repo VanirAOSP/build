@@ -57,8 +57,7 @@ endef
 # $(call ) isn't necessary.
 #
 define get-all-product-makefiles
-    $(shell test -f .cachedproductmakefiles || echo $(call get-product-makefiles,$(_find-android-products-files)) > .cachedproductmakefiles)
-    $(shell cat .cachedproductmakefiles)
+$(call get-product-makefiles,$(_find-android-products-files))
 endef
 
 #
