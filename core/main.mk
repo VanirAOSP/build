@@ -522,15 +522,8 @@ else # ONE_SHOT_MAKEFILE
 
 # Can't use first-makefiles-under here because
 # --mindepth=2 makes the prunes not work.
-
-define get-all-product-makefiles
-    $(shell cat .cachedproductmakefiles)
-endef
-
-$(shell test -f .cachedsubdirmakefiles || build/tools/findleaves.py --prune=out --prune=.repo --prune=.git $(subdirs) Android.mk > .cachedsubdirmakefiles)
-
 subdir_makefiles := \
-	$(shell cat .cachedsubdirmakefiles)
+	$(shell build/tools/findleaves.py --prune=out --prune=.repo --prune=.git $(subdirs) Android.mk)
 
 include $(subdir_makefiles)
 
