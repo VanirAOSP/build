@@ -121,7 +121,6 @@ $(warning ************************************************************)
 $(error Directory names containing spaces not supported)
 endif
 
-
 # Check for the correct version of java
 java_version := $(shell java -version 2>&1 | head -n 1 | grep '^java .*[ "]1\.6[\. "$$]')
 ifneq ($(shell java -version 2>&1 | grep -i openjdk),)
@@ -285,11 +284,6 @@ ifneq ($(filter sdk win_sdk sdk_addon,$(MAKECMDGOALS)),)
 is_sdk_build := true
 endif
 
-## have selinux ##
-ifeq ($(HAVE_SELINUX),true)
-ADDITIONAL_BUILD_PROPERTIES += ro.build.selinux=1
-endif # HAVE_SELINUX
-
 ## user/userdebug ##
 
 user_variant := $(filter user userdebug,$(TARGET_BUILD_VARIANT))
@@ -411,7 +405,6 @@ define should-install-to-system
 $(if $(filter samples tests,$(1)),,true)
 endef
 endif
-
 
 # If they only used the modifier goals (showcommands, checkbuild), we'll actually
 # build the default target.
@@ -711,7 +704,6 @@ modules_to_install := $(sort $(ALL_DEFAULT_INSTALLED_MODULES))
 ALL_DEFAULT_INSTALLED_MODULES :=
 
 endif # dont_bother
-
 
 # These are additional goals that we build, in order to make sure that there
 # is as little code as possible in the tree that doesn't build.
