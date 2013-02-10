@@ -83,6 +83,8 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -O3 \
                         -fomit-frame-pointer \
                         -fstrict-aliasing \
+                        -fforce-addr \
+                        -funsafe-math-optimizations \
                         -Wstrict-aliasing=2 \
                         -Werror=strict-aliasing
 else
