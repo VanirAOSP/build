@@ -68,8 +68,10 @@ TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
 TARGET_mips_CFLAGS :=	-O2 \
 			-fomit-frame-pointer \
-			-fno-strict-aliasing    \
-			-funswitch-loops
+			-fstrict-aliasing    \
+			-funswitch-loops \
+			-fvect-cost-model \
+			-ftree-vectorize 
 
 # Set FORCE_MIPS_DEBUGGING to "true" in your buildspec.mk
 # or in your environment to gdb debugging easier.

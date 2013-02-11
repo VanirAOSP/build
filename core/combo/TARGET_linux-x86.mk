@@ -94,6 +94,8 @@ TARGET_GLOBAL_CFLAGS += \
 			-fno-short-enums \
 			-fstrict-aliasing \
 			-funswitch-loops \
+			-ftree-vectorize \
+			-fvect-cost-model \
 			-funwind-tables \
 			-fstack-protector \
 			-mtune=native

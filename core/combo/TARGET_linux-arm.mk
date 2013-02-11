@@ -70,7 +70,9 @@ TARGET_arm_CFLAGS :=    -O3 \
                         -fomit-frame-pointer \
                         -fstrict-aliasing    \
                         -funswitch-loops \
-                        -funsafe-loop-optimizations
+                        -funsafe-loop-optimizations \
+                        -fvect-cost-model \
+                        -ftree-vectorize
 
 # Modules can choose to compile some source as thumb. As
 # non-thumb enabled targets are supported, this is treated
