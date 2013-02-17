@@ -16,21 +16,11 @@ ARCH_ARM_HAVE_VFP_D32           := true
 endif
 ifeq ($(strip $(TARGET_CPU_SMP)),true)
 ARCH_ARM_HAVE_TLS_REGISTER      := true
-endif
-
-# Note: Hard coding the 'arch' value here is probably not ideal,
-# and a better solution should be found in the future.
-#
 arch_variant_cflags := \
-    -march=armv7-a \
-    -mtune=$(TARGET_ARCH_VARIANT_CPU)
-
-ifneq (,$(findstring cpu=cortex-a9,$(TARGET_EXTRA_CFLAGS)))
-arch_variant_ldflags += \
-	-Wl,--no-fix-cortex-a8
-else
-arch_variant_ldflags += \
-	-Wl,--fix-cortex-a8
+    -march=armv7-a
+ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
+arch_variant_cflags += \
+    -mtune=$(strip $(TARGET_ARCH_VARIANT_CPU))
 endif
 
 # if fpu is defined but not set use softfp and set fpu
