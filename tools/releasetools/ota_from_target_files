@@ -413,7 +413,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.DeleteFiles(["/data/cron"])
   script.DeleteFiles(["/data/dalvik-cache"])
   script.DeleteFiles(["/data/media/0/Android/data/com.amazon.venezia"])
-  
+
   script.Print(" ")
   script.Print("Copying files")
   script.UnpackPackageDir("system", "/system")
@@ -433,23 +433,21 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("   -rw-r--r-- means -rwxrwxrwx")
   Item.GetMetadata(input_zip)
   Item.Get("system").SetPermissions(script)
-  script.SetPermissionsRecursive("/system/etc/init.d", 0, 0, 0755, 0555)
-  script.SetPermissionsRecursive("/data/cron", 0, 0, 0755, 0555)
-  script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0555)
+  script.SetPermissionsRecursive("/system/etc/init.d", 0, 0, 0755, 0755)
+  script.SetPermissionsRecursive("/data/cron", 0, 0, 0755, 0755)
+  script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0755)
+  script.SetPermissions("/system/xbin/su", 0, 0, 06755)
+  script.SetPermissions("/system/bin/.ext/.su", 0, 0, 06755)
 
   script.Print(" ")
-  if GetBuildProp("ro.product.device", input_zip) == "grouper":
-    script.Print("Faux Kernel v013u IN THE HIZNOUSE")
-  else:
-    script.Print("Popcorn Kernel v12 just rolled up in a retro custom van with an airbrushed wizard on the side.")
-    script.Print("What's in back of the van? ... COPIOUS AMOUNTS OF PAIN.")
+  script.Print("Instaling Colonel...")
+
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
   script.ShowProgress(0.2, 0)
   script.ShowProgress(0.2, 10)
   script.WriteRawImage("/boot", "boot.img")  
 
-  script.Print("Vanir Voodoo")
   vanirinitlinks = []
   vanirinitlinks.append(("/init.vanir.rc", "/init.cm.rc"))
   vanirinitlinks.append(("/init.vanir.rc", "/system/etc/init.local.rc"))
