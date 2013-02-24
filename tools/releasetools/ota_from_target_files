@@ -436,8 +436,6 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.SetPermissionsRecursive("/system/etc/init.d", 0, 0, 0755, 0755)
   script.SetPermissionsRecursive("/data/cron", 0, 0, 0755, 0755)
   script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0755)
-  script.SetPermissions("/system/xbin/su", 0, 0, 06755)
-  script.SetPermissions("/system/bin/.ext/.su", 0, 0, 06755)
 
   script.Print(" ")
   script.Print("Instaling Colonel...")
