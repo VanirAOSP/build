@@ -71,8 +71,9 @@ TARGET_arm_CFLAGS :=    -O3 \
                         -fstrict-aliasing    \
                         -funswitch-loops \
                         -funsafe-loop-optimizations \
+                        -ftree-vectorize \
                         -fvect-cost-model \
-                        -ftree-vectorize
+                        -pipe
 
 # THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
 TARGET_thumb_CFLAGS :=  -mthumb \
@@ -82,7 +83,8 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -fforce-addr \
                         -ffast-math \
                         -Wstrict-aliasing=2 \
-                        -Werror=strict-aliasing
+                        -Werror=strict-aliasing \
+                        -pipe
 
 #SHUT THE F$#@ UP!
 TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
@@ -132,6 +134,7 @@ TARGET_GLOBAL_CFLAGS += \
 			-Werror=format-security \
 			-D_FORTIFY_SOURCE=0 \
 			-fno-short-enums \
+			-pipe \
 			$(arch_variant_cflags)
 
 android_config_h := $(call select-android-config-h,linux-arm)
@@ -181,8 +184,8 @@ TARGET_RELEASE_CFLAGS += \
 			-Werror=strict-aliasing \
 			-fgcse-after-reload \
 			-frerun-cse-after-loop \
-			-frename-registers
-
+			-frename-registers \
+			-pipe
 libc_root := bionic/libc
 libm_root := bionic/libm
 libstdc++_root := bionic/libstdc++

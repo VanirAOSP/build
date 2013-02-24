@@ -98,6 +98,7 @@ TARGET_GLOBAL_CFLAGS += \
 			-fvect-cost-model \
 			-funwind-tables \
 			-fstack-protector \
+			-pipe \
 			-mtune=native
 
 android_config_h := $(call select-android-config-h,target_linux-x86)
