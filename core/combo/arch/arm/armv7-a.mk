@@ -21,3 +21,8 @@ else
 arch_variant_ldflags := \
 	-Wl,--fix-cortex-a8
 endif
+
+ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
+arch_variant_cflags += \
+    -mtune=$(strip $(TARGET_ARCH_VARIANT_CPU))
+endif

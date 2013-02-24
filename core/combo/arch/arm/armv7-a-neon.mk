@@ -8,10 +8,16 @@ ARCH_ARM_HAVE_VFP               := true
 ARCH_ARM_HAVE_VFP_D32           := true
 ARCH_ARM_HAVE_NEON              := true
 
+
 ifeq ($(strip $(TARGET_CPU_VARIANT)), cortex-a15)
 	arch_variant_cflags := -mcpu=cortex-a15
 else
 	arch_variant_cflags := -march=armv7-a
+endif
+
+ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
+arch_variant_cflags += \
+    -mtune=$(strip $(TARGET_ARCH_VARIANT_CPU))
 endif
 
 arch_variant_cflags += \
