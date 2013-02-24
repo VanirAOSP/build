@@ -1,5 +1,7 @@
 # Board platforms lists to be used for
 # TARGET_BOARD_PLATFORM specific featurization
+
+ifndef TARGET_USE_PREBUILT_KERNEL
 QCOM_BOARD_PLATFORMS := msm7627_surf
 QCOM_BOARD_PLATFORMS += msm7627_6x
 QCOM_BOARD_PLATFORMS += msm7627a
@@ -17,7 +19,7 @@ MSM7K_BOARD_PLATFORMS += msm7627a
 MSM7K_BOARD_PLATFORMS += msm7k
 
 QSD8K_BOARD_PLATFORMS := qsd8k
-
+endif
 
 # vars for use by utils
 empty :=
@@ -175,7 +177,7 @@ FROYO_SDK_VERSIONS   := 8
 GINGERBREAD_SDK_VERSIONS := 9 10
 HONEYCOMB_SDK_VERSIONS := 11 12 13
 ICECREAM_SANDWICH_SDK_VERSIONS := 14 15
-JELLY_BEAN_SDK_VERSIONS := 16
+JELLY_BEAN_SDK_VERSIONS := 16 17
 
 # $(call is-android-codename,codename)
 # codename is one of cupcake,donut,eclair,froyo,gingerbread,icecream
@@ -210,4 +212,3 @@ $(strip \
   $(if $(strip $(acn)),true,) \
 )
 endef
-
