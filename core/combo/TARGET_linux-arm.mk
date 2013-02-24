@@ -80,7 +80,7 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -fomit-frame-pointer \
                         -fstrict-aliasing \
                         -fforce-addr \
-                        -funsafe-math-optimizations \
+                        -ffast-math \
                         -Wstrict-aliasing=2 \
                         -Werror=strict-aliasing
 
