@@ -66,24 +66,42 @@ endif
 
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
-TARGET_arm_CFLAGS :=    -O3 \
+TARGET_arm_CFLAGS :=    -Ofast \
                         -fomit-frame-pointer \
                         -fstrict-aliasing    \
                         -funswitch-loops \
-                        -funsafe-loop-optimizations \
-                        -ftree-vectorize \
+                        -finline-limit=300 \
                         -fvect-cost-model \
+                        -ftree-loop-linear \
+                        -floop-interchange \
+                        -floop-strip-mine  \
+                        -floop-block \
+                        -fgraphite-identity \
+                        -ftree-loop-distribution \
+                        -fforce-addr \
+                        -ftree-loop-distribute-patterns \
+                        -fivopts \
                         -pipe
 
 # THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
 TARGET_thumb_CFLAGS :=  -mthumb \
                         -O3 \
                         -fomit-frame-pointer \
+                        -finline-limit=64 \
                         -fstrict-aliasing \
-                        -fforce-addr \
+                        -ftree-loop-linear \
+                        -floop-interchange \
+                        -floop-strip-mine \
+                        -floop-block \
+                        -fgraphite-identity \
+                        -ftree-loop-distribution \
+                        -ftree-loop-distribute-patterns \
+                        -funsafe-loop-optimizations \
                         -funsafe-math-optimizations \
+                        -fivopts \
                         -Wstrict-aliasing=2 \
                         -Werror=strict-aliasing \
+                        -fforce-addr \
                         -pipe
 
 #SHUT THE F$#@ UP!
