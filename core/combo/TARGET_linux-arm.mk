@@ -70,38 +70,20 @@ TARGET_arm_CFLAGS :=    -O3 \
                         -fomit-frame-pointer \
                         -fstrict-aliasing    \
                         -funswitch-loops \
-                        -finline-limit=300 \
+                        -funsafe-loop-optimizations \
+                        -ftree-vectorize \
                         -fvect-cost-model \
-                        -ftree-loop-linear \
-                        -floop-interchange \
-                        -floop-strip-mine  \
-                        -floop-block \
-                        -fgraphite-identity \
-                        -ftree-loop-distribution \
-                        -fforce-addr \
-                        -ftree-loop-distribute-patterns \
-                        -fivopts \
                         -pipe
 
 # THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
 TARGET_thumb_CFLAGS :=  -mthumb \
                         -O3 \
                         -fomit-frame-pointer \
-                        -finline-limit=64 \
                         -fstrict-aliasing \
-                        -ftree-loop-linear \
-                        -floop-interchange \
-                        -floop-strip-mine \
-                        -floop-block \
-                        -fgraphite-identity \
-                        -ftree-loop-distribution \
-                        -ftree-loop-distribute-patterns \
-                        -funsafe-loop-optimizations \
+                        -fforce-addr \
                         -funsafe-math-optimizations \
-                        -fivopts \
                         -Wstrict-aliasing=2 \
                         -Werror=strict-aliasing \
-                        -fforce-addr \
                         -pipe
 
 #SHUT THE F$#@ UP!
