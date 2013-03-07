@@ -121,23 +121,30 @@ $(warning ************************************************************)
 $(error Directory names containing spaces not supported)
 endif
 
-# Check for the correct version of java
-java_version := $(shell java -version 2>&1 | head -n 1 | grep '^java .*[ "]1\.6[\. "$$]')
-ifneq ($(shell java -version 2>&1 | grep -i openjdk),)
-java_version :=
-endif
-ifeq ($(strip $(java_version)),)
-$(info ************************************************************)
-$(info You are attempting to build with the incorrect version)
-$(info of java.)
+# Check for the correct version of java		
+java_version := $(shell java -version 2>&1 | head -n 1 | grep '^java .*[ "]1\.6[\. "$$]')		
+ifneq ($(shell java -version 2>&1 | grep -i openjdk),)		
+java_version :=		
+endif		
+ifeq ($(strip $(java_version)),)		
+$(info ************************************************************)		
+$(info WTF are you doing?)		
+$(info Install Java 6 Dingus...)
+$(info $(space))		
+$(info Your version is: $(shell java -version 2>&1 | head -n 1).)		
+$(info The correct version is: Java SE 1.6.X)		
+$(info $(space))		
+$(info $(space))		
 $(info $(space))
-$(info Your version is: $(shell java -version 2>&1 | head -n 1).)
-$(info The correct version is: Java SE 1.6.)
 $(info $(space))
-$(info Please follow the machine setup instructions at)
-$(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
-$(info ************************************************************)
-$(error stop)
+$(info $(space))
+$(info $(space))
+$(info $(space))
+$(info WTF-BBQ!? JAVA SMILES UPON YOU and your machine levels up...)
+$(info You are now permitted to build with your crap-ass open JDK)
+$(info Stay frosty... the ninjas have arrived.   --TeamVanir)
+$(info $(space)$(space)$(space)$(space)https://github.com/VanirAOSP/platform_manifest)
+#$(error stop)		
 endif
 
 # Check for the correct version of javac
@@ -145,14 +152,14 @@ javac_version := $(shell javac -version 2>&1 | head -n 1 | grep '[ "]1\.6[\. "$$
 ifeq ($(strip $(javac_version)),)
 $(info ************************************************************)
 $(info You are attempting to build with an unsupported version of) 
-$(info java.)
+$(info javac...)
 $(info $(space))
 $(info Your version is: $(shell javac -version 2>&1 | head -n 1).)
 $(info The supported ASOP version is: Java SE 1.6.)
 $(info $(space))
 $(info WTF-BBQ!? JAVA SMILES UPON YOU and your machine levels up...)
 $(info You are now permitted to build with your crap-ass open JDK)
-$(info Stay frosty... the ninjas have arrived.   --PrimeDirective)
+$(info Stay frosty... the ninjas have arrived.   --TeamVanir)
 $(info $(space)$(space)$(space)$(space)https://github.com/VanirAOSP/platform_manifest)
 $(info ************************************************************)
 #$(error stop)
