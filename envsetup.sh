@@ -20,6 +20,7 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - cmkap:     Cleans and builds using mka, then crams it in your phone's gullet.
 - reposync: Parallel repo sync using ionice and SCHED_BATCH
 - smash:    clean out the out directory of your lunched target only.
+- bashtest: Push a shell script to the phone and execute it.
 
 Look at the source to view more functions. The complete list is:
 EOF
@@ -1367,7 +1368,7 @@ function dopush()
         echo "Device Found."
     fi
 
-    if (adb shell cat /system/build.prop | grep -q "ro.cm.device=$CM_BUILD");
+    if (adb shell cat /system/build.prop | grep -q "ro.product.device=vanir_$TARGET_PRODUCT");
     then
     adb root &> /dev/null
     sleep 0.3
@@ -1408,7 +1409,7 @@ function dopush()
     rm -f $OUT/.log
     return 0
     else
-        echo "The connected device does not appear to be $CM_BUILD, run away!"
+        echo "The connected device does not appear to be $TARGET_PRODUCT, run away!"
     fi
 }
 
@@ -1442,7 +1443,34 @@ DIR=$OUT
 	fi
 }
 
+bashtest() {
+    if [ -z "$1" ]; then
+        echo "Usage:  bashtest <relative path to shell script> [(optional) destination dir]"
+        return 0
+    fi
+    local srcpath="$1"
+    local destpath="/cache/"
+    destpath=`echo $destpath | sed 's/\/$//g'`
+    local binname="`basename $srcpath`"
+    if [ ! -z "$2" ]; then 
+        destpath="$2"
+    fi
+    adb start-server # Prevent unexpected starting server message from adb get-state in the next line
+    if [ $(adb get-state) != device -a $(adb shell busybox test -e /sbin/recovery 2> /dev/null; echo $?) != 0 ] ; then
+        echo "No device is online. Waiting for one..."
+        echo "Please connect USB and/or enable USB debugging"
+        until [ $(adb get-state) = device -o $(adb shell busybox test -e /sbin/recovery 2> /dev/null; echo $?) = 0 ];do
+            sleep 1
+        done
+        echo "Device Found."
+    fi
 
+    adb push $srcpath /sdcard/$binname
+    adb shell su -c "cp /sdcard/$binname $destpath/$binname" &> /dev/null
+    adb shell rm /sdcard/$binname >& /dev/null
+    adb shell su -c "chmod 755 $destpath/$binname" &> /dev/null
+    adb shell su -c "$destpath/$binname"
+}
 
 function reposync() {
     case `uname -s` in
