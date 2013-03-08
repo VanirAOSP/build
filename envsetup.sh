@@ -1,19 +1,23 @@
 function hmm() {
 cat <<EOF
 Invoke ". build/envsetup.sh" from your shell to add the following functions to your environment:
--- lunch:   lunch <product_name>-<build_variant>
--- tapas:   tapas [<App1> <App2> ...] [arm|x86|mips] [eng|userdebug|user]
+- lunch:   lunch <product_name>-<build_variant>
+- tapas:   tapas [<App1> <App2> ...] [arm|x86|mips] [eng|userdebug|user]
 - croot:   Changes directory to the top of the tree.
 - m:       Makes from the top of the tree.
 - mm:      Builds all of the modules in the current directory.
+- mmp:     Builds all of the modules in the current directory and pushes them to the device.
 - mmm:     Builds all of the modules in the supplied directories.
+- mmmp:    Builds all of the modules in the supplied directories and pushes them to the device.
+- mgrep:   Greps on all local .mk files.
 - cgrep:   Greps on all local C/C++ files.
 - jgrep:   Greps on all local Java files.
 - resgrep: Greps on all local res/*.xml files.
 - godir:   Go to the directory containing a file.
 - mka:      Builds using SCHED_BATCH on all processors
-- mkaflash: Same as mka in the top of the tree with the addition of flashing the rom, gapps, and addon zips.
-- mkapush:  Same as mka with the addition of adb pushing to the device.
+- mkap:     Builds the module(s) using mka and pushes them to the device.
+- cmka:     Cleans and builds using mka.
+- cmkap:     Cleans and builds using mka, then crams it in your phone's gullet.
 - reposync: Parallel repo sync using ionice and SCHED_BATCH
 - smash:    clean out the out directory of your lunched target only.
 
@@ -1326,6 +1330,93 @@ fi
 return $retval
 }
 
+
+function cmka() {
+    if [ ! -z "$1" ]; then
+        for i in "$@"; do
+            case $i in
+                bacon|otapackage|systemimage)
+                    mka installclean
+                    mka $i
+                    ;;
+                *)
+                    mka clean-$i
+                    mka $i
+                    ;;
+            esac
+        done
+    else
+        mka clean
+        mka
+    fi
+}
+
+# Credit for color strip sed: http://goo.gl/BoIcm
+function dopush()
+{
+    local func=$1
+    shift
+
+    adb start-server # Prevent unexpected starting server message from adb get-state in the next line
+    if [ $(adb get-state) != device -a $(adb shell busybox test -e /sbin/recovery 2> /dev/null; echo $?) != 0 ] ; then
+        echo "No device is online. Waiting for one..."
+        echo "Please connect USB and/or enable USB debugging"
+        until [ $(adb get-state) = device -o $(adb shell busybox test -e /sbin/recovery 2> /dev/null; echo $?) = 0 ];do
+            sleep 1
+        done
+        echo "Device Found."
+    fi
+
+    if (adb shell cat /system/build.prop | grep -q "ro.cm.device=$CM_BUILD");
+    then
+    adb root &> /dev/null
+    sleep 0.3
+    adb wait-for-device &> /dev/null
+    sleep 0.3
+    adb remount &> /dev/null
+
+    $func $* | tee $OUT/.log
+
+    # Install: <file>
+    LOC=$(cat $OUT/.log | sed -r 's/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g' | grep 'Install' | cut -d ':' -f 2)
+
+    # Copy: <file>
+    LOC=$LOC $(cat $OUT/.log | sed -r 's/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g' | grep 'Copy' | cut -d ':' -f 2)
+
+    for FILE in $LOC; do
+        # Get target file name (i.e. system/bin/adb)
+        TARGET=$(echo $FILE | sed "s#$OUT/##")
+
+        # Don't send files that are not in /system.
+        if ! echo $TARGET | egrep '^system\/' > /dev/null ; then
+            continue
+        else
+            case $TARGET in
+            system/app/SystemUI.apk|system/framework/*)
+                stop_n_start=true
+            ;;
+            *)
+                stop_n_start=false
+            ;;
+            esac
+            if $stop_n_start ; then adb shell stop ; fi
+            echo "Pushing: $TARGET"
+            adb push $FILE $TARGET
+            if $stop_n_start ; then adb shell start ; fi
+        fi
+    done
+    rm -f $OUT/.log
+    return 0
+    else
+        echo "The connected device does not appear to be $CM_BUILD, run away!"
+    fi
+}
+
+alias mmp='dopush mm'
+alias mmmp='dopush mmm'
+alias mkap='dopush mka'
+alias cmkap='dopush cmka'
+
 smash() {
 #to do: add smash $anytarget, smashOTA, smash, smashVANIR
 DIR=$OUT
@@ -1351,103 +1442,7 @@ DIR=$OUT
 	fi
 }
 
-mkaflash() {
-    if [ $# -gt 0 ]; then
-        echo "It seems as though you wanted to build something other than bacon. TOO BAD!"
-        echo "Just \"mkaflash\" runs mka bacon and flashes your shizz"
-        return 1
-    fi
-    croot
-    # this voodoo will build the entire ROM from any directory on your PC without changing your current directory
-    if mka bacon; then
-        echo ""
-        echo "-------------------"
-        echo "\\\\===\\\\   || //=\\\\"
-        echo " \\\\   \\\\  ||//===\\\\"
-        echo " //   //  ||\\\\"
-        echo "//   //===|| \\\\==="
-        echo "-------------------"
-        echo ""        
-        echo "Your gapps better be moved to /sdcard/vanir_gapps.zip!"
-        echo "CTRL-C in the next 5 seconds to abort flashing. If your phone turns inside-out or becomes a stripper, no one is to blame BUT YOU."
-        sleep 5
-        echo "Commence teh flazhing"        
-        for x in `ls $ANDROID_PRODUCT_OUT | grep -i .zip | grep -vi md5sum | grep -vi ota`; do
-            echo "Pushing $ANDROID_PRODUCT_OUT/$x to /sdcard/vanir_rom.zip"
-            adb push $ANDROID_PRODUCT_OUT/$x /sdcard/vanir_rom.zip
-            echo "Generating auto-flash script."
-            adb shell su -c 'echo set tw_signed_zip_verify 0 > /cache/recovery/openrecoveryscript'
-            for C in "wipe cache" "wipe dalvik" "install /sdcard/vanir_rom.zip" "install /sdcard/vanir_gapps.zip"; do
-                adb shell su -c 'echo "'$C'" >> /cache/recovery/openrecoveryscript'
-            done
-            DOESITEXIST=`adb shell bash -c "[ -e /sdcard/vanir_addons/ ] && echo 1"`
-            if [ $DOESITEXIST ]; then
-                for X in `adb shell 'for i in /sdcard/vanir_addons/*.zip; do echo $i; done'`
-                do
-                    P="`echo $X | sed 's/.*\///g' | sed 's/\n//g' | sed 's/\r//g'`"
-                    adb shell su -c 'echo install /sdcard/vanir_addons/'$P' >> /cache/recovery/openrecoveryscript'
-                done
-            else
-                echo "If you want to flash stuff other than the rom and gapps, you can copy them to /sdcard/vanir_addons/, and it will be done automatically"
-            fi
-            echo "THIS IS HAPPENING. COME TO TERMS WITH IT!"                
-            adb shell sync && adb reboot recovery
-            echo "If your phone winds up sitting at the CWMR main menu, choose \"reboot phone\", and install an openrecoveryscript capable recovery, suckah"
-        done
-    fi
-}
 
-function mkapush() {
-    # There's got to be a better way to do this stupid shit.
-    case `uname -s` in
-        Darwin)
-            if [ ! -f $ANDROID_PRODUCT_OUT/installed-files.txt ]; then
-			make -j `sysctl hw.ncpu|cut -d" " -f2` installed-file-list
-            fi
-			make -j `sysctl hw.ncpu|cut -d" " -f2` "$@"
-            ;;
-        *)
-            if [ ! -f $ANDROID_PRODUCT_OUT/installed-files.txt ]; then
-			schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` installed-file-list
-            fi
-			schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` "$@"
-            ;;
-    esac
-	case $@ in
-        *\ * )
-            echo $@ | awk 'gsub(/ /,"\n") {print}' | while read line; do
-			blackmagic=`sed -n "/$line/{p;q;}" $ANDROID_PRODUCT_OUT/installed-files.txt | awk {'print $2'}`
-                if [ `echo $blackmagic | cut -f3 -d "/" = framework ];
-                elif [ `echo $blackmagic | cut -f4 -d "/" = SystemUI.apk ]; then
-				adb_stop=true
-				fi
-				adb remount
-                if [ $adb_stop = true ]; then
-				adb shell stop
-                fi
-				adb push $ANDROID_PRODUCT_OUT$blackmagic $blackmagic
-                if [ $adb_stop = true ]; then
-				adb shell start
-                fi
-			done
-            ;;
-        *)
-            blackmagic=`sed -n "/$@/{p;q;}" $ANDROID_PRODUCT_OUT/installed-files.txt | awk {'print $2'}`
-            if [ `echo $blackmagic | cut -f3 -d "/" = framework ];
-            elif [ `echo $blackmagic | cut -f4 -d "/" = SystemUI.apk ]; then
-				adb_stop=true
-			fi
-			adb remount
-            if [ $adb_stop = true ]; then
-				adb shell stop
-            fi
-			adb push $ANDROID_PRODUCT_OUT$blackmagic $blackmagic
-            if [ $adb_stop = true ]; then
-				adb shell start
-            fi
-            ;;
-    esac
-}
 
 function reposync() {
     case `uname -s` in
