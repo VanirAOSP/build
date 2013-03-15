@@ -386,13 +386,8 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print(" \\\\\\\\ //=\\\\\\\\||\\\\\\\\| || ||=//")
   script.Print("  \\\\//   \\\\\\\\| \\\\|====|| \\\\\\\\")
   script.Print(" ")
-  script.Print("  Vanir - JellyBean")
-  script.Print("    by Team Vanir:")
-  script.Print("      Sonicxml")
-  script.Print("      DHO")
-  script.Print("      PrimeDirective")
-  script.Print("      Nuclearmistake")
-  script.Print("      ChevyCam94")
+  script.Print("  Vanir - JellyBean 4.2.2 ") 
+  script.Print("    by Team Vanir")
   script.Print(" ")
   script.Print(" ")
   script.Print("Installing the ROM...")
@@ -408,10 +403,16 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Mount("/data")
 
   script.Print(" ")
-  script.Print("De Novo Lite Wipe In Progress")
+  script.Print("De Novo Lite: wiping cache...")
+  script.Print("                     dalvik...")
+  script.Print("                     old logs...")
+  script.Print("                     orphaned data...")
   script.DeleteFiles(["/cache"])
   script.DeleteFiles(["/data/cron"])
   script.DeleteFiles(["/data/dalvik-cache"])
+  script.DeleteFiles(["/data/tombstones/"])
+  script.DeleteFiles(["/data/system/usagestats/*"])
+  script.DeleteFiles(["/data/system/dropbox/*.txt"])
   script.DeleteFiles(["/data/media/0/Android/data/com.amazon.venezia"])
 
   script.Print(" ")
@@ -438,7 +439,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0755)
 
   script.Print(" ")
-  script.Print("Instaling Colonel...")
+  script.Print("Installing Colonel...")
 
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
@@ -452,8 +453,10 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.MakeSymlinks(vanirinitlinks)
 
   script.Print(" ")
-  script.Print("CLEAN UP THE BLOOD!")
-  script.Print("YOU SHOULD PROBABLY GET TESTED!");
+  script.Print("Installation complete.")
+  script.Print("Please flash Gapps now.");
+  script.Print(" ")
+  script.Print(" ")
   script.Print(" ")
   script.Print(" ")
 
