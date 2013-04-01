@@ -1,8 +1,6 @@
 # Configuration for Linux on ARM.
 # Generating binaries for the ARMv7-a architecture and higher
 #
-ARCH_ARM_HAVE_CLZ               := true
-ARCH_ARM_HAVE_FFS               := true
 ARCH_ARM_HAVE_ARMV7A            := true
 ifneq ($(strip $(TARGET_ARCH_VARIANT_FPU)),none)
 ARCH_ARM_HAVE_VFP               := true
@@ -15,7 +13,6 @@ else
 ARCH_ARM_HAVE_VFP_D32           := true
 endif
 ifeq ($(strip $(TARGET_CPU_SMP)),true)
-ARCH_ARM_HAVE_TLS_REGISTER      := true
 endif
 
 # Note: Hard coding the 'arch' value here is probably not ideal,

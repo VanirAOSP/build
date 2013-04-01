@@ -163,7 +163,14 @@ $(if $(product_property_overrides_locale_region),,$(word 2, $(call default-local
 endef
 
 BUILDINFO_SH := build/tools/buildinfo.sh
-$(INSTALLED_BUILD_PROP_TARGET): $(BUILDINFO_SH) $(INTERNAL_BUILD_ID_MAKEFILE) $(BUILD_SYSTEM)/version_defaults.mk $(wildcard $(TARGET_DEVICE_DIR)/system.prop)
+
+ifdef TARGET_SYSTEM_PROP
+system_prop_file := $(TARGET_SYSTEM_PROP)
+else
+system_prop_file := $(wildcard $(TARGET_DEVICE_DIR)/system.prop)
+endif
+
+$(INSTALLED_BUILD_PROP_TARGET): $(BUILDINFO_SH) $(INTERNAL_BUILD_ID_MAKEFILE) $(BUILD_SYSTEM)/version_defaults.mk $(system_prop_file)
 	@echo Target buildinfo: $@
 	@mkdir -p $(dir $@)
 	$(hide) TARGET_BUILD_TYPE="$(TARGET_BUILD_VARIANT)" \
@@ -191,8 +198,8 @@ $(INSTALLED_BUILD_PROP_TARGET): $(BUILDINFO_SH) $(INTERNAL_BUILD_ID_MAKEFILE) $(
 			TARGET_AAPT_CHARACTERISTICS="$(TARGET_AAPT_CHARACTERISTICS)" \
 			$(PRODUCT_BUILD_PROP_OVERRIDES) \
 	        bash $(BUILDINFO_SH) > $@
-	$(hide) if [ -f $(TARGET_DEVICE_DIR)/system.prop ]; then \
-	          cat $(TARGET_DEVICE_DIR)/system.prop >> $@; \
+	$(hide) if [ -f "$(system_prop_file)" ]; then \
+	          cat $(system_prop_file) >> $@; \
 	        fi
 	$(if $(ADDITIONAL_BUILD_PROPERTIES), \
 		$(hide) echo >> $@; \
@@ -248,6 +255,12 @@ package-stats: $(PACKAGE_STATS_FILE)
 
 # -----------------------------------------------------------------
 # Cert-to-package mapping.  Used by the post-build signing tools.
+# Use a macro to add newline to each echo command
+define _apkcerts_echo_with_newline
+$(hide) echo $(1)
+
+endef
+
 name := $(TARGET_PRODUCT)
 ifeq ($(TARGET_BUILD_TYPE),debug)
   name := $(name)_debug
@@ -262,13 +275,15 @@ $(APKCERTS_FILE):
 	@echo APK certs list: $@
 	@mkdir -p $(dir $@)
 	@rm -f $@
-	$(hide) $(foreach p,$(PACKAGES),\
-          $(if $(PACKAGES.$(p).EXTERNAL_KEY),\
-	    echo 'name="$(p).apk" certificate="EXTERNAL" \
-	         private_key=""' >> $@;,\
-	    echo 'name="$(p).apk" certificate="$(PACKAGES.$(p).CERTIFICATE)" \
-	         private_key="$(PACKAGES.$(p).PRIVATE_KEY)"' >> $@;))
-	# In case $(PACKAGES) is empty.
+	$(foreach p,$(PACKAGES),\
+	  $(if $(PACKAGES.$(p).EXTERNAL_KEY),\
+	    $(call _apkcerts_echo_with_newline,\
+	      'name="$(p).apk" certificate="EXTERNAL" \
+	      private_key=""' >> $@),\
+	    $(call _apkcerts_echo_with_newline,\
+	      'name="$(p).apk" certificate="$(PACKAGES.$(p).CERTIFICATE)" \
+	      private_key="$(PACKAGES.$(p).PRIVATE_KEY)"' >> $@)))
+	# In case value of PACKAGES is empty.
 	$(hide) touch $@
 
 .PHONY: apkcerts-list
@@ -571,6 +586,9 @@ INTERNAL_USERIMAGES_DEPS := $(MKYAFFS2)
 endif
 INTERNAL_USERIMAGES_BINARY_PATHS := $(sort $(dir $(INTERNAL_USERIMAGES_DEPS)))
 
+SELINUX_FC := $(TARGET_ROOT_OUT)/file_contexts
+INTERNAL_USERIMAGES_DEPS += $(SELINUX_FC)
+
 # $(1): the path of the output dictionary file
 define generate-userimage-prop-dictionary
 $(if $(INTERNAL_USERIMAGES_EXT_VARIANT),$(hide) echo "fs_type=$(INTERNAL_USERIMAGES_EXT_VARIANT)" >> $(1))
@@ -580,14 +598,14 @@ $(if $(BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE),$(hide) echo "cache_fs_type=$(BOARD_CA
 $(if $(BOARD_CACHEIMAGE_PARTITION_SIZE),$(hide) echo "cache_size=$(BOARD_CACHEIMAGE_PARTITION_SIZE)" >> $(1))
 $(if $(INTERNAL_USERIMAGES_SPARSE_EXT_FLAG),$(hide) echo "extfs_sparse_flag=$(INTERNAL_USERIMAGES_SPARSE_EXT_FLAG)" >> $(1))
 $(if $(mkyaffs2_extra_flags),$(hide) echo "mkyaffs2_extra_flags=$(mkyaffs2_extra_flags)" >> $(1))
-$(if $(filter true, $(strip $(HAVE_SELINUX))), echo "selinux_fc=$(TARGET_ROOT_OUT)/file_contexts" >> $(1))
+$(hide) echo "selinux_fc=$(SELINUX_FC)" >> $(1)
 endef
 
 # -----------------------------------------------------------------
 # Recovery image
 
 # If neither TARGET_NO_KERNEL nor TARGET_NO_RECOVERY are true
-ifeq (,$(filter true, $(TARGET_NO_KERNEL) $(TARGET_NO_RECOVERY) $(BUILD_TINY_ANDROID)))
+ifeq (,$(filter true, $(TARGET_NO_KERNEL) $(TARGET_NO_RECOVERY)))
 
 INSTALLED_RECOVERYIMAGE_TARGET := $(PRODUCT_OUT)/recovery.img
 
@@ -600,7 +618,11 @@ recovery_resources_common := $(call include-path-for, recovery)/res
 recovery_resources_private := $(strip $(wildcard $(TARGET_DEVICE_DIR)/recovery/res))
 recovery_resource_deps := $(shell find $(recovery_resources_common) \
   $(recovery_resources_private) -type f)
+ifdef TARGET_RECOVERY_FSTAB
+recovery_fstab := $(TARGET_RECOVERY_FSTAB)
+else
 recovery_fstab := $(strip $(wildcard $(TARGET_DEVICE_DIR)/recovery.fstab))
+endif
 # Named '.dat' so we don't attempt to use imgdiff for patching it.
 RECOVERY_RESOURCE_ZIP := $(TARGET_OUT)/etc/recovery-resource.dat
 
@@ -1461,7 +1483,6 @@ deps := \
 	$(atree_dir)/sdk.atree \
 	$(sdk_tools_atree_files) \
 	$(HOST_OUT_EXECUTABLES)/atree \
-	$(ALL_HOST_INSTALLED_FILES) \
 	$(HOST_OUT_EXECUTABLES)/line_endings
 
 INTERNAL_SDK_TARGET := $(sdk_dir)/$(sdk_name).zip

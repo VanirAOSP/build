@@ -125,17 +125,16 @@ PRODUCT_PACKAGES += \
     requestsync \
     screencap \
     sensorservice \
-    lint \
-    uiautomator \
     telephony-common \
-    mms-common \
-    zoneinfo.dat \
-    zoneinfo.idx \
-    zoneinfo.version
+    mms-common
 
-PRODUCT_COPY_FILES += \
-    system/core/rootdir/init.usb.rc:root/init.usb.rc \
-    system/core/rootdir/init.trace.rc:root/init.trace.rc \
+# SELinux packages
+PRODUCT_PACKAGES += \
+    sepolicy \
+    file_contexts \
+    seapp_contexts \
+    property_contexts \
+    mac_permissions.xml
 
 # host-only dependencies
 ifeq ($(WITH_HOST_DALVIK),true)
@@ -150,10 +149,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
         libjavacore \
         libssl \
         libz-host \
-        dalvik \
-        zoneinfo-host.dat \
-        zoneinfo-host.idx \
-        zoneinfo-host.version
+        dalvik
 endif
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/base.mk)
