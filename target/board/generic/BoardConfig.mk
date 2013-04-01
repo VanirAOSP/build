@@ -20,7 +20,6 @@ TARGET_ARCH := arm
 # application code generated with the NDK that uses NEON in the emulator.
 #
 TARGET_ARCH_VARIANT := armv7-a
-TARGET_CPU_VARIANT := generic
 TARGET_CPU_ABI := armeabi-v7a
 TARGET_CPU_ABI2 := armeabi
 

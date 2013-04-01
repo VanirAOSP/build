@@ -521,9 +521,6 @@ class SignApk {
         }
     }
 
-    public static void signWholeFile(JarFile inputJar, File publicKeyFile, X509Certificate publicKey, PrivateKey privateKey, OutputStream outputStream) throws Exception {
-        CMSSigner cmsOut = new CMSSigner(inputJar, publicKeyFile, publicKey, privateKey, outputStream);
-
         ByteArrayOutputStream temp = new ByteArrayOutputStream();
 
         // put a readable message and a null char at the start of the

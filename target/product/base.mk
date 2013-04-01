@@ -104,4 +104,3 @@ PRODUCT_PACKAGES += \
     vdc \
     vold
 $(call inherit-product, $(SRC_TARGET_DIR)/product/embedded.mk)
-
