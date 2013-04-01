@@ -140,17 +140,6 @@ $(info You use OpenJDK but only Sun/Oracle JDK is supported.)
 $(info Please follow the machine setup instructions at)
 $(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
 $(info ************************************************************)
-$(error stop)
-endif
-$(info $(space))
-$(info $(space))
-$(info $(space))
-$(info $(space))
-$(info WTF-BBQ!? JAVA SMILES UPON YOU and your machine levels up...)
-$(info You are now permitted to build with your crap-ass open JDK)
-$(info Stay frosty... the ninjas have arrived.   --TeamVanir)
-$(info $(space)$(space)$(space)$(space)https://github.com/VanirAOSP/platform_manifest)
-#$(error stop)		
 endif
 
 # Check for the correct version of javac
@@ -462,9 +451,9 @@ FULL_BUILD := true
 
 endif	# !SDK_ONLY
 
-# Before we go and include all of the module makefiles, stash away
-# the PRODUCT_* values so that later we can verify they are not modified.
-stash_product_vars:=true
+# Before we go and include all of the module makefiles, turn off this stupid 
+# check because we're going honey badger mode.
+stash_product_vars:=false
 ifeq ($(stash_product_vars),true)
   $(call stash-product-vars, __STASHED)
 endif
