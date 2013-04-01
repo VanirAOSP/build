@@ -22,8 +22,13 @@ endif
 # and a better solution should be found in the future.
 #
 arch_variant_cflags := \
-    -march=armv7-a \
+    -march=armv7-a
+
+#avoid mtuning an empty variable
+ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
+arch_variant_cflags += \
     -mtune=$(TARGET_ARCH_VARIANT_CPU)
+endif
 
 ifneq (,$(findstring cpu=cortex-a9,$(TARGET_EXTRA_CFLAGS)))
 arch_variant_ldflags += \
