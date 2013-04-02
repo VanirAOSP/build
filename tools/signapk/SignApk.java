@@ -84,8 +84,6 @@ import javax.crypto.spec.PBEKeySpec;
 class SignApk {
     private static final String CERT_SF_NAME = "META-INF/CERT.SF";
     private static final String CERT_RSA_NAME = "META-INF/CERT.RSA";
-    private static final String CERT_SF_MULTI_NAME = "META-INF/CERT%d.SF";
-    private static final String CERT_RSA_MULTI_NAME = "META-INF/CERT%d.RSA";
 
     private static final String OTACERT_NAME = "META-INF/com/android/otacert";
 
@@ -93,11 +91,10 @@ class SignApk {
 
     // Files matching this pattern are not copied to the output.
     private static Pattern stripPattern =
-        Pattern.compile("^(META-INF/((.*)[.](SF|RSA|DSA)|com/android/otacert))|(" +
-                        Pattern.quote(JarFile.MANIFEST_NAME) + ")$");
+            Pattern.compile("^META-INF/(.*)[.](SF|RSA|DSA)$");
 
     private static X509Certificate readPublicKey(File file)
-        throws IOException, GeneralSecurityException {
+            throws IOException, GeneralSecurityException {
         FileInputStream input = new FileInputStream(file);
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -134,7 +131,7 @@ class SignApk {
      * @param keyFile The file containing the private key
      */
     private static KeySpec decryptPrivateKey(byte[] encryptedPrivateKey, File keyFile)
-        throws GeneralSecurityException {
+            throws GeneralSecurityException {
         EncryptedPrivateKeyInfo epkInfo;
         try {
             epkInfo = new EncryptedPrivateKeyInfo(encryptedPrivateKey);
@@ -161,7 +158,7 @@ class SignApk {
 
     /** Read a PKCS 8 format private key. */
     private static PrivateKey readPrivateKey(File file)
-        throws IOException, GeneralSecurityException {
+            throws IOException, GeneralSecurityException {
         DataInputStream input = new DataInputStream(new FileInputStream(file));
         try {
             byte[] bytes = new byte[(int) file.length()];
@@ -184,7 +181,7 @@ class SignApk {
 
     /** Add the SHA1 of every file to the manifest, creating it if necessary. */
     private static Manifest addDigestsToManifest(JarFile jar)
-        throws IOException, GeneralSecurityException {
+            throws IOException, GeneralSecurityException {
         Manifest input = jar.getManifest();
         Manifest output = new Manifest();
         Attributes main = output.getMainAttributes();
@@ -212,8 +209,11 @@ class SignApk {
 
         for (JarEntry entry: byName.values()) {
             String name = entry.getName();
-            if (!entry.isDirectory() &&
-                (stripPattern == null || !stripPattern.matcher(name).matches())) {
+            if (!entry.isDirectory() && !name.equals(JarFile.MANIFEST_NAME) &&
+                !name.equals(CERT_SF_NAME) && !name.equals(CERT_RSA_NAME) &&
+                !name.equals(OTACERT_NAME) &&
+                (stripPattern == null ||
+                 !stripPattern.matcher(name).matches())) {
                 InputStream data = jar.getInputStream(entry);
                 while ((num = data.read(buffer)) > 0) {
                     md.update(buffer, 0, num);
@@ -302,8 +302,8 @@ class SignApk {
 
         MessageDigest md = MessageDigest.getInstance("SHA1");
         PrintStream print = new PrintStream(
-            new DigestOutputStream(new ByteArrayOutputStream(), md),
-            true, "UTF-8");
+                new DigestOutputStream(new ByteArrayOutputStream(), md),
+                true, "UTF-8");
 
         // Digest of the entire manifest
         manifest.write(print);
@@ -513,6 +513,9 @@ class SignApk {
         }
 
         public void writeSignatureBlock(ByteArrayOutputStream temp) throws IOException,
+               CertificateEncodingException,
+               OperatorCreationException,
+               CMSException {
             SignApk.writeSignatureBlock(this, publicKey, privateKey, temp);
         }
 
@@ -520,6 +523,9 @@ class SignApk {
             return signer;
         }
     }
+
+    public static void signWholeFile(JarFile inputJar, File publicKeyFile, X509Certificate publicKey, PrivateKey privateKey, OutputStream outputStream) throws Exception {
+        CMSSigner cmsOut = new CMSSigner(inputJar, publicKeyFile, publicKey, privateKey, outputStream);
 
         ByteArrayOutputStream temp = new ByteArrayOutputStream();
 
@@ -615,16 +621,13 @@ class SignApk {
                             publicKey, privateKey, outputJar);
     }
 
-    private static void usage() {
-        System.err.println("Usage: signapk [-w] " +
-                           "publickey.x509[.pem] privatekey.pk8 " +
-                           "[publickey2.x509[.pem] privatekey2.pk8 ...] " +
-                           "input.jar output.jar");
-        System.exit(2);
-    }
-
     public static void main(String[] args) {
-        if (args.length < 4) usage();
+        if (args.length != 4 && args.length != 5) {
+            System.err.println("Usage: signapk [-w] " +
+                    "publickey.x509[.pem] privatekey.pk8 " +
+                    "input.jar output.jar");
+            System.exit(2);
+        }
 
         sBouncyCastleProvider = new BouncyCastleProvider();
         Security.addProvider(sBouncyCastleProvider);
@@ -636,40 +639,22 @@ class SignApk {
             argstart = 1;
         }
 
-        if ((args.length - argstart) % 2 == 1) usage();
-        int numKeys = ((args.length - argstart) / 2) - 1;
-        if (signWholeFile && numKeys > 1) {
-            System.err.println("Only one key may be used with -w.");
-            System.exit(2);
-        }
-
-        String inputFilename = args[args.length-2];
-        String outputFilename = args[args.length-1];
-
         JarFile inputJar = null;
         FileOutputStream outputFile = null;
 
         try {
-            File firstPublicKeyFile = new File(args[argstart+0]);
+            File publicKeyFile = new File(args[argstart+0]);
+            X509Certificate publicKey = readPublicKey(publicKeyFile);
 
-            // Set the ZIP file timestamp to the starting valid time
-            // of the 0th certificate plus one hour (to match what
-            // we've historically done).
-            long timestamp = publicKey[0].getNotBefore().getTime() + 3600L * 1000;
+            PrivateKey privateKey = readPrivateKey(new File(args[argstart+1]));
+            inputJar = new JarFile(new File(args[argstart+2]), false);  // Don't verify.
 
             outputFile = new FileOutputStream(args[argstart+3]);
-            }
-            inputJar = new JarFile(new File(inputFilename), false);  // Don't verify.
-
-            outputFile = new FileOutputStream(outputFilename);
-
 
             if (signWholeFile) {
                 SignApk.signWholeFile(inputJar, publicKeyFile, publicKey, privateKey, outputFile);
+            }
             else {
-                SignApk.signWholeFile(inputJar, firstPublicKeyFile,
-                                      publicKey[0], privateKey[0], outputFile);
-            } else {
                 JarOutputStream outputJar = new JarOutputStream(outputFile);
 
                 // For signing .apks, use the maximum compression to make
