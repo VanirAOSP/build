@@ -862,7 +862,7 @@ function resgrep()
     
     #if not, assume it's below our folder
     foundone=
-    for dir in `find . -name .repo -prune -o -name .git -prune -o -name res -type d`; do echo find $dir -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@"; done;
+    for dir in `find . -name .repo -prune -o -name .git -prune -o -name res -type d`; do find $dir -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@"; done;
     [ ! -z $foundone ] && return 0
 
     #if res isn't our parent, and we're not in a parent of res, then res is probably our uncle.
@@ -876,7 +876,6 @@ function resgrep()
             foundone=1
             return 0
         elif [ "`pwd`" = "$T" ] || [ "`pwd`" = "/" ]; then
-            echo "WOOPS! There be no reseseses here!"
             foundone=1
             popd >& /dev/null
             return 1
