@@ -1199,17 +1199,16 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
 
 bacon: otapackage
-ifeq ($(DHO_VENDOR),)
-	VANIR_VENDOR := vanir
-else
-	VANIR_VENDOR := $(DHO_VENDOR)
-endif
 ifneq ($(TARGET_CUSTOM_RELEASETOOL),)
 	@echo -e ${CL_YLW}"Running custom releasetool..."${CL_RST}
 	$(hide) $(TARGET_CUSTOM_RELEASETOOL)
 else
 	@echo -e ${CL_YLW}"Running releasetool..."${CL_RST}	
-	$(hide) ./vendor/$(VANIR_VENDOR)/tools/squisher
+ifeq ($(DHO_VENDOR),)
+	$(hide) ./vendor/vanir/tools/squisher
+else
+	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher
+endif
 endif
 
 # -----------------------------------------------------------------
