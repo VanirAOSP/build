@@ -1493,12 +1493,13 @@ bashtest() {
         done
         echo "Device Found."
     fi
-
+    set -x
     adb push $srcpath /sdcard/$binname
-    adb shell su -c "cp /sdcard/$binname $destpath/$binname" &> /dev/null
-    adb shell rm /sdcard/$binname >& /dev/null
-    adb shell su -c "chmod 755 $destpath/$binname" &> /dev/null
-    adb shell su -c "$destpath/$binname"
+    adb shell su -c "cp /sdcard/$binname $destpath/$binname"
+    adb shell rm /sdcard/$binname
+    adb shell su -c "chmod 755 $destpath/$binname"
+    adb shell su -c "sh $destpath/$binname"
+    set +x
 }
 
 function reposync() {
