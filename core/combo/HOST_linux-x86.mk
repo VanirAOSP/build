@@ -45,15 +45,12 @@ ifneq ($(strip $(BUILD_HOST_64bit)),)
 # more consistency between the host tools and the target.
 # BUILD_HOST_64bit=1 overrides it for tool like emulator
 # which can benefit from 64-bit host arch.
-
-#TO DO: add link time optimization when binutils is added to our toolchain
-HOST_GLOBAL_CFLAGS += -m64 -Ofast -mtune=native -fsched-spec-load -fvect-cost-model -funroll-loops
-HOST_GLOBAL_LDFLAGS += -m64 -Ofast -mtune=native -fsched-spec-load -fvect-cost-model -funroll-loops
+HOST_GLOBAL_CFLAGS += -m64
+HOST_GLOBAL_LDFLAGS += -m64
 else
 # We expect SSE3 floating point math.
-# fighter jet made out of biceps.
-HOST_GLOBAL_CFLAGS += -m32 -Ofast -mstackrealign -mtune=native -msse3 -mfpmath=sse -fsched-spec-load -fvect-cost-model -funroll-loops
-HOST_GLOBAL_LDFLAGS += -m32 -Ofast -mstackrealign -mtune=native -msse3 -mfpmath=sse -fsched-spec-load -fvect-cost-model -funroll-loops
+HOST_GLOBAL_CFLAGS += -mstackrealign -msse3 -mfpmath=sse -m32
+HOST_GLOBAL_LDFLAGS += -m32
 endif # BUILD_HOST_64bit
 
 ifneq ($(strip $(BUILD_HOST_static)),)
