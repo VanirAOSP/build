@@ -25,12 +25,7 @@ ifeq ($(TARGET_ARCH),arm)
     -target arm-linux-androideabi \
     -nostdlibinc \
     -B$(TARGET_TOOLCHAIN_ROOT)/arm-linux-androideabi/bin \
-    -mllvm -arm-enable-ehabi \
-    -fgraphite-identity \
-    -floop-block \
-    -floop-strip-mine \
-    -ftree-loop-distribution \
-    -ftree-loop-linear
+    -mllvm -arm-enable-ehabi
   CLANG_CONFIG_EXTRA_LDFLAGS += \
     -target arm-linux-androideabi \
     -B$(TARGET_TOOLCHAIN_ROOT)/arm-linux-androideabi/bin
