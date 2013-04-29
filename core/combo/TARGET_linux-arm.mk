@@ -70,21 +70,23 @@ TARGET_arm_CFLAGS :=    -O3 \
                         -fomit-frame-pointer \
                         -fstrict-aliasing    \
                         -funswitch-loops \
-                        -funsafe-loop-optimizations \
-                        -ftree-vectorize \
-                        -fvect-cost-model \
                         -pipe
 
-# THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
+# Modules can choose to compile some source as thumb. As
+# non-thumb enabled targets are supported, this is treated
+# as a 'hint'. If thumb is not enabled, these files are just
+# compiled as ARM.
+#ifeq ($(ARCH_ARM_HAVE_THUMB_SUPPORT),true)
 TARGET_thumb_CFLAGS :=  -mthumb \
                         -O3 \
                         -fomit-frame-pointer \
                         -fstrict-aliasing \
-                        -fforce-addr \
-                        -funsafe-math-optimizations \
                         -Wstrict-aliasing=2 \
                         -Werror=strict-aliasing \
                         -pipe
+#else
+#TARGET_thumb_CFLAGS := $(TARGET_arm_CFLAGS)
+#endif
 
 #SHUT THE F$#@ UP!
 TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
@@ -97,10 +99,10 @@ TARGET_thumb_CFLAGS +=  -Wno-unused-parameter \
 
 # Turn off strict-aliasing if we're building an AOSP variant without the
 # patchset...
-#ifeq ($(DEBUG_NO_STRICT_ALIASING),yes)
-#TARGET_arm_CFLAGS += -fno-strict-aliasing -Wno-error=strict-aliasing
-#TARGET_thumb_CFLAGS += -fno-strict-aliasing -Wno-error=strict-aliasing
-#endif   
+ifeq ($(DEBUG_NO_STRICT_ALIASING),yes)
+TARGET_arm_CFLAGS += -fno-strict-aliasing -Wno-error=strict-aliasing
+TARGET_thumb_CFLAGS += -fno-strict-aliasing -Wno-error=strict-aliasing
+endif   
 
 # Set FORCE_ARM_DEBUGGING to "true" in your buildspec.mk
 # or in your environment to force a full arm build, even for
@@ -132,7 +134,7 @@ TARGET_GLOBAL_CFLAGS += \
 			-fstack-protector \
 			-Wa,--noexecstack \
 			-Werror=format-security \
-			-D_FORTIFY_SOURCE=0 \
+			-D_FORTIFY_SOURCE=1 \
 			-fno-short-enums \
 			-pipe \
 			$(arch_variant_cflags)
@@ -168,8 +170,15 @@ TARGET_GLOBAL_LDFLAGS += \
 			-Wl,--icf=safe \
 			$(arch_variant_ldflags)
 
-# more always true garglemesh:
+# We only need thumb interworking in cases where thumb support
+# is available in the architecture, and just to be sure, (and
+# since sometimes thumb-interwork appears to be default), we
+# specifically disable when thumb support is unavailable.
+#ifeq ($(ARCH_ARM_HAVE_THUMB_SUPPORT),true)
 TARGET_GLOBAL_CFLAGS += -mthumb-interwork
+#else
+#TARGET_GLOBAL_CFLAGS += -mno-thumb-interwork
+#endif
 
 TARGET_GLOBAL_CPPFLAGS += -fvisibility-inlines-hidden
 ifneq ($(DEBUG_NO_STDCXX11),yes)
