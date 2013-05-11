@@ -312,13 +312,9 @@ ifneq (,$(user_variant))
 
     # Enable Dalvik lock contention logging for userdebug builds.
     ADDITIONAL_BUILD_PROPERTIES += dalvik.vm.lockprof.threshold=850
-  else 
-      ifeq ($(user_variant),userdebug)
-        enable_target_debugging := true      
-      else
-        # Disable debugging in plain user builds.
-        enable_target_debugging :=
-      endif
+  else
+    # Disable debugging in plain user builds.
+    enable_target_debugging :=
   endif
 
   # Forcefully turn off odex
