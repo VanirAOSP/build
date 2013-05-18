@@ -155,7 +155,8 @@ ifneq ($(filter 4.6 4.6.% 4.7 4.7.% 4.8 4.8.%, $(shell $(TARGET_CC) --version)),
 TARGET_GLOBAL_CFLAGS += -Wno-unused-but-set-variable -fno-builtin-sin \
 			-fno-strict-volatile-bitfields
 ifneq ($(filter 4.8 4.8.%, $(shell $(TARGET_CC) --version)),)
-gcc_variant_ldflags :=
+gcc_variant_ldflags := \
+			-Wl,--enable-new-dtags
 else
 gcc_variant_ldflags := \
 			-Wl,--icf=safe
