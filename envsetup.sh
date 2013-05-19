@@ -1171,6 +1171,17 @@ function linaroinit()
 {
     pushd . >& /dev/null
     cd $(gettop)
+    if [ ! -e .ccache_cleaned_for_gcc48 ]; then
+        if [ `uname -a | grep -i darwin | wc -l` -eq 0 ]; then
+            export PATH=$PATH:`pwd`/prebuilts/misc/linux-x86/ccache/
+        else
+            export PATH=$PATH:`pwd`/prebuilts/misc/darwin-x86/ccache/
+        fi
+        echo "Clearing your ccache in preparation for your first build with GCC 4.8"
+        echo "(preprocessed files from ccache and gcc4.7 aren't compatible with gcc4.8 compilation,"
+        echo "   so your ccache needs to be restarted from scratch)"
+        ccache -C -z && touch .ccache_cleaned_for_gcc48
+    fi
     if [ ! -e .nukewazhere ]; then
         rm -rf build-info android-toolchain-eabi android-toolchain-eabi-gcc4.8-turboexperimental .nukesballs .nukesballs48 .usinggcc48
         touch .nukewazhere
