@@ -248,28 +248,36 @@ package-stats: $(PACKAGE_STATS_FILE)
 
 # -----------------------------------------------------------------
 # Cert-to-package mapping.  Used by the post-build signing tools.
+# Use a macro to add newline to each echo command
+define _apkcerts_echo_with_newline
+$(hide) echo $(1)
+
+endef
+
 name := $(TARGET_PRODUCT)
 ifeq ($(TARGET_BUILD_TYPE),debug)
   name := $(name)_debug
 endif
 name := $(name)-apkcerts-$(FILE_NAME_TAG)
 intermediates := \
-	$(call intermediates-dir-for,PACKAGING,apkcerts)
+		$(call intermediates-dir-for,PACKAGING,apkcerts)
 APKCERTS_FILE := $(intermediates)/$(name).txt
 # We don't need to really build all the modules.
 # TODO: rebuild APKCERTS_FILE if any app change its cert.
 $(APKCERTS_FILE):
-	@echo APK certs list: $@
-	@mkdir -p $(dir $@)
-	@rm -f $@
-	$(hide) $(foreach p,$(PACKAGES),\
-          $(if $(PACKAGES.$(p).EXTERNAL_KEY),\
-	    echo 'name="$(p).apk" certificate="EXTERNAL" \
-	         private_key=""' >> $@;,\
-	    echo 'name="$(p).apk" certificate="$(PACKAGES.$(p).CERTIFICATE)" \
-	         private_key="$(PACKAGES.$(p).PRIVATE_KEY)"' >> $@;))
-	# In case $(PACKAGES) is empty.
-	$(hide) touch $@
+		@echo APK certs list: $@
+		@mkdir -p $(dir $@)
+		@rm -f $@
+		$(foreach p,$(PACKAGES),\
+	$(if $(PACKAGES.$(p).EXTERNAL_KEY),\
+    	$(call _apkcerts_echo_with_newline,\
+    	'name="$(p).apk" certificate="EXTERNAL" \
+    	private_key=""' >> $@),\
+	$(call _apkcerts_echo_with_newline,\
+    	'name="$(p).apk" certificate="$(PACKAGES.$(p).CERTIFICATE)" \
+    	private_key="$(PACKAGES.$(p).PRIVATE_KEY)"' >> $@)))
+	# In case value of PACKAGES is empty.
+		$(hide) touch $@
 
 .PHONY: apkcerts-list
 apkcerts-list: $(APKCERTS_FILE)
