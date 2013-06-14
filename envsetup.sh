@@ -33,6 +33,27 @@ EOF
     echo $A
 }
 
+#run a command inside all projects tracked on the vanir remote in the manifest
+function forall_vanir()
+{
+  T=$(gettop)
+  if [ ! "$T" ]; then
+    echo "Couldn't locate the top of the tree.  Try setting TOP." >&2
+    return
+  fi
+  local cmd
+  local pathlist
+  pushd . >& /dev/null
+  cd $T
+  pathlist=""
+  for x in `cat $(gettop)/.repo/manifest.xml | grep \<project | sed 's/.*project //g' | grep 'remote=\"vanir\"' | sed 's/[ ]*\/*>//g' | sed 's/groups=[\"a-zA-Z0-9,\-]*//g' | sed 's/.*path="//g' | sed 's/\".*//g'`; do
+    pathlist="$pathlist $x"
+  done
+  cmd="`echo $* | sed 's/\"/\\\"/g'`"
+  repo forall $pathlist -c "eval $cmd"
+  popd >& /dev/null
+}
+
 # Get the value of a build variable as an absolute path.
 function get_abs_build_var()
 {
