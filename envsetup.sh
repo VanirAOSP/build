@@ -891,7 +891,7 @@ function resgrep()
     
     #if not, assume it's below our folder
     foundone=
-    for dir in `find . -name .repo -prune -o -name .git -prune -o -name res -type d`; do echo find $dir -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@"; done;
+    for dir in `find . -name .repo -prune -o -name .git -prune -o -name res -type d`; do find $dir -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@"; done;
     [ ! -z $foundone ] && return 0
 
     #if res isn't our parent, and we're not in a parent of res, then res is probably our uncle.
@@ -905,7 +905,6 @@ function resgrep()
             foundone=1
             return 0
         elif [ "`pwd`" = "$T" ] || [ "`pwd`" = "/" ]; then
-            echo "WOOPS! There be no reseseses here!"
             foundone=1
             popd >& /dev/null
             return 1
@@ -1369,18 +1368,22 @@ else
 fi
 linaroupdate
 retval=0
+pathpat="^.*:[0-9]+"
+ccred=$(echo -e "\033[1;31m")
+ccyellow=$(echo -e "\033[1;33m")
+ccend=$(echo -e "\033[0m")
     case `uname -s` in
         Darwin)
             local threads=`sysctl hw.ncpu|cut -d" " -f2`
             local load=`expr $threads \* 2`
-            time make -j -l $load "$@"
-            retval=$?
+            time make -j -l $load "$@" 2>&1 | sed -E -e "/[Ee]rror[: ]/ s%$pathpat%$ccred&$ccend%g" -e "/[Ww]arning[: ]/ s%$pathpat%$ccyellow&$ccend%g"
+            retval=${PIPESTATUS[0]}
             ;;
         *)
             local threads=`grep "^processor" /proc/cpuinfo | wc -l`
             local load=`expr $threads \* 2`
-            time schedtool -B -n 1 -e ionice -n 1 make -j -l $load "$@"
-            retval=$?
+            time schedtool -B -n 1 -e ionice -n 1 make -j -l $load "$@" 2>&1 | sed -E -e "/[Ee]rror[: ]/ s%$pathpat%$ccred&$ccend%g" -e "/[Ww]arning[: ]/ s%$pathpat%$ccyellow&$ccend%g"
+            retval=${PIPESTATUS[0]}
             ;;
     esac
 if [ $retval -eq 0 ]; then
@@ -1524,12 +1527,13 @@ bashtest() {
         done
         echo "Device Found."
     fi
-
+    set -x
     adb push $srcpath /sdcard/$binname
-    adb shell su -c "cp /sdcard/$binname $destpath/$binname" &> /dev/null
-    adb shell rm /sdcard/$binname >& /dev/null
-    adb shell su -c "chmod 755 $destpath/$binname" &> /dev/null
-    adb shell su -c "$destpath/$binname"
+    adb shell su -c "cp /sdcard/$binname $destpath/$binname"
+    adb shell rm /sdcard/$binname
+    adb shell su -c "chmod 755 $destpath/$binname"
+    adb shell su -c "sh $destpath/$binname"
+    set +x
 }
 
 function reposync() {

@@ -281,12 +281,12 @@ ifneq (,$(user_variant))
   # Security is for bitches
   ADDITIONAL_DEFAULT_PROPERTIES += ro.secure=0
 
-  ifeq ($(user_variant),userdebug)
+  ifeq ($(user_variant),eng)
     # Pick up some extra useful tools
     tags_to_install += debug
 
     # this makes things a bit spammy
-    # enable_target_debugging := true
+    enable_target_debugging := true
 
     # Enable Dalvik lock contention logging for userdebug builds.
     ADDITIONAL_BUILD_PROPERTIES += dalvik.vm.lockprof.threshold=850
