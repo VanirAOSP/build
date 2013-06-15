@@ -138,7 +138,7 @@ TARGET_GLOBAL_CFLAGS += \
 			-fstack-protector \
 			-Wa,--noexecstack \
 			-Werror=format-security \
-			-D_FORTIFY_SOURCE=0 \
+			-D_FORTIFY_SOURCE=2 \
 			-fno-short-enums \
 			-pipe \
 			$(arch_variant_cflags)
