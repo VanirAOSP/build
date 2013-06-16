@@ -1,6 +1,12 @@
 # Configuration for Linux on ARM.
 # Generating binaries for the ARMv7-a architecture and higher with NEON
 #
+
+TARGET_ARCH_VARIANT_FPU := neon
+include $(BUILD_COMBOS)/arch/$(TARGET_ARCH)/armv7-a.mk
+
+ARCH_ARM_HAVE_CLZ               := true
+ARCH_ARM_HAVE_FFS               := true
 ARCH_ARM_HAVE_ARMV7A            := true
 ARCH_ARM_HAVE_VFP               := true
 # retain AOSP convention for ARCH_ARM_VFP_D32

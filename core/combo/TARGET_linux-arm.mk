@@ -35,7 +35,7 @@ TARGET_ARCH_VARIANT := armv5te
 endif
 
 ifeq ($(strip $(TARGET_GCC_VERSION_EXP)),)
-TARGET_GCC_VERSION := 4.7
+TARGET_GCC_VERSION := 4.8
 else
 TARGET_GCC_VERSION := $(TARGET_GCC_VERSION_EXP)
 endif
@@ -151,9 +151,16 @@ TARGET_GLOBAL_CFLAGS += $(TARGET_ANDROID_CONFIG_CFLAGS)
 # We cannot turn it off blindly since the option is not available
 # in gcc-4.4.x.  We also want to disable sincos optimization globally
 # by turning off the builtin sin function.
-ifneq ($(filter 4.6 4.6.% 4.7 4.7.%, $(shell $(TARGET_CC) --version)),)
+ifneq ($(filter 4.6 4.6.% 4.7 4.7.% 4.8 4.8.%, $(shell $(TARGET_CC) --version)),)
 TARGET_GLOBAL_CFLAGS += -Wno-unused-but-set-variable -fno-builtin-sin \
 			-fno-strict-volatile-bitfields
+ifneq ($(filter 4.8 4.8.%, $(shell $(TARGET_CC) --version)),)
+gcc_variant_ldflags := \
+			-Wl,--enable-new-dtags
+else
+gcc_variant_ldflags := \
+			-Wl,--icf=safe
+endif
 endif
 
 # This is to avoid the dreaded warning compiler message:
@@ -171,8 +178,7 @@ TARGET_GLOBAL_LDFLAGS += \
 			-Wl,-z,relro \
 			-Wl,-z,now \
 			-Wl,--warn-shared-textrel \
-			-Wl,--icf=safe \
-			$(arch_variant_ldflags)
+			$(arch_variant_ldflags) $(gcc_variant_ldflags)
 
 # more always true garglemesh:
 TARGET_GLOBAL_CFLAGS += -mthumb-interwork
@@ -271,6 +277,12 @@ TARGET_STRIP_MODULE:=true
 TARGET_DEFAULT_SYSTEM_SHARED_LIBRARIES := libc libstdc++ libm
 
 TARGET_CUSTOM_LD_COMMAND := true
+
+# Enable the Dalvik JIT compiler if not already specified.
+ifeq ($(strip $(WITH_JIT)),)
+    WITH_JIT := true
+    WITH_JIT_TUNING := true
+endif
 
 define transform-o-to-shared-lib-inner
 $(hide) $(PRIVATE_CXX) \

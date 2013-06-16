@@ -33,6 +33,27 @@ EOF
     echo $A
 }
 
+#run a command inside all projects tracked on the vanir remote in the manifest
+function forall_vanir()
+{
+  T=$(gettop)
+  if [ ! "$T" ]; then
+    echo "Couldn't locate the top of the tree.  Try setting TOP." >&2
+    return
+  fi
+  local cmd
+  local pathlist
+  pushd . >& /dev/null
+  cd $T
+  pathlist=""
+  for x in `cat $(gettop)/.repo/manifest.xml | grep \<project | sed 's/.*project //g' | grep 'remote=\"vanir\"' | sed 's/[ ]*\/*>//g' | sed 's/groups=[\"a-zA-Z0-9,\-]*//g' | sed 's/.*path="//g' | sed 's/\".*//g'`; do
+    pathlist="$pathlist $x"
+  done
+  cmd="`echo $* | sed 's/\"/\\\"/g'`"
+  repo forall $pathlist -c "eval $cmd"
+  popd >& /dev/null
+}
+
 # Get the value of a build variable as an absolute path.
 function get_abs_build_var()
 {
@@ -1210,12 +1231,20 @@ function linaroinit()
 {
     pushd . >& /dev/null
     cd $(gettop)
-
-    if [ ! -d build-info ]; then
-        wget http://snapshots.linaro.org/android/binaries/open/20120716/build-info.tar.bz2
-        tar -x -a -f "build-info.tar.bz2" -C .
-        rm -f build-info.tar.bz2
-
+    if [ ! -e .ccache_cleaned_for_gcc48 ]; then
+        if [ `uname -a | grep -i darwin | wc -l` -eq 0 ]; then
+            export PATH=$PATH:`pwd`/prebuilts/misc/linux-x86/ccache/
+        else
+            export PATH=$PATH:`pwd`/prebuilts/misc/darwin-x86/ccache/
+        fi
+        echo "Clearing your ccache in preparation for your first build with GCC 4.8"
+        echo "(preprocessed files from ccache and gcc4.7 aren't compatible with gcc4.8 compilation,"
+        echo "   so your ccache needs to be restarted from scratch)"
+        ccache -C -z && touch .ccache_cleaned_for_gcc48
+    fi
+    if [ ! -e .nukewazhere ]; then
+        rm -rf build-info android-toolchain-eabi android-toolchain-eabi-gcc4.8-turboexperimental .nukesballs .nukesballs48 .usinggcc48
+        touch .nukewazhere
         UBUNTU=`cat /etc/issue.net | cut -d' ' -f2`
         HOST_ARCH=`uname -m`
         echo "HOST_ARCH = ${HOST_ARCH}"
@@ -1242,117 +1271,8 @@ function linaroinit()
 	        return 1
         fi
     fi
-    
     popd >& /dev/null
     return 0
-}
-
-function __grab() {
-    T=$(gettop)
-    if [ ! "$T" ]; then
-        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
-        return
-    fi
-    rm -Rf $T/$1    
-    mkdir -p $T/$1\_temp
-    pushd . >& /dev/null
-    cd $T/$1\_temp
-    curl -k $2 > toolchain.tar.bz2
-    tar -jxf toolchain.tar.bz2
-    mv $T/$1\_temp/android-toolchain-eabi $T/$1
-    popd >& /dev/null
-    rm -Rf $T/$1\_temp
-}
-
-function update47() {
-    T=$(gettop)
-    if [ ! "$T" ]; then
-        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
-        return
-    fi
-    pushd . >& /dev/null
-    cd $T
-
-    #if our toolchain is older than 1 day old, grab a fresh one
-#    find -name .nukesballs -mtime +1 | xargs rm -f
-    if [ ! -d $T/android-toolchain-eabi ]; then
-        rm -f $T/.nukesballs >& /dev/null
-    fi
-    [ -e $T/.nukesballs ] && return 0
-    touch $T/.nukesballs #tee hee that tickles
-    echo "DOWNLOADING DAILY BUILD OF LINARO's ARM GCC4.7"
-    __grab android-toolchain-eabi https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
-    popd >& /dev/null
-    return 0
-}
-
-function update48() {
-    T=$(gettop)
-    if [ ! "$T" ]; then
-        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
-        return
-    fi
-    pushd . >& /dev/null
-    cd $T    
-    
-    #if our toolchain is older than 1 day old, grab a fresh one
- #   find -name .nukesballs48 -mtime +1 | xargs rm -f
-    if [ ! -e $T/android-toolchain-eabi-gcc4.8-turboexperimental ]; then
-        rm -f $T/.nukesballs48 >& /dev/null
-    fi    
-    [ -e $T/.nukesballs48 ] && return 0
-    touch $T/.nukesballs48 #tee hee that tickles
-    echo "DOWNLOADING DAILY BUILD OF LINARO's ARM GCC4.8"
-    __grab android-toolchain-eabi-gcc4.8-turboexperimental https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-trunk/lastSuccessfulBuild/artifact/build/out/android-toolchain-eabi-trunk-daily-linux-x86.tar.bz2
-    popd >& /dev/null
-    return 0
-}
-
-function linaroupdate() {
-    T=$(gettop)
-    if [ ! "$T" ]; then
-        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
-        return
-    fi
-    [ ! -e $T/.usinggcc48 ] && update47 || update48
-    
-    echo "Fresh linarosauce in the hiznouse."    
-}
-
-function usegcc48() {
-    T=$(gettop)
-    if [ ! "$T" ]; then
-        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
-        return
-    fi
-    if [ ! -e $T/.usinggcc48 ]; then
-        echo "You're changing from gcc4.7 to gcc4.8, so it's clobbering time."
-        pushd . >& /dev/null
-        cd $T
-        make clobber
-        popd >& /dev/null
-        touch $T/.usinggcc48
-    fi    
-
-    linaroupdate
-}
-
-function usegcc47() {
-    T=$(gettop)
-    if [ ! "$T" ]; then
-        echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
-        return
-    fi
-    if [ -e $T/.usinggcc48 ]; then
-        echo "You're changing from gcc4.8 to gcc4.7, so it's clobbering time."
-        pushd . >& /dev/null
-        cd $T
-        make clobber
-        popd >& /dev/null
-        rm -f $T/.usinggcc48
-    fi
-    
-    linaroupdate
 }
 
 function mka() {
@@ -1361,17 +1281,9 @@ if [ ! "$T" ]; then
     echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
     return
 fi
-linaroinit || sleep 3
+linaroinit
 export TARGET_SIMULATOR=false
 export BUILD_TINY_ANDROID=
-if [ ! -e $T/.usinggcc48 ]; then
-    export TARGET_TOOLS_PREFIX=$T/android-toolchain-eabi/bin/arm-linux-androideabi-
-    echo "Building with GCC4.7"
-else
-    export TARGET_TOOLS_PREFIX=$T/android-toolchain-eabi-gcc4.8-turboexperimental/bin/arm-linux-androideabi-
-    echo "Building with GCC4.8... you must be straight out your gourd, brah."
-fi
-linaroupdate
 retval=0
 pathpat="^.*:[0-9]+"
 ccred=$(echo -e "\033[1;31m")

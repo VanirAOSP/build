@@ -267,24 +267,24 @@ ifeq ($(TARGET_BUILD_TYPE),debug)
 endif
 name := $(name)-apkcerts-$(FILE_NAME_TAG)
 intermediates := \
-	$(call intermediates-dir-for,PACKAGING,apkcerts)
+		$(call intermediates-dir-for,PACKAGING,apkcerts)
 APKCERTS_FILE := $(intermediates)/$(name).txt
 # We don't need to really build all the modules.
 # TODO: rebuild APKCERTS_FILE if any app change its cert.
 $(APKCERTS_FILE):
-	@echo APK certs list: $@
-	@mkdir -p $(dir $@)
-	@rm -f $@
-	$(foreach p,$(PACKAGES),\
-	  $(if $(PACKAGES.$(p).EXTERNAL_KEY),\
-	    $(call _apkcerts_echo_with_newline,\
-	      'name="$(p).apk" certificate="EXTERNAL" \
-	      private_key=""' >> $@),\
-	    $(call _apkcerts_echo_with_newline,\
-	      'name="$(p).apk" certificate="$(PACKAGES.$(p).CERTIFICATE)" \
-	      private_key="$(PACKAGES.$(p).PRIVATE_KEY)"' >> $@)))
+		@echo APK certs list: $@
+		@mkdir -p $(dir $@)
+		@rm -f $@
+		$(foreach p,$(PACKAGES),\
+	$(if $(PACKAGES.$(p).EXTERNAL_KEY),\
+    	$(call _apkcerts_echo_with_newline,\
+    	'name="$(p).apk" certificate="EXTERNAL" \
+    	private_key=""' >> $@),\
+	$(call _apkcerts_echo_with_newline,\
+    	'name="$(p).apk" certificate="$(PACKAGES.$(p).CERTIFICATE)" \
+    	private_key="$(PACKAGES.$(p).PRIVATE_KEY)"' >> $@)))
 	# In case value of PACKAGES is empty.
-	$(hide) touch $@
+		$(hide) touch $@
 
 .PHONY: apkcerts-list
 apkcerts-list: $(APKCERTS_FILE)
