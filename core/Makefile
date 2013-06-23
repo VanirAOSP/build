@@ -1353,10 +1353,28 @@ $(INTERNAL_UPDATE_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
 
 .PHONY: updatepackage
 updatepackage: $(INTERNAL_UPDATE_PACKAGE_TARGET)
-
+else
+.PHONY: bacon
+bacon:
+	$(error CANNOT BACON BECAUSE recovery_fstab is UNDEFINED)
 endif    # recovery_fstab is defined
+
+else
+.PHONY: bacon
+bacon:
+	$(error CANNOT BACON BECAUSE TARGET_NO_KERNEL IS TRUE)
 endif    # TARGET_NO_KERNEL != true
+
+else
+.PHONY: bacon
+bacon:
+	$(error CANNOT BACON BECAUSE TARGET_DEVICE == generic*)
 endif    # TARGET_DEVICE != generic*
+
+else
+.PHONY: bacon
+bacon:
+	$(error CANNOT BACON BECAUSE TARGET_PRODUCT == sdk)
 endif    # TARGET_PRODUCT != sdk
 
 # -----------------------------------------------------------------
