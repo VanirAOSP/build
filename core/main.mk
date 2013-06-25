@@ -421,6 +421,7 @@ $(if $(filter samples tests,$(1)),,true)
 endef
 endif
 
+
 # If they only used the modifier goals (showcommands, checkbuild), we'll actually
 # build the default target.
 ifeq ($(filter-out $(INTERNAL_MODIFIER_TARGETS),$(MAKECMDGOALS)),)
@@ -723,6 +724,7 @@ modules_to_install := $(sort $(ALL_DEFAULT_INSTALLED_MODULES))
 ALL_DEFAULT_INSTALLED_MODULES :=
 
 endif # dont_bother
+
 
 # These are additional goals that we build, in order to make sure that there
 # is as little code as possible in the tree that doesn't build.
