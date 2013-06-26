@@ -341,7 +341,7 @@ endif
 
 OLD_FLEX := prebuilts/misc/$(HOST_PREBUILT_TAG)/flex/flex-2.5.4a$(HOST_EXECUTABLE_SUFFIX)
 
-ifeq ($(HOST_OS),darwin)
+ifeq ($(BUILD_OS),darwin)
 # Mac OS' screwy version of java uses a non-standard directory layout
 # and doesn't even seem to have tools.jar.  On the other hand, javac seems
 # to be able to magically find the classes in there, wherever they are, so
@@ -422,15 +422,11 @@ TARGET_PROJECT_INCLUDES:= $(SRC_HEADERS) $(TARGET_OUT_HEADERS) \
 TARGET_GLOBAL_CFLAGS += $(TARGET_ERROR_FLAGS)
 TARGET_GLOBAL_CPPFLAGS += $(TARGET_ERROR_FLAGS)
 
-ifeq ($(TARGET_EXTRA_CPPFLAGS),)
-TARGET_EXTRA_CPPFLAGS := $(TARGET_EXTRA_CFLAGS)
-endif
-
 HOST_GLOBAL_CFLAGS += $(HOST_RELEASE_CFLAGS)
 HOST_GLOBAL_CPPFLAGS += $(HOST_RELEASE_CPPFLAGS)
 
-TARGET_GLOBAL_CFLAGS += $(TARGET_RELEASE_CFLAGS) $(TARGET_EXTRA_CFLAGS)
-TARGET_GLOBAL_CPPFLAGS += $(TARGET_RELEASE_CPPFLAGS) $(TARGET_EXTRA_CPPFLAGS)
+TARGET_GLOBAL_CFLAGS += $(TARGET_RELEASE_CFLAGS)
+TARGET_GLOBAL_CPPFLAGS += $(TARGET_RELEASE_CPPFLAGS)
 
 # define llvm tools and global flags
 include $(BUILD_SYSTEM)/llvm_config.mk
