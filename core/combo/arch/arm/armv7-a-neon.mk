@@ -21,41 +21,33 @@ ifeq ($(strip $(TARGET_CPU_SMP)),true)
 ARCH_ARM_HAVE_TLS_REGISTER      := true
 endif
 
-# define the defaults
-arch_variant_cflags := \
-     -mcpu=$(strip $(TARGET_ARCH_VARIANT_CPU)) \
-     -mtune=$(strip $(TARGET_ARCH_VARIANT_CPU)) \
-     -mfpu=neon \
+# is arch variant CPU defined?
+ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 
-# append more specific neon and fpu if defined
-# todo: add more device specific soft/softfp/hard
+ifeq ($(strip $(TARGET_ARCH_VARIANT_CPU)),cortex-a15)
+arch_cpu_without_ghosts := cortex-a9  #cortex-a15 has ghosts
+else
+arch_cpu_without_ghosts := $(strip $(TARGET_ARCH_VARIANT_CPU))
+endif
+
+arch_variant_cflags += \
+	-mcpu=$(arch_cpu_without_ghosts) \
+	-mtune=$(strip $(TARGET_ARCH_VARIANT_CPU))
+
+else
+
+$(warn TARGET_ARCH_VARIANT_CPU is NOT SET! Using values from armv7-a.mk)
+
+endif #end of cpu stuff
+
 ifneq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
 arch_variant_cflags += \
-     -mfloat-abi=softfp \
-     -mfpu=$(strip $(TARGET_ARCH_VARIANT_FPU))
+	-mfloat-abi=softfp \
+	-mfpu=$(strip $(TARGET_ARCH_VARIANT_FPU))
 else
+# fall back on soft tunning if fpu is not specified
 arch_variant_cflags += \
-     -mfloat-abi=softfp
-endif
-
-ifeq ($(TARGET_ARCH_VARIANT_CPU),cortex-a9)
-arch_variant_cflags += \
-#    Remove -march=cortex-a15 until better support is provided. Not
-#    entirely sure it's necessary anyways since -mcpu implies -march.
-    -march=cortex-a9
-endif
-ifeq ($(TARGET_ARCH_VARIANT_CPU),cortex-a15)
-arch_variant_cflags += \
-#    Remove -march=cortex-a15 until better support is provided.
-#    -march=cortex-a15
-endif
-
-ifneq (,$(findstring cpu=cortex-a9,$(TARGET_EXTRA_CFLAGS)))
-arch_variant_ldflags := \
-	-Wl,--no-fix-cortex-a8
-else
-arch_variant_ldflags := \
-	-Wl,--fix-cortex-a8
+	-mfloat-abi=soft
 endif
 
 #TODO: fine-tune generic values
