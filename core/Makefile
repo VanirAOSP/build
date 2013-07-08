@@ -1487,10 +1487,16 @@ dalvikfiles: $(INTERNAL_DALVIK_MODULES)
 # -----------------------------------------------------------------
 # The emulator package
 ifeq ($(BUILD_EMULATOR),true)
+INSTALLED_QEMU_KERNEL_TARGET := $(PRODUCT_OUT)/kernel-qemu
+
+$(INSTALLED_QEMU_KERNEL_TARGET): $(INSTALLED_KERNEL_TARGET)
+		$(hide) $(ACP) -fp $(INSTALLED_KERNEL_TARGET) $(INSTALLED_QEMU_KERNEL_TARGET)
+
 INTERNAL_EMULATOR_PACKAGE_FILES += \
-        $(HOST_OUT_EXECUTABLES)/emulator$(HOST_EXECUTABLE_SUFFIX) \
-        prebuilts/qemu-kernel/$(TARGET_ARCH)/kernel-qemu \
-        $(INSTALLED_RAMDISK_TARGET) \
+		$(HOST_OUT_EXECUTABLES)/emulator$(HOST_EXECUTABLE_SUFFIX) \
+		$(INSTALLED_QEMU_KERNEL_TARGET) \
+		$(INSTALLED_RAMDISK_TARGET) \
+		$(recovery_ramdisk) \
 		$(INSTALLED_SYSTEMIMAGE) \
 		$(INSTALLED_USERDATAIMAGE_TARGET)
 
@@ -1502,6 +1508,9 @@ $(INTERNAL_EMULATOR_PACKAGE_TARGET): $(INTERNAL_EMULATOR_PACKAGE_FILES)
 	@echo -e ${CL_YLW}"Package:"${CL_RST}" $@"
 	$(hide) zip -qj $@ $(INTERNAL_EMULATOR_PACKAGE_FILES)
 
+.PHONY: goldfish
+goldfish: $(INTERNAL_EMULATOR_PACKAGE_TARGET)
+
 endif
 # -----------------------------------------------------------------
 # Old PDK stuffs, retired
@@ -1510,7 +1519,6 @@ endif
 #ifneq (,$(filter pdk,$(MAKECMDGOALS)))
 #  include development/pdk/Pdk.mk
 #endif
-
 
 # -----------------------------------------------------------------
 # The SDK
@@ -1628,6 +1636,7 @@ $(INTERNAL_SDK_TARGET): $(deps)
 		$(addprefix -f ,$(PRIVATE_INPUT_FILES)) \
 			-m $(PRIVATE_DEP_FILE) \
 			-I . \
+			-I / \
 			-I $(PRODUCT_OUT) \
 			-I $(HOST_OUT) \
 			-I $(TARGET_COMMON_OUT_ROOT) \
