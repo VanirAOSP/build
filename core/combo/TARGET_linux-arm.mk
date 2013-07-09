@@ -36,10 +36,13 @@ endif
 
 # default target GCC version
 ifneq ($(strip $(BONE_STOCK)),)
-TARGET_GCC_VERSION := 4.7
+    TARGET_GCC_VERSION := 4.7
+else
+ifeq ($(TARGET_BUILD_TYPE),development)
+    TARGET_GCC_VERSION := inline
 else
 ifeq ($(strip $(TARGET_GCC_VERSION)),)
-TARGET_GCC_VERSION := 4.8-linaro
+    TARGET_GCC_VERSION := 4.8-linaro
 endif
 endif
 
