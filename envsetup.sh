@@ -250,6 +250,8 @@ function set_stuff_for_environment()
     set_java_home
     setpaths
     set_sequence_number
+    build_toolchain
+
     # With this environment variable new GCC can apply colors to warnings/errors
     export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 }
@@ -302,6 +304,15 @@ function check_bash_version()
     fi
 
     return 0
+}
+
+function build_toolchain()
+{
+    local build_type=$TARGET_BUILD_TYPE
+    local dev_type=development
+    if [ "$build_type" = "$dev_type" ]; then
+        $ANDROID_BUILD_TOP/toolchain/build.sh
+    fi
 }
 
 function choosetype()
