@@ -1405,15 +1405,12 @@ bashtest() {
         done
         echo "Device Found."
     fi
+    echo
     echo "Pushing $srcpath to $destpath and running it as root!"
+    echo
     adb push $srcpath /sdcard/$binname >& /dev/null
     adb root >& /dev/null
-    adb shell "sh << EOF
-cp /sdcard/$binname $destpath/$binname
-rm /sdcard/$binname
-chmod 755 $destpath/$binname
-EOF
-"
+    (adb shell "cp /sdcard/$binname $destpath/$binname; rm /sdcard/$binname; chmod 755 $destpath/$binname") >& /dev/null
     adb shell sh $destpath/$binname
 }
 
