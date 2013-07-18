@@ -390,6 +390,14 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("    by Team Vanir")
   script.Print(" ")
   script.Print(" ")
+  script.Print(" Using CM backuptool to allow")
+  script.Print("    gapps to survive w/out reinstall")
+  script.Mount("/system")
+  script.RunBackup("backup")
+  script.Unmount("/system")
+  script.Print(" gapps evasive maneuvers COMPLETE");
+  script.Print(" ")
+  script.Print(" ")
   script.Print("Installing the ROM...")
 
   if OPTIONS.wipe_user_data:
@@ -443,7 +451,6 @@ def WriteFullOTAPackage(input_zip, output_zip):
 
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
-  script.ShowProgress(0.2, 0)
   script.ShowProgress(0.2, 10)
   script.WriteRawImage("/boot", "boot.img")  
 
@@ -452,18 +459,24 @@ def WriteFullOTAPackage(input_zip, output_zip):
   vanirinitlinks.append(("/init.vanir.rc", "/system/etc/init.local.rc"))
   script.MakeSymlinks(vanirinitlinks)
 
+  script.ShowProgress(0.1, 0)
+  device_specific.FullOTA_InstallEnd()
+
+  if OPTIONS.extra_script is not None:
+    script.AppendExtra(OPTIONS.extra_script)
+
+  script.Print(" ")
+  script.Print("Resurrecting gapps from pre-flash backup")
+  script.ShowProgress(0.2, 10)
+  script.RunBackup("restore")
+  script.Print("Zombie gapps in the hizouse")
+
   script.Print(" ")
   script.Print("CLEAN UP THE BLOOD!")
   script.Print("YOU SHOULD PROBABLY GET TESTED!");
   script.Print(" ")
   script.Print(" ")
   script.Print(" ")
-
-  script.ShowProgress(0.1, 0)
-  device_specific.FullOTA_InstallEnd()
-
-  if OPTIONS.extra_script is not None:
-    script.AppendExtra(OPTIONS.extra_script)
 
   script.UnmountAll()
   script.AddToZip(input_zip, output_zip)

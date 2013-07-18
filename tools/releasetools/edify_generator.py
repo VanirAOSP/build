@@ -126,6 +126,12 @@ class EdifyGenerator(object):
     [0,1]."""
     self.script.append("set_progress(%f);" % (frac,))
 
+  def Unmount(self, mount_point):
+    """Unmount the partiiton with the given mount_point."""
+    if mount_point in self.mounts:
+      self.mounts.remove(mount_point)
+      self.script.append('unmount("%s");' % (mount_point,))
+
   def PatchCheck(self, filename, *sha1):
     """Check that the given file (or MTD reference) has one of the
     given *sha1 hashes, checking the version saved in cache if the
