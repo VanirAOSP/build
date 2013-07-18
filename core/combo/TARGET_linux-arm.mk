@@ -182,7 +182,10 @@ TARGET_GLOBAL_LDFLAGS += \
 # more always true garglemesh:
 TARGET_GLOBAL_CFLAGS += -mthumb-interwork
 
-TARGET_GLOBAL_CPPFLAGS += -fvisibility-inlines-hidden
+TARGET_GLOBAL_CPPFLAGS += \
+			-fvisibility-inlines-hidden \
+			$(arch_variant_cflags)
+
 ifneq ($(DEBUG_NO_STDCXX11),yes)
 TARGET_GLOBAL_CPPFLAGS += $(call cc-option,-std=gnu++11)
 endif
