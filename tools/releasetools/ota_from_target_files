@@ -415,7 +415,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("                     dalvik...")
   script.Print("                     old logs...")
   script.Print("                     orphaned data...")
-  script.FormatPartition("/cache")
+  script.DeleteRecursive(["/cache"])
   script.DeleteRecursive(["/data/cron"])
   script.DeleteRecursive(["/data/dalvik-cache"])
   script.DeleteRecursive(["/data/tombstones/"])
