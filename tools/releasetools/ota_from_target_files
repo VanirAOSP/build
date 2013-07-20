@@ -421,7 +421,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.DeleteRecursive(["/data/tombstones/"])
   script.DeleteFiles(["/data/system/usagestats/*"])
   script.DeleteFiles(["/data/system/dropbox/*.txt"])
-  script.DeleteRecursive(["/data/media/0/Android/data/com.amazon.venezia"])
+  script.DeleteRecursive(["/data/media/0/Android/data/com.amazon.venezia/files/apks"])
 
   script.Print(" ")
   script.Print("Copying files")
