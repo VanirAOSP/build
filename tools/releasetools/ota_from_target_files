@@ -386,7 +386,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print(" \\\\\\\\ //=\\\\\\\\||\\\\\\\\| || ||=//")
   script.Print("  \\\\//   \\\\\\\\| \\\\|====|| \\\\\\\\")
   script.Print(" ")
-  script.Print("  Vanir - JellyBean 4.2.2 ") 
+  script.Print("  Vanir - JellyBean 4.3 ") 
   script.Print("    by Team Vanir")
   script.Print(" ")
   script.Print(" ")
