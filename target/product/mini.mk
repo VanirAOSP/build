@@ -61,6 +61,7 @@ PRODUCT_PACKAGES += \
     MediaProvider \
     PackageInstaller \
     SettingsProvider \
+    Shell \
     TelephonyProvider \
     UserDictionaryProvider \
     abcc \
@@ -129,6 +130,7 @@ PRODUCT_PACKAGES += \
     libstagefright_soft_amrwbenc \
     libstagefright_soft_flacenc \
     libstagefright_soft_g711dec \
+    libstagefright_soft_gsmdec \
     libstagefright_soft_h264dec \
     libstagefright_soft_h264enc \
     libstagefright_soft_mp3dec \
@@ -142,7 +144,6 @@ PRODUCT_PACKAGES += \
     libwilhelm \
     libz \
     mdnsd \
-    mms-common \
     network \
     okhttp \
     pand \
@@ -150,8 +151,10 @@ PRODUCT_PACKAGES += \
     screencap \
     sdptool \
     sensorservice \
+    lint \
     telephony-common \
-    wpa_supplicant
+    voip-common \
+    mms-common
 
 PRODUCT_COPY_FILES += \
     system/core/rootdir/init.usb.rc:root/init.usb.rc \
@@ -222,4 +225,8 @@ PRODUCT_PACKAGES += \
     SystemUI \
     Settings \
     libsurfaceflinger_ddmconnection
+
+# This is not necessary for mini, but is for mini-emulator as it should
+# be included in platform.zip
+PRODUCT_PACKAGES += camera.goldfish.jpeg
 

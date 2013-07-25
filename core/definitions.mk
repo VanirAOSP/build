@@ -81,6 +81,11 @@ ALL_FINDBUGS_FILES:=
 # GPL module license files
 ALL_GPL_MODULE_LICENSE_FILES:=
 
+# Target and host installed module's dependencies on shared libraries.
+# They are list of "<module_name>:<installed_file>:lib1,lib2...".
+TARGET_DEPENDENCIES_ON_SHARED_LIBRARIES :=
+HOST_DEPENDENCIES_ON_SHARED_LIBRARIES :=
+
 # Generated class file names for Android resource.
 # They are escaped and quoted so can be passed safely to a bash command.
 ANDROID_RESOURCE_GENERATED_CLASSES := 'R.class' 'R$$*.class' 'Manifest.class' 'Manifest$$*.class'
@@ -533,7 +538,7 @@ endef
 # $(1): library name
 # $(2): Non-empty if IS_HOST_MODULE
 define _java-lib-full-dep
-$(call _java-lib-dir,$(1),$(2))/javalib$(COMMON_JAVA_PACKAGE_SUFFIX)
+$(call _java-lib-dir,$(1),$(2))/$(if $(2),javalib,classes)$(COMMON_JAVA_PACKAGE_SUFFIX)
 endef
 
 # $(1): library name list
@@ -796,7 +801,7 @@ rm -f $(@:$1=$(YACC_HEADER_SUFFIX))
 endef
 
 ###########################################################
-## Commands to compile RenderScript
+## Commands to compile RenderScript to Java
 ###########################################################
 
 define transform-renderscripts-to-java-and-bc
@@ -813,8 +818,40 @@ $(hide) $(PRIVATE_RS_CC) \
   $(PRIVATE_RS_FLAGS) \
   $(foreach inc,$(PRIVATE_RS_INCLUDES),$(addprefix -I , $(inc))) \
   $(PRIVATE_RS_SOURCE_FILES)
-#$(hide) $(LLVM_RS_LINK) \
-#  $(PRIVATE_RS_OUTPUT_DIR)/res/raw/*.bc
+$(hide) mkdir -p $(dir $@)
+$(hide) touch $@
+endef
+
+define transform-bc-to-so
+@echo "Renderscript compatibility: $(notdir $@) <= $(notdir $<)"
+$(hide) mkdir -p $(dir $@)
+$(hide) $(BCC_COMPAT) -O3 -o $(dir $@)/$(notdir $(<:.bc=.o)) -fPIC -shared \
+	-rt-path $(RS_PREBUILT_CLCORE) -mtriple $(RS_TRIPLE) $<
+$(hide) $(PRIVATE_CXX) -shared -Wl,-soname,$(notdir $@) -nostdlib \
+	-Wl,-rpath,\$$ORIGIN/../lib \
+	$(dir $@)/$(notdir $(<:.bc=.o)) \
+	$(RS_PREBUILT_COMPILER_RT) \
+	-o $@ -L prebuilts/gcc/ \
+	-L $(TARGET_OUT_INTERMEDIATE_LIBRARIES) $(RS_PREBUILT_LIBPATH) \
+	-lRSSupport -lm -lc
+endef
+
+###########################################################
+## Commands to compile RenderScript to C++
+###########################################################
+
+define transform-renderscripts-to-cpp-and-bc
+@echo "RenderScript: $(PRIVATE_MODULE) <= $(PRIVATE_RS_SOURCE_FILES)"
+$(hide) rm -rf $(PRIVATE_RS_OUTPUT_DIR)
+$(hide) mkdir -p $(PRIVATE_RS_OUTPUT_DIR)/
+$(hide) $(PRIVATE_RS_CC) \
+  -o $(PRIVATE_RS_OUTPUT_DIR)/ \
+  -d $(PRIVATE_RS_OUTPUT_DIR) \
+  -a $@ -MD \
+  -reflect-c++ \
+  $(PRIVATE_RS_FLAGS) \
+  $(foreach inc,$(PRIVATE_RS_INCLUDES),$(addprefix -I , $(inc))) \
+  $(PRIVATE_RS_SOURCE_FILES)
 $(hide) mkdir -p $(dir $@)
 $(hide) touch $@
 endef
@@ -925,15 +962,13 @@ $(hide) $(PRIVATE_CC) \
 	    $(PRIVATE_TARGET_GLOBAL_CFLAGS) \
 	    $(PRIVATE_ARM_CFLAGS) \
 	 ) \
-	$(PRIVATE_CFLAGS) \
-	$(1) \
-	$(PRIVATE_DEBUG_CFLAGS) \
+	 $(1) \
 	-MD -MF $(patsubst %.o,%.d,$@) -o $@ $<
 endef
 
 define transform-c-to-o-no-deps
 @echo -e ${CL_GRN}"target $(PRIVATE_ARM_MODE) C:"${CL_RST}" $(PRIVATE_MODULE) <= $<"
-$(call transform-c-or-s-to-o-no-deps, )
+$(call transform-c-or-s-to-o-no-deps, $(PRIVATE_CFLAGS) $(PRIVATE_CONLYFLAGS) $(PRIVATE_DEBUG_CFLAGS))
 endef
 
 define transform-s-to-o-no-deps
@@ -959,7 +994,7 @@ endef
 
 define transform-m-to-o-no-deps
 @echo -e ${CL_GRN}"target ObjC:"${CL_RST}" $(PRIVATE_MODULE) <= $<"
-$(call transform-c-or-s-to-o-no-deps)
+$(call transform-c-or-s-to-o-no-deps, $(PRIVATE_CFLAGS) $(PRIVATE_DEBUG_CFLAGS))
 endef
 
 define transform-m-to-o
@@ -1014,15 +1049,13 @@ $(hide) $(PRIVATE_CC) \
 	$(if $(PRIVATE_NO_DEFAULT_COMPILER_FLAGS),, \
 	    $(HOST_GLOBAL_CFLAGS) \
 	 ) \
-	$(PRIVATE_CFLAGS) \
 	$(1) \
-	$(PRIVATE_DEBUG_CFLAGS) \
 	-MD -MF $(patsubst %.o,%.d,$@) -o $@ $<
 endef
 
 define transform-host-c-to-o-no-deps
 @echo -e ${CL_YLW}"host C:"${CL_RST}" $(PRIVATE_MODULE) <= $<"
-$(call transform-host-c-or-s-to-o-no-deps, )
+$(call transform-host-c-or-s-to-o-no-deps, $(PRIVATE_CFLAGS) $(PRIVATE_CONLYFLAGS) $(PRIVATE_DEBUG_CFLAGS))
 endef
 
 define transform-host-s-to-o-no-deps
@@ -1046,7 +1079,7 @@ endef
 
 define transform-host-m-to-o-no-deps
 @echo -e ${CL_YLW}"host ObjC:"${CL_RST}" $(PRIVATE_MODULE) <= $<"
-$(call transform-host-c-or-s-to-o-no-deps)
+$(call transform-host-c-or-s-to-o-no-deps, $(PRIVATE_CFLAGS) $(PRIVATE_DEBUG_CFLAGS))
 endef
 
 define transform-host-m-to-o
@@ -1460,11 +1493,11 @@ $(hide) tr ' ' '\n' < $(PRIVATE_CLASS_INTERMEDIATES_DIR)/java-source-list \
 $(hide) if [ -s $(PRIVATE_CLASS_INTERMEDIATES_DIR)/java-source-list-uniq ] ; then \
     $(1) -encoding UTF-8 \
     $(strip $(PRIVATE_JAVAC_DEBUG_FLAGS)) \
-    $(if $(findstring true,$(LOCAL_WARNINGS_ENABLE)),$(xlint_unchecked),) \
+    $(if $(findstring true,$(PRIVATE_WARNINGS_ENABLE)),$(xlint_unchecked),) \
     $(2) \
     $(addprefix -classpath ,$(strip \
         $(call normalize-path-list,$(PRIVATE_ALL_JAVA_LIBRARIES)))) \
-    $(if $(findstring true,$(LOCAL_WARNINGS_ENABLE)),$(xlint_unchecked),) \
+    $(if $(findstring true,$(PRIVATE_WARNINGS_ENABLE)),$(xlint_unchecked),) \
     -extdirs "" -d $(PRIVATE_CLASS_INTERMEDIATES_DIR) \
     $(PRIVATE_JAVACFLAGS) \
     \@$(PRIVATE_CLASS_INTERMEDIATES_DIR)/java-source-list-uniq \
@@ -1508,11 +1541,11 @@ $(hide) tr ' ' '\n' < $(PRIVATE_CLASS_INTERMEDIATES_DIR)/java-source-list \
 $(hide) if [ -s $(PRIVATE_CLASS_INTERMEDIATES_DIR)/java-source-list-uniq ] ; then \
     $(1) -encoding UTF-8 \
     $(strip $(PRIVATE_JAVAC_DEBUG_FLAGS)) \
-    $(if $(findstring true,$(LOCAL_WARNINGS_ENABLE)),$(xlint_unchecked),) \
+    $(if $(findstring true,$(PRIVATE_WARNINGS_ENABLE)),$(xlint_unchecked),) \
     $(2) \
     $(addprefix -classpath ,$(strip \
         $(call normalize-path-list,$(PRIVATE_ALL_JAVA_LIBRARIES) $(PRIVATE_CLASS_INTERMEDIATES_DIR)))) \
-    $(if $(findstring true,$(LOCAL_WARNINGS_ENABLE)),$(xlint_unchecked),) \
+    $(if $(findstring true,$(PRIVATE_WARNINGS_ENABLE)),$(xlint_unchecked),) \
     -extdirs "" -d $(PRIVATE_CLASS_INTERMEDIATES_DIR) \
     $(PRIVATE_JAVACFLAGS) \
     \@$(PRIVATE_CLASS_INTERMEDIATES_DIR)/java-source-list-uniq \
@@ -1611,10 +1644,10 @@ endef
 #TODO: update the manifest to point to the dex file
 define add-dex-to-package
 $(if $(filter classes.dex,$(notdir $(PRIVATE_DEX_FILE))),\
-$(hide) $(AAPT) add -k $@ $(PRIVATE_DEX_FILE),\
+$(hide) zip -qj $@ $(PRIVATE_DEX_FILE),\
 $(hide) _adtp_classes_dex=$(dir $(PRIVATE_DEX_FILE))classes.dex; \
 cp $(PRIVATE_DEX_FILE) $$_adtp_classes_dex && \
-$(AAPT) add -k $@ $$_adtp_classes_dex && rm -f $$_adtp_classes_dex)
+zip -qj $@ $$_adtp_classes_dex && rm -f $$_adtp_classes_dex)
 endef
 
 # Add java resources added by the current module.
@@ -1643,7 +1676,8 @@ endef
 define sign-package
 $(hide) mv $@ $@.unsigned
 $(hide) java -jar $(SIGNAPK_JAR) \
-	$(PRIVATE_CERTIFICATE) $(PRIVATE_PRIVATE_KEY) $@.unsigned $@.signed
+    $(PRIVATE_CERTIFICATE) $(PRIVATE_PRIVATE_KEY) \
+    $(PRIVATE_ADDITIONAL_CERTIFICATES) $@.unsigned $@.signed
 $(hide) mv $@.signed $@
 endef
 
@@ -2081,6 +2115,30 @@ $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/$(strip $(1))-timestamp: $(2) $(3) 
 	$(hide) mkdir -p $$(dir $$@)
 	$(hide) touch $$@
 $(6): $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/$(strip $(1))-timestamp
+endef
+
+## Whether to build from source if prebuilt alternative exists
+###########################################################
+# $(1): module name
+# $(2): LOCAL_PATH
+# Expands to empty string if not from source.
+ifeq (true,$(ANDROID_BUILD_FROM_SOURCE))
+define if-build-from-source
+true
+endef
+else
+define if-build-from-source
+$(if $(filter $(ANDROID_NO_PREBUILT_MODULES),$(1))$(filter \
+    $(addsuffix %,$(ANDROID_NO_PREBUILT_PATHS)),$(2)),true)
+endef
+endif
+
+# Include makefile $(1) if build from source for module $(2)
+# $(1): the makefile to include
+# $(2): module name
+# $(3): LOCAL_PATH
+define include-if-build-from-source
+$(if $(call if-build-from-source,$(2),$(3)),$(eval include $(1)))
 endef
 
 ###########################################################
