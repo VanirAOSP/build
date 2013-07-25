@@ -71,6 +71,7 @@ PRODUCT_PACKAGES += \
     cacerts \
     com.android.location.provider \
     com.android.location.provider.xml \
+    conscrypt \
     core \
     core-junit \
     dalvikvm \
@@ -140,10 +141,10 @@ PRODUCT_PACKAGES += \
     libwebrtc_audio_preprocessing \
     libwilhelm \
     libz \
-    lint \
     mdnsd \
     mms-common \
     network \
+    okhttp \
     pand \
     requestsync \
     screencap \

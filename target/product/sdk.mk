@@ -20,7 +20,7 @@ PRODUCT_PROPERTY_OVERRIDES :=
 PRODUCT_PACKAGES := \
 	Calculator \
 	DeskClock \
-	Email2 \
+	Email \
 	Exchange2 \
 	FusedLocation \
 	Gallery \
@@ -45,11 +45,6 @@ PRODUCT_PACKAGES := \
 	ApiDemos \
 	GestureBuilder \
 	WidgetPreview \
-	monkeyrunner \
-	guavalib \
-	jsr305lib \
-	jython \
-	jsilver \
 	librs_jni \
 	ConnectivityTest \
 	GpsLocationTest \

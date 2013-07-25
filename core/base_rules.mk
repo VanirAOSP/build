@@ -257,7 +257,11 @@ $(proto_java_sources_file_stamp): PRIVATE_PROTO_JAVA_OUTPUT_DIR := $(proto_java_
 ifeq ($(LOCAL_PROTOC_OPTIMIZE_TYPE),micro)
 $(proto_java_sources_file_stamp): PRIVATE_PROTO_JAVA_OUTPUT_OPTION := --javamicro_out
 else
+  ifeq ($(LOCAL_PROTOC_OPTIMIZE_TYPE),nano)
+$(proto_java_sources_file_stamp): PRIVATE_PROTO_JAVA_OUTPUT_OPTION := --javanano_out
+  else
 $(proto_java_sources_file_stamp): PRIVATE_PROTO_JAVA_OUTPUT_OPTION := --java_out
+  endif
 endif
 $(proto_java_sources_file_stamp): PRIVATE_PROTOC_FLAGS := $(LOCAL_PROTOC_FLAGS)
 $(proto_java_sources_file_stamp) : $(proto_sources_fullpath) $(PROTOC)
@@ -433,8 +437,7 @@ endif
 ## make clean- targets
 ###########################################################
 cleantarget := clean-$(LOCAL_MODULE)
-$(cleantarget) : PRIVATE_MODULE := $(LOCAL_MODULE)
-$(cleantarget) : PRIVATE_CLEAN_FILES += \
+$(cleantarget) : PRIVATE_MODULE := $(LOCAL_MODULE) \
     $(LOCAL_BUILT_MODULE) \
     $(LOCAL_INSTALLED_MODULE) \
     $(intermediates)
@@ -510,22 +513,11 @@ ifdef LOCAL_DEX_PREOPT
 installed_odex := $(basename $(LOCAL_INSTALLED_MODULE)).odex
 built_odex := $(basename $(LOCAL_BUILT_MODULE)).odex
 $(installed_odex) : $(built_odex) $(LOCAL_BUILT_MODULE) | $(ACP)
-	@echo -e ${CL_CYN}"Install: $@"${CL_RST}
+	@echo "Install: $@"
 	$(copy-file-to-target)
 
 $(LOCAL_INSTALLED_MODULE) : $(installed_odex)
 endif
-
-# All host modules that are not tagged with optional are automatically installed.
-# Save the installed files in ALL_HOST_INSTALLED_FILES.
-ifeq ($(LOCAL_IS_HOST_MODULE),true)
-  ALL_HOST_INSTALLED_FILES += $(LOCAL_INSTALLED_MODULE)
-  ifneq ($(filter debug eng tests, $(LOCAL_MODULE_TAGS)),)
-    $(warning $(LOCAL_MODULE_MAKEFILE): Module "$(LOCAL_MODULE)" has useless module tags: $(filter debug eng tests, $(LOCAL_MODULE_TAGS)). It will be installed anyway.)
-    LOCAL_MODULE_TAGS := $(filter-out debug eng tests, $(LOCAL_MODULE_TAGS))
-  endif
-endif
-
 endif # !LOCAL_UNINSTALLABLE_MODULE
 
 

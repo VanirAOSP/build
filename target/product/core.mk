@@ -51,6 +51,7 @@ PRODUCT_PACKAGES += \
     cacerts \
     com.android.location.provider \
     com.android.location.provider.xml \
+    conscrypt \
     core \
     core-junit \
     dalvikvm \
@@ -122,27 +123,29 @@ PRODUCT_PACKAGES += \
     libz \
     make_ext4fs \
     mdnsd \
+    okhttp \
     requestsync \
     screencap \
     sensorservice \
-    lint \
-    uiautomator \
     telephony-common \
-    mms-common \
-    zoneinfo.dat \
-    zoneinfo.idx \
-    zoneinfo.version
+    mms-common
 
-PRODUCT_COPY_FILES += \
-    system/core/rootdir/init.usb.rc:root/init.usb.rc \
-    system/core/rootdir/init.trace.rc:root/init.trace.rc \
+# SELinux packages
+PRODUCT_PACKAGES += \
+    sepolicy \
+    file_contexts \
+    seapp_contexts \
+    property_contexts \
+    mac_permissions.xml
 
 # host-only dependencies
 ifeq ($(WITH_HOST_DALVIK),true)
     PRODUCT_PACKAGES += \
         apache-xml-hostdex \
         bouncycastle-hostdex \
+        conscrypt-hostdex \
         core-hostdex \
+        okhttp-hostdex \
         libcrypto \
         libexpat \
         libicui18n \
@@ -150,10 +153,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
         libjavacore \
         libssl \
         libz-host \
-        dalvik \
-        zoneinfo-host.dat \
-        zoneinfo-host.idx \
-        zoneinfo-host.version
+        dalvik
 endif
 
 ifeq ($(HAVE_SELINUX),true)

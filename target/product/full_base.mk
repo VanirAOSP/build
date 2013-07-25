@@ -23,17 +23,6 @@ PRODUCT_PACKAGES := \
     libfwdlockengine \
     WAPPushManager
 
-PRODUCT_PACKAGES += \
-    Galaxy4 \
-    HoloSpiralWallpaper \
-    LiveWallpapers \
-    LiveWallpapersPicker \
-    MagicSmokeWallpapers \
-    NoiseField \
-    PhaseBeam \
-    VisualizationWallpapers \
-    PhotoTable
-
 include $(SRC_TARGET_DIR)/product/emulator.mk
 
 # Additional settings used in all AOSP builds
