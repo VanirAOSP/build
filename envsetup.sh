@@ -99,10 +99,6 @@ function check_product()
 
 VARIANT_CHOICES=(user userdebug eng)
 
-# Use a prebuilt libjavacore to work around the tricky
-# conscrypt JNI_OnLoad handling
-./vendor/cfx/tools/host_libjavacore
-
 # check to see if the supplied variant is valid
 function check_variant()
 {
