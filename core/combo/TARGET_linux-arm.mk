@@ -73,7 +73,6 @@ TARGET_arm_CFLAGS :=    -O3 \
                         -funswitch-loops \
                         -funsafe-loop-optimizations \
                         -ftree-vectorize \
-                        -fvect-cost-model \
                         -pipe
 
 # THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
@@ -81,7 +80,6 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -O3 \
                         -fomit-frame-pointer \
                         -fstrict-aliasing \
-                        -fforce-addr \
                         -funsafe-math-optimizations \
                         -Wstrict-aliasing=2 \
                         -Werror=strict-aliasing \
