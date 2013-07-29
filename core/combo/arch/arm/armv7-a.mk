@@ -15,9 +15,9 @@ endif
 arch_variant_cflags := \
     -march=armv7-a
 
-ifneq ($(strip $(TARGET_CPU_VARIANT)),)
+ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 arch_variant_cflags += \
-    -mtune=$(strip $(TARGET_CPU_VARIANT))
+    -mtune=$(strip $(TARGET_ARCH_VARIANT_CPU))
 endif
 
 ifneq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)

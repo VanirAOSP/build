@@ -22,21 +22,21 @@ ARCH_ARM_HAVE_TLS_REGISTER      := true
 endif
 
 # is arch variant CPU defined?
-ifneq ($(strip $(TARGET_CPU_VARIANT)),)
+ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 
-ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a15)
+ifeq ($(strip $(TARGET_ARCH_VARIANT_CPU)),cortex-a15)
 arch_cpu_without_ghosts := cortex-a9  #cortex-a15 has ghosts
 else
-arch_cpu_without_ghosts := $(strip $(TARGET_CPU_VARIANT))
+arch_cpu_without_ghosts := $(strip $(TARGET_ARCH_VARIANT_CPU))
 endif
 
 arch_variant_cflags += \
 	-mcpu=$(arch_cpu_without_ghosts) \
-	-mtune=$(strip $(TARGET_CPU_VARIANT))
+	-mtune=$(strip $(TARGET_ARCH_VARIANT_CPU))
 
 else
 
-$(warn TARGET_CPU_VARIANT is NOT SET! Using values from armv7-a.mk)
+$(warn TARGET_ARCH_VARIANT_CPU is NOT SET! Using values from armv7-a.mk)
 
 endif #end of cpu stuff
 
@@ -51,22 +51,22 @@ arch_variant_cflags += \
 endif
 
 #TODO: fine-tune generic values
-ifeq ($(TARGET_CPU_VARIANT),cortex-a15)
+ifeq ($(TARGET_ARCH_VARIANT_CPU),cortex-a15)
 ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
 ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
 #ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224
 endif
-ifeq ($(TARGET_CPU_VARIANT),cortex-a9)
+ifeq ($(TARGET_ARCH_VARIANT_CPU),cortex-a9)
 ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
 ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
 ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224
 endif
-ifeq ($(TARGET_CPU_VARIANT),cortex-a8)
+ifeq ($(TARGET_ARCH_VARIANT_CPU),cortex-a8)
 ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
 ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
 ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224
 endif
-ifeq ($(TARGET_CPU_VARIANT), cortex-a5)
+ifeq ($(TARGET_ARCH_VARIANT_CPU), cortex-a5)
 ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
 ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
 ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224

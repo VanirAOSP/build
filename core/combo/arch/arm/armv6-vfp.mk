@@ -12,7 +12,7 @@ ARCH_ARM_HAVE_VFP               := true
 ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
 TARGET_ARCH_VARIANT_FPU         := vfp
 endif
-ifeq ($(strip $(TARGET_CPU_VARIANT)),)
+ifeq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 TARGET_ARCH_VARIANT_CPU         := arm1136jf-s
 endif
 
@@ -20,7 +20,7 @@ endif
 # and a better solution should be found in the future.
 #
 arch_variant_cflags := \
-    -mcpu=$(TARGET_CPU_VARIANT) \
+    -mcpu=$(TARGET_ARCH_VARIANT_CPU) \
     -mfloat-abi=softfp \
     -mfpu=$(TARGET_ARCH_VARIANT_FPU) \
     -D__ARM_ARCH_5__ \
