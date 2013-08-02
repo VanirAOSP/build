@@ -23,10 +23,8 @@ PRODUCT_PACKAGES := \
 	Email \
 	Exchange2 \
 	FusedLocation \
-	Gallery \
 	Mms \
 	Phone \
-	Protips \
 	SoftKeyboard \
 	SystemUI \
 	Launcher2 \
@@ -49,7 +47,6 @@ PRODUCT_PACKAGES := \
 	ConnectivityTest \
 	GpsLocationTest \
 	CalendarProvider \
-	Calendar \
 	SmokeTest \
 	SmokeTestApp \
 	rild \

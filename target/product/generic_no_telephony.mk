@@ -32,7 +32,7 @@ PRODUCT_PACKAGES := \
     InputDevices \
     LatinIME \
     Launcher2 \
-    OneTimeI    OneTimeInitializer \
+    OneTimeInitializer \
     Phone \
     Settings \
     SystemUI \
