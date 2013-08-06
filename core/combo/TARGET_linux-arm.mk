@@ -165,6 +165,14 @@ $(combo_2nd_arch_prefix)TARGET_LIBGCC := $(shell $($(combo_2nd_arch_prefix)TARGE
         $($(combo_2nd_arch_prefix)TARGET_GLOBAL_CFLAGS) -print-libgcc-file-name)
 $(combo_2nd_arch_prefix)TARGET_LIBATOMIC := $(shell $($(combo_2nd_arch_prefix)TARGET_CC) \
         $($(combo_2nd_arch_prefix)TARGET_GLOBAL_CFLAGS) -print-file-name=libatomic.a)
+# Define LTO (Link Time Optimization options)
+
+ifeq ($(strip $(TARGET_ENABLE_LTO)),true)
+# Enable global LTO if TARGET_ENABLE_LTO is set.
+TARGET_LTO_CFLAGS := -flto \
+                    -flto-compression-level=2
+endif
+
 endif
 
 KERNEL_HEADERS_COMMON := $(libc_root)/kernel/uapi

@@ -194,6 +194,21 @@ ifeq ($(strip $(LOCAL_FDO_SUPPORT)), true)
   endif
 endif
 
+####################################################
+## Add LTO flags if LTO is turned on, supported,
+# clang is not used for the module, and the module
+# is a target module
+####################################################
+ifeq ($(strip $(LOCAL_NO_LTO_SUPPORT)),)
+  ifeq ($(strip $(LOCAL_STOCK_CLANG)),)
+    ifeq ($(strip $(LOCAL_IS_HOST_MODULE)),)
+      LOCAL_CFLAGS += $(TARGET_LTO_CFLAGS)
+      LOCAL_CPPFLAGS += $(TARGET_LTO_CFLAGS)
+      LOCAL_LDFLAGS += $(TARGET_LTO_CFLAGS)
+    endif
+  endif
+endif
+
 ###########################################################
 ## Explicitly declare assembly-only __ASSEMBLY__ macro for
 ## assembly source
