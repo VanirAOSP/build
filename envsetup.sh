@@ -35,6 +35,24 @@ EOF
     echo $A
 }
 
+BLACK='\[\033[0;30m\]'
+BLUE='\[\033[0;34m\]'
+GREEN='\[\033[0;32m\]'
+CYAN='\[\033[0;36m\]'
+RED='\[\033[0;31m\]'
+PURPLE='\[\033[0;35m\]'
+BROWN='\[\033[0;33m\]'
+LIGHTGREY='\[\033[0;37m\]'
+DARKGREY='\[\033[1;30m\]'
+LIGHTBLUE='\[\033[1;34m\]'
+LIGHTGREEN='\[\033[1;32m\]'
+LIGHTCYAN='\[\033[1;36m\]'
+LIGHTRED='\[\033[1;31m\]'
+LIGHTPURPLE='\[\033[1;35m\]'
+YELLOW='\[\033[1;33m\]'
+WHITE='\[\033[1;37m\]'
+NONE='\[\033[0m\]'
+
 #run a command inside all projects tracked on the vanir remote in the manifest
 function forall_vanir()
 {
@@ -1610,7 +1628,7 @@ export PS1=`echo "$PS1" | sed 's/\[\$ \]*//g'`
 istheregit=$(which git)
 if [ `echo $PS1 | grep parse_git_branch | wc -l` -eq 0 ]; then
   if [ -x "$istheregit" ]; then
-      export PS1="${NONE}$PS1$(parse_git_branch)${NONE}"
+      export PS1="${NONE}$PS1\$(parse_git_branch)${NONE}"
   else
       export PS1="$PS1$ "
   fi
