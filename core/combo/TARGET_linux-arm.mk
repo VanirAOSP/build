@@ -44,6 +44,12 @@ ifeq ($(strip $(wildcard $(TARGET_ARCH_SPECIFIC_MAKEFILE))),)
 $(error Unknown ARM architecture version: $(TARGET_ARCH_VARIANT))
 endif
 
+ifeq ($(DONT_WARN_STRICT_ALIASING),)
+STRICT_ALIASING_WARNINGS := \
+                        -Wstrict-aliasing=2 \
+                        -Werror=strict-aliasing
+endif
+
 include $(TARGET_ARCH_SPECIFIC_MAKEFILE)
 
 # You can set TARGET_TOOLS_PREFIX to get gcc from somewhere else
@@ -73,9 +79,7 @@ TARGET_arm_CFLAGS :=    -O3 \
                         -funswitch-loops \
                         -funsafe-loop-optimizations \
                         -ftree-vectorize \
-                        -Wstrict-aliasing=2 \
-                        -Werror=strict-aliasing \
-                        -pipe
+                        -pipe $(STRICT_ALIASING_WARNINGS)
 
 # THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
 TARGET_thumb_CFLAGS :=  -mthumb \
@@ -83,9 +87,7 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -fomit-frame-pointer \
                         -fstrict-aliasing \
                         -funsafe-math-optimizations \
-                        -Wstrict-aliasing=2 \
-                        -Werror=strict-aliasing \
-                        -pipe
+                        -pipe $(STRICT_ALIASING_WARNINGS)
 
 #SHUT THE F$#@ UP!
 TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
@@ -136,7 +138,7 @@ TARGET_GLOBAL_CFLAGS += \
 			-D_FORTIFY_SOURCE=0 \
 			-fno-short-enums \
 			-pipe \
-			$(arch_variant_cflags)
+			$(arch_variant_cflags) $(STRICT_ALIASING_WARNINGS)
 
 android_config_h := $(call select-android-config-h,linux-arm)
 TARGET_ANDROID_CONFIG_CFLAGS := -include $(android_config_h) -I $(dir $(android_config_h))
@@ -187,8 +189,6 @@ TARGET_GLOBAL_CPPFLAGS += \
 TARGET_RELEASE_CFLAGS += \
 			-DNDEBUG \
 			-g \
-			-Wstrict-aliasing=2 \
-			-Werror=strict-aliasing \
 			-fgcse-after-reload \
 			-frerun-cse-after-loop \
 			-frename-registers \
