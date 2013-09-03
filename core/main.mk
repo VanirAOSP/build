@@ -44,10 +44,9 @@ ifeq (0,$(shell expr $$(echo $(MAKE_VERSION) | sed "s/[^0-9\.].*//") = 3.81))
 ifeq (0,$(shell expr $$(echo $(MAKE_VERSION) | sed "s/[^0-9\.].*//") = 3.82))
 $(warning ********************************************************************************)
 $(warning *  You are using version $(MAKE_VERSION) of make.)
-$(warning *  Android can only be built by versions 3.81 and 3.82.)
+$(warning *  Android is tested to build with versions 3.81 and 3.82.)
 $(warning *  see https://source.android.com/source/download.html)
 $(warning ********************************************************************************)
-$(error stopping)
 endif
 endif
 endif
@@ -178,32 +177,45 @@ $(info $(space))
 $(info You use OpenJDK but only Sun/Oracle JDK is supported.)
 $(info Please follow the machine setup instructions at)
 $(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
+$(info $(space))
+$(info Continue at your own peril!)
+$(info ************************************************************)
+endif
+
+# Check for the correct version of java
+java_version := $(shell java -version 2>&1 | head -n 1 | grep '^java .*[ "]1\.[67][\. "$$]')
+ifneq ($(shell java -version 2>&1 | grep -i openjdk),)
+java_version :=
+endif
+ifeq ($(strip $(java_version)),)
+$(info ************************************************************)
+$(info You are attempting to build with an unsupported version)
+$(info of java.)
+$(info $(space))
+$(info Your version is: $(shell java -version 2>&1 | head -n 1).)
+$(info The correct version is: Java SE 1.6 or 1.7.)
+$(info $(space))
+$(info Please follow the machine setup instructions at)
+$(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
 $(info ************************************************************)
 endif
 
 # Check for the correct version of javac
-javac_version := $(shell javac -version 2>&1 | head -n 1 | grep '[ "]1\.6[\. "$$]')
+javac_version := $(shell javac -version 2>&1 | head -n 1 | grep '[ "]1\.[67][\. "$$]')
 ifeq ($(strip $(javac_version)),)
 $(info ************************************************************)
+$(info You are attempting to build with the incorrect version)
+$(info of javac.)
 $(info $(space))
 $(info Your version is: $(shell javac -version 2>&1 | head -n 1).)
-$(info The supported ASOP version is: Java SE 1.6.)
+$(info The correct version is: 1.6 or 1.7.)
 $(info $(space))
-$(info WTF-BBQ!? JAVA SMILES UPON YOU and your machine levels up...)
-$(info You are now permitted to build with your crap-ass open JDK)
-$(info Stay frosty... the ninjas have arrived.   --TeamVanir)
-$(info $(space)$(space)$(space)$(space)https://github.com/VanirAOSP/platform_manifest)
+$(info Please follow the machine setup instructions at)
+$(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
 $(info ************************************************************)
-#$(error stop)
+$(error stop)
 endif
 
-#set BUILD_EMULATOR to true in product mk to build emulator... otherwise don't.
-ifeq (,$(strip $(BUILD_EMULATOR)))
-    BUILD_EMULATOR := false
-endif
-
-#if BUILD_EMULATOR is true, then check if we're building on mac and handle stuff accordingly
-ifeq ($(BUILD_EMULATOR), true)
 ifeq (darwin,$(HOST_OS))
 GCC_REALPATH = $(realpath $(shell which $(HOST_CC)))
 ifneq ($(findstring llvm-gcc,$(GCC_REALPATH)),)
@@ -225,7 +237,6 @@ $(shell echo 'VERSIONS_CHECKED := $(VERSION_CHECK_SEQUENCE_NUMBER)' \
         > $(OUT_DIR)/versions_checked.mk)
 $(shell echo 'BUILD_EMULATOR := $(BUILD_EMULATOR)' \
         >> $(OUT_DIR)/versions_checked.mk)
-endif
 endif
 
 # These are the modifier targets that don't do anything themselves, but
@@ -308,11 +319,6 @@ is_sdk_build :=
 ifneq ($(filter sdk win_sdk sdk_addon,$(MAKECMDGOALS)),)
 is_sdk_build := true
 endif
-
-## have selinux ##
-ifeq ($(HAVE_SELINUX),true)
-ADDITIONAL_BUILD_PROPERTIES += ro.build.selinux=1
-endif # HAVE_SELINUX
 
 ## user/userdebug ##
 
@@ -470,9 +476,9 @@ FULL_BUILD := true
 
 endif	# !SDK_ONLY
 
-# Before we go and include all of the module makefiles, turn off this stupid 
-# check because we're going honey badger mode.
-stash_product_vars:=false
+# Before we go and include all of the module makefiles, stash away
+# the PRODUCT_* values so that later we can verify they are not modified.
+stash_product_vars:=true
 ifeq ($(stash_product_vars),true)
   $(call stash-product-vars, __STASHED)
 endif
