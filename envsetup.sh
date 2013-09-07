@@ -70,7 +70,7 @@ function forall_vanir()
     pathlist="$pathlist $x"
   done
   cmd="`echo $* | sed 's/\"/\\\"/g'`"
-  repo forall $pathlist -p -c "eval $cmd"
+  repo forall $pathlist -c "eval $cmd"
   popd >& /dev/null
 }
 
