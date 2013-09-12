@@ -73,28 +73,57 @@ endif
 
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
-TARGET_arm_CFLAGS :=    -O3 \
-                        -fomit-frame-pointer \
-                        -fstrict-aliasing    \
-                        -funswitch-loops \
-                        -funsafe-loop-optimizations \
-                        -ftree-vectorize \
-                        -pipe $(STRICT_ALIASING_WARNINGS)
-
-# THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
-TARGET_thumb_CFLAGS :=  -mthumb \
-                        -O3 \
+ifeq ($(TARGET_USE_O2),true)
+TARGET_arm_CFLAGS := -O2 \
                         -fomit-frame-pointer \
                         -fstrict-aliasing \
+                        -funswitch-loops \
+                        -pipe
+
+TARGET_thumb_CFLAGS := -mthumb \
+                        -Os \
+                        -fomit-frame-pointer \
+                        -fno-strict-aliasing \
+                        -pipe
+else ifeq ($(TARGET_USE_STOCK),true)
+TARGET_arm_CFLAGS := -O2 \
+                        -fomit-frame-pointer \
+                        -fstrict-aliasing \
+                        -funswitch-loops \
+                        -pipe
+
+TARGET_thumb_CFLAGS := -mthumb \
+                        -Os \
+                        -fomit-frame-pointer \
+                        -fno-strict-aliasing \
+                        -pipe
+else
+TARGET_arm_CFLAGS := -O3 \
+                        -fomit-frame-pointer \
+                        -fstrict-aliasing \
+                        -funswitch-loops \
+                        -funsafe-loop-optimizations \
+                        -fno-tree-vectorize \
+                        -pipe
+
+TARGET_thumb_CFLAGS := -mthumb \
+                        -O2 \
+                        -fomit-frame-pointer \
+                        -fstrict-aliasing \
+                        -fforce-addr \
                         -funsafe-math-optimizations \
-                        -pipe $(STRICT_ALIASING_WARNINGS)
+                        -Wstrict-aliasing=2 \
+                        -Werror=strict-aliasing \
+                        -fno-tree-vectorize \
+                        -pipe
+endif
 
 #SHUT THE F$#@ UP!
-TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
+TARGET_arm_CFLAGS += -Wno-unused-parameter \
                         -Wno-unused-value \
                         -Wno-unused-function
 
-TARGET_thumb_CFLAGS +=  -Wno-unused-parameter \
+TARGET_thumb_CFLAGS += -Wno-unused-parameter \
                         -Wno-unused-value \
                         -Wno-unused-function
 
@@ -181,11 +210,20 @@ TARGET_GLOBAL_LDFLAGS += \
 # more always true garglemesh:
 TARGET_GLOBAL_CFLAGS += -mthumb-interwork
 
-TARGET_GLOBAL_CPPFLAGS += \
-			-fvisibility-inlines-hidden \
-			$(arch_variant_cflags)
-
 # More flags/options can be added here
+ifeq ($(TARGET_USE_STOCK),true)
+TARGET_GLOBAL_CPPFLAGS += -fvisibility-inlines-hidden
+
+TARGET_RELEASE_CFLAGS := \
+                         -DNDEBUG \
+                         -g \
+                         -Wstrict-aliasing=2 \
+                         -fgcse-after-reload \
+                         -frerun-cse-after-loop \
+                         -frename-registers \
+                         -pipe
+else 
+
 TARGET_RELEASE_CFLAGS += \
 			-DNDEBUG \
 			-g \
@@ -193,6 +231,8 @@ TARGET_RELEASE_CFLAGS += \
 			-frerun-cse-after-loop \
 			-frename-registers \
 			-pipe
+endif
+
 libc_root := bionic/libc
 libm_root := bionic/libm
 libstdc++_root := bionic/libstdc++
