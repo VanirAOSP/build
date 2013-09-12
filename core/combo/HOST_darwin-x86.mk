@@ -22,11 +22,22 @@ ifneq ($(strip $(BUILD_HOST_64bit)),)
 # more consistency between the host tools and the target.
 # BUILD_HOST_64bit=1 overrides it for tool like emulator
 # which can benefit from 64-bit host arch.
+ifeq ($(TARGET_USE_STOCK),true)
 HOST_GLOBAL_CFLAGS += -m64
 HOST_GLOBAL_LDFLAGS += -m64
 else
+HOST_GLOBAL_CFLAGS += -m64 -mtune=native -fsched-spec-load -funroll-loops
+HOST_GLOBAL_LDFLAGS += -m64 -mtune=native -fsched-spec-load -funroll-loops
+endif
+else
+ifeq ($(TARGET_USE_STOCK),true)
+else
 HOST_GLOBAL_CFLAGS += -m32
 HOST_GLOBAL_LDFLAGS += -m32
+else
+HOST_GLOBAL_CFLAGS += -m32 -mstackrealign -mtune=native -msse3 -mfpmath=sse -fsched-spec-load -funroll-loops
+HOST_GLOBAL_LDFLAGS += -m32 -mstackrealign -mtune=native -msse3 -mfpmath=sse -fsched-spec-load -funroll-loops
+endif
 endif # BUILD_HOST_64bit
 
 ifneq ($(strip $(BUILD_HOST_static)),)
