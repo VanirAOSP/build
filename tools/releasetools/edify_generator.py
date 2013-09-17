@@ -260,8 +260,8 @@ class EdifyGenerator(object):
 
     for dest, links in sorted(by_dest.iteritems()):
       cmd = ('symlink("%s", ' % (dest,) +
-             ",\0".join(['"' + i + '"' for i in sorted(links)]) + ");")
-      self.script.append(self._WordWrap(cmd))
+             ", ".join(['"' + i + '"' for i in sorted(links)]) + ");")
+      self.script.append(cmd)
 
   def AppendExtra(self, extra):
     """Append text verbatim to the output script."""
