@@ -91,6 +91,12 @@ endif
 ifeq ($(MAKECMDGOALS),clobber)
 dont_bother := true
 endif
+ifeq ($(MAKECMDGOALS),novo)
+dont_bother := true
+endif
+ifeq ($(MAKECMDGOALS),burst)
+dont_bother := true
+endif
 ifeq ($(MAKECMDGOALS),dataclean)
 dont_bother := true
 endif
@@ -435,7 +441,6 @@ define should-install-to-system
 $(if $(filter samples tests,$(1)),,true)
 endef
 endif
-
 
 # If they only used the modifier goals (showcommands, etc), we'll actually
 # build the default target.
@@ -955,6 +960,13 @@ clobber: clean
 novo:
 	@rm -rf $(OUT_DIR)/target/*
 	@echo -e ${CL_GRN}"Target directory removed."${CL_RST}
+
+
+# This is designed for building in memory.  Clean products, but keep common files - DHO
+.PHONY: burst
+burst:
+	@rm -rf $(OUT_DIR)/target/product/*
+	@echo -e ${CL_GRN}"Product directory removed."${CL_RST}
 
 # The rules for dataclean and installclean are defined in cleanbuild.mk.
 
