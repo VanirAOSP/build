@@ -171,9 +171,11 @@ endif
 TARGET_GLOBAL_CFLAGS += -Wno-psabi
 
 TARGET_GLOBAL_LDFLAGS += \
+            -Wl,-O1 \
 			-Wl,-z,noexecstack \
 			-Wl,-z,relro \
 			-Wl,-z,now \
+			-Wl,--sort-common -s\
 			-Wl,--warn-shared-textrel \
 			-Wl,--fatal-warnings \
 			$(arch_variant_ldflags) $(gcc_variant_ldflags)
