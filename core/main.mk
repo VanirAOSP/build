@@ -100,6 +100,9 @@ endif
 ifeq ($(MAKECMDGOALS),surgical)
 dont_bother := true
 endif
+ifeq ($(MAKECMDGOALS),biopsy)
+dont_bother := true
+endif
 ifeq ($(MAKECMDGOALS),dataclean)
 dont_bother := true
 endif
@@ -978,6 +981,15 @@ surgical:
 	@rm -rf $(OUT_DIR)/target/product/*/vanir_*-ota-eng.dho.zip
 	@rm -rf $(OUT_DIR)/target/product/*/system.img
 	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
+	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
+
+# This is designed for building on SSD but to whittle away at the bulk file size - DHO
+.PHONY: biopsy
+biopsy:
+	@rm -rf $(OUT_DIR)/target/product/*/vanir_*-ota-eng.dho.zip
+	@rm -rf $(OUT_DIR)/target/product/*/system.img
+	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
+	@rm -rf $(OUT_DIR)/target/product/*/system/app/*
 	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
 
 # The rules for dataclean and installclean are defined in cleanbuild.mk.
