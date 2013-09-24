@@ -37,6 +37,7 @@ PRODUCT_PACKAGES += \
     UserDictionaryProvider \
     VpnDialogs \
     atrace \
+    libanalogradiobroadcasting \ 
     libandroidfw \
     libaudiopreprocessing \
     libaudioutils \
