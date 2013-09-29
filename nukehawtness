@@ -1,5 +1,5 @@
 #!/bin/bash
-### SEXY REPO START HELPER (assumes you are starting a branch on the project you're in if you ommit that argument)
+### SEXY REPO START HELPER (assumes you are starting a branch on the project you're in if you omit that argument)
 rst()
 {
 if [ $# -eq 1 ]; then
@@ -20,7 +20,8 @@ if [ $# -eq 1 ]; then
     repo start $1 $currpath
     popd &> /dev/null
 else
-    repo start $1 $*
+    repo start $1 $2
+    cd $2
 fi
 }
 
