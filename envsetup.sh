@@ -545,6 +545,13 @@ function lunch()
 
     local product=$(echo -n $selection | sed -e "s/-.*$//")
     check_product $product
+    T=$(gettop)
+    if [ $T ]; then
+        pushd . >& /dev/null
+        cd $T
+        build/tools/bottleservice.sh $product || return 1
+        popd >& /dev/null
+    fi
     if [ $? -ne 0 ]
     then
         echo
