@@ -82,4 +82,12 @@ if [ `cat .repo/local_manifests/bottleservice.xml | grep "name=\"$kernelsource\"
     reposync -c -f -j32 -q
     echo " "
     echo " re-sync complete"
+else
+    #fix borked toroplus kernel string comparison consequences
+    if [ `cat .repo/local_manifests/bottleservice.xml | grep "tuna" | wc -l` -gt 1 ]; then
+        cat .repo/local_manifests/bottleservice.xml | grep -v tuna > .repo/local_manifests/tmp.xml
+        mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
+        $0 $*
+    fi
 fi
+exit 0
