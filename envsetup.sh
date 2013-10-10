@@ -544,14 +544,7 @@ function lunch()
     export TARGET_BUILD_APPS=
 
     local product=$(echo -n $selection | sed -e "s/-.*$//")
-    check_product $product
-    T=$(gettop)
-    if [ $T ]; then
-        pushd . >& /dev/null
-        cd $T
-        build/tools/bottleservice.sh $product || return 1
-        popd >& /dev/null
-    fi
+    check_product $product    
     if [ $? -ne 0 ]
     then
         echo
@@ -559,7 +552,6 @@ function lunch()
         echo "** Do you have the right repo manifest?"
         product=
     fi
-
     local variant=$(echo -n $selection | sed -e "s/^[^\-]*-//")
     check_variant $variant
     if [ $? -ne 0 ]
@@ -574,6 +566,13 @@ function lunch()
     then
         echo
         return 1
+    fi
+    T=$(gettop)
+    if [ $T ]; then
+        pushd . >& /dev/null
+        cd $T
+        build/tools/bottleservice.sh $product || return 1
+        popd >& /dev/null
     fi
 
     export TARGET_PRODUCT=$product
