@@ -51,13 +51,56 @@ kernelsource="android_`echo $TARGET_KERNEL_SOURCE | sed 's/\//_/g'`"
 
 source .repo/manifests/kernel_special_cases.sh $device
 
+[ $remote ] && [ "$remote" = "cm" ] && export remote=
+
 if [ ! -e .repo/local_manifests ] || [ ! -e .repo/local_manifests/bottleservice.xml ]; then
     mkdir -p .repo/local_manifests
     echo '<?xml version="1.0" encoding="UTF-8"?>
 <manifest>
 </manifest>' > .repo/local_manifests/bottleservice.xml
 fi
-if [ `cat .repo/local_manifests/bottleservice.xml | grep "name=\"$kernelsource\"" | wc -l` -eq 0 ]; then
+if [ `cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL_SOURCE\"" | wc -l` -gt 1 ]; then
+   echo "UH OH! You have duplicate repos for $TARGET_KERNEL_SOURCE in bottleservice.xml"
+   echo "Let's pick one arbitrarily and get rid of the rest."
+   line=`cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL_SOURCE\"" | head -n 1`
+   cat .repo/local_manifests/bottleservice.xml | grep -v "</manifest>" | egrep -v "path=\"$TARGET_KERNEL_SOURCE\"" > .repo/local_manifests/tmp.xml
+   echo "$line" >> .repo/local_manifests/tmp.xml
+   echo "</manifest>" >> .repo/local_manifests/tmp.xml
+   mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
+fi
+getkernelline='path="'$TARGET_KERNEL_SOURCE'" name="'$kernelsource'"'
+[ $remote ] && getkernelline=$getkernelline' remote="'$remote'"'
+[ $remoterevision ] && getkernelline=$getkernelline' revision="'$remoterevision'"'
+haskernelline=`cat .repo/local_manifests/bottleservice.xml | egrep "$getkernelline" | wc -l`
+hasdevice=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->" | wc -l`
+if [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
+   #device comment is in the file, but its kernel is the wrong one
+   line=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->"`
+   cat .repo/local_manifests/bottleservice.xml | egrep -v "$line" > .repo/local_manifests/tmp.xml
+   remainingdevs=""
+   echo "removing $device from previous kernel line: $line"
+   for x in `echo $line | sed 's/.*\/> //g' | sed 's/<!-- //g' | sed 's/ -->/ /g'`; do
+       if [ ! "$device" = $x ]; then
+           remainingdevs="$remainingdevs<!-- $x -->"
+       fi
+   done
+   echo "remaining line that used to have device = $line"
+   if [ `echo $remainingdevs | wc -c` -gt 1 ]; then
+       echo "`echo "$line" | sed 's/<!--.*//g'`$remainingdevs" >> .repo/local_manifests/tmp.xml
+   fi
+   echo "</manifest>" >> .repo/local_manifests/tmp.xml
+   mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
+elif [ $haskernelline -gt 0 ] && [ $hasdevice -eq 0 ]; then
+    #device's kernel is in the file, but device comment isn't added yet
+    line=`cat .repo/local_manifests/bottleservice.xml | egrep "$getkernelline"`
+    echo "Adding $device to already existing kernel line: $line"
+    cat .repo/local_manifests/bottleservice.xml | egrep -v "$line" | grep -v "</manifest>" > .repo/local_manifests/tmp.xml
+    echo "$line <!-- $device -->" >> .repo/local_manifests/tmp.xml
+    echo "</manifest>" >> .repo/local_manifests/tmp.xml
+    mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
+fi
+if [ $haskernelline -eq 0 ]; then
+    #add kernel to the file
     echo " "
     echo " VANIR BOTTLESERVICE. YOU KNOW HOW WE DO."
     echo " "
@@ -70,7 +113,7 @@ if [ `cat .repo/local_manifests/bottleservice.xml | grep "name=\"$kernelsource\"
     NEWLINE="<project path=\"$TARGET_KERNEL_SOURCE\" name=\"$kernelsource\""
     [ $remote ] && NEWLINE="$NEWLINE remote=\"$remote\""
     [ $remoterevision ] && NEWLINE="$NEWLINE revision=\"$remoterevision\""
-    NEWLINE="$NEWLINE />"
+    NEWLINE="$NEWLINE /> <!-- $device -->"
     echo "  $NEWLINE" >> tmp.xml
     echo "</manifest>" >> tmp.xml
     mv tmp.xml bottleservice.xml
@@ -82,12 +125,5 @@ if [ `cat .repo/local_manifests/bottleservice.xml | grep "name=\"$kernelsource\"
     reposync -c -f -j32 -q
     echo " "
     echo " re-sync complete"
-else
-    #fix borked toroplus kernel string comparison consequences
-    if [ `cat .repo/local_manifests/bottleservice.xml | grep "tuna" | wc -l` -gt 1 ]; then
-        cat .repo/local_manifests/bottleservice.xml | grep -v tuna > .repo/local_manifests/tmp.xml
-        mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
-        $0 $*
-    fi
 fi
 exit 0
