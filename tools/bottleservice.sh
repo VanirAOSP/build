@@ -62,7 +62,7 @@ if [ `cat .repo/local_manifests/bottleservice.xml | grep "name=\"$kernelsource\"
     echo " VANIR BOTTLESERVICE. YOU KNOW HOW WE DO."
     echo " "
     echo " Adding a line for $device's kernel to .repo/local_manifests/bottleservice.xml,
-    and adding another bottle of Crystal to your tab."
+    and adding another bottle of Cristal to your tab."
     echo " "
     pushd . >& /dev/null
     cd .repo/local_manifests
