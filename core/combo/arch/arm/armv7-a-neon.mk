@@ -10,8 +10,7 @@ ARCH_ARM_HAVE_NEON              := true
 ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 	cpu_for_optimizations := $(strip $(TARGET_ARCH_VARIANT_CPU))
 else
-# infer TARGET_ARCH_VARIANT_CPU from TARGET_CPU_VARIANT
-ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a15)
+ifeq ($(TARGET_CPU_VARIANT),$(filter $(TARGET_CPU_VARIANT),cortex-a15 krait))
 	cpu_for_optimizations := cortex-a15
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a9)
@@ -19,9 +18,6 @@ ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a9)
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a7)
 	cpu_for_optimizations := cortex-a7
-else
-ifeq ($(strip $(TARGET_CPU_VARIANT)),krait)
-	cpu_for_optimizations := cortex-a9
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),scorpion)
 	cpu_for_optimizations := cortex-a8
@@ -31,16 +27,15 @@ endif
 endif
 endif
 endif
-endif
 endif #end of cpu stuff
 
 ifneq ($(cpu_for_optimizations),armv7-a)
 TARGET_ARCH_VARIANT_CPU := $(cpu_for_optimizations)
-arch_variant_cflags := \
+arch_variant_cflags += \
 	-mcpu=$(cpu_for_optimizations) \
 	-mtune=$(cpu_for_optimizations)
 else
-arch_variant_cflags := \
+arch_variant_cflags += \
 	-march=armv7-a
 endif
 
@@ -80,5 +75,5 @@ TARGET_GLOBAL_CFLAGS := $(filter-out -mfloat-abi=%,$(TARGET_GLOBAL_CFLAGS))
 TARGET_GLOBAL_CPPFLAGS := $(filter-out -mfloat-abi=%,$(TARGET_GLOBAL_CPPFLAGS))
 arch_variant_cflags += -mfloat-abi=$(TARGET_ARCH_VARIANT_FLOAT_ABI)
 
-arch_variant_ldflags := \
+arch_variant_ldflags += \
 	-Wl,--fix-cortex-a8
