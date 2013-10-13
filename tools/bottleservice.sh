@@ -10,11 +10,11 @@ bfs()
     local frontier=""
 #    echo "bfs currently @ $*"
     for x in $*; do
-        if [ `cat $x | grep TARGET_KERNEL_SOURCE | wc -l` -gt 0 ]; then
-            if [ `cat $x | grep TARGET_KERNEL_SOURCE | grep TARGET_KERNEL_VERSION | wc -l` -gt 0 ]; then
+        if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_KERNEL_SOURCE | wc -l` -gt 0 ]; then
+            if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_KERNEL_SOURCE | grep TARGET_KERNEL_VERSION | wc -l` -gt 0 ]; then
                 export TARGET_KERNEL_VERSION="`cat $x | grep TARGET_KERNEL_VERSION | sed 's/.*:=//g' | sed 's/[\t ]*//g' | head -n 1`"
             fi
-            export TARGET_KERNEL_SOURCE="`cat $x | grep TARGET_KERNEL_SOURCE | sed 's/.*:=//g' | sed 's/[\t ]*//g' | sed 's/(//g' | sed 's/)//g' | head -n 1`"
+            export TARGET_KERNEL_SOURCE="`cat $x | sed 's/[ ]*#.*//g' | grep TARGET_KERNEL_SOURCE | sed 's/.*:=//g' | sed 's/[\t ]*//g' | sed 's/(//g' | sed 's/)//g' | head -n 1`"
             export TARGET_KERNEL_SOURCE=`eval echo $TARGET_KERNEL_SOURCE`
             return 0
         fi
