@@ -60,8 +60,8 @@ if [ ! -e .repo/local_manifests ] || [ ! -e .repo/local_manifests/bottleservice.
 </manifest>' > .repo/local_manifests/bottleservice.xml
 fi
 if [ `cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL_SOURCE\"" | wc -l` -gt 1 ]; then
-   echo "UH OH! You have duplicate repos for $TARGET_KERNEL_SOURCE in bottleservice.xml"
-   echo "Let's pick one arbitrarily and get rid of the rest."
+   echo " UH OH! You have duplicate repos for $TARGET_KERNEL_SOURCE in bottleservice.xml"
+   echo " Let's pick one arbitrarily and get rid of the rest."
    line=`cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL_SOURCE\"" | head -n 1`
    cat .repo/local_manifests/bottleservice.xml | grep -v "</manifest>" | egrep -v "path=\"$TARGET_KERNEL_SOURCE\"" > .repo/local_manifests/tmp.xml
    echo "$line" >> .repo/local_manifests/tmp.xml
@@ -78,15 +78,17 @@ if [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
    line=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->"`
    cat .repo/local_manifests/bottleservice.xml | egrep -v "$line" > .repo/local_manifests/tmp.xml
    remainingdevs=""
-   echo "removing $device from previous kernel line: $line"
+   echo " removing $device from previous kernel line: $line"
    for x in `echo $line | sed 's/.*\/> //g' | sed 's/<!-- //g' | sed 's/ -->/ /g'`; do
        if [ ! "$device" = $x ]; then
            remainingdevs="$remainingdevs<!-- $x -->"
        fi
    done
-   echo "remaining line that used to have device = $line"
+   echo " remaining line that used to have device = `echo "$line" | sed 's/<!--.*//g'`$remainingdevs"
    if [ `echo $remainingdevs | wc -c` -gt 1 ]; then
        echo "`echo "$line" | sed 's/<!--.*//g'`$remainingdevs" >> .repo/local_manifests/tmp.xml
+   else
+       echo " deleting line used by no devices"
    fi
    echo "</manifest>" >> .repo/local_manifests/tmp.xml
    mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
