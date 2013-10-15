@@ -956,6 +956,7 @@ findbugs: $(INTERNAL_FINDBUGS_HTML_TARGET) $(INTERNAL_FINDBUGS_XML_TARGET)
 .PHONY: clean
 clean:
 	@rm -rf $(OUT_DIR)/*
+	@rm -rf /tmp/vanir_*
 	@echo -e ${CL_GRN}"Entire build directory removed."${CL_RST}
 
 .PHONY: clobber
@@ -978,7 +979,7 @@ burst:
 surgical:
 	@rm -rf $(OUT_DIR)/target/product/*/obj/
 	@rm -rf $(OUT_DIR)/target/product/*/symbols/
-	@rm -rf $(OUT_DIR)/target/product/*/vanir_*-ota-eng.dho.zip
+	@rm -rf $(OUT_DIR)/target/product/*/vanir_*-ota-eng.$(USER).zip
 	@rm -rf $(OUT_DIR)/target/product/*/system.img
 	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
 	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
