@@ -339,9 +339,11 @@ ifneq (,$(user_variant))
   # Security is for bitches
   ADDITIONAL_DEFAULT_PROPERTIES += ro.secure=0
 
-  ifeq ($(user_variant),eng)
+  ifneq ($(filter eng userdebug,$(user_variant)),)
     # Pick up some extra useful tools
-    tags_to_install += debug
+    ifeq (eng,$(user_variant))
+      tags_to_install += debug
+    endif
 
     # this makes things a bit spammy
     enable_target_debugging := true
