@@ -124,7 +124,7 @@ if [ $haskernelline -eq 0 ]; then
     echo " re-syncing!"
     popd >& /dev/null
     . build/envsetup.sh >& /dev/null
-    reposync -c -f -j32 -q
+    reposync -c -f -j32
     echo " "
     echo " re-sync complete"
 fi
