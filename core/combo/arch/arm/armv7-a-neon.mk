@@ -51,10 +51,12 @@ endif
 ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
 TARGET_ARCH_VARIANT_FPU := neon
 endif
-
-arch_variant_cflags += \
-	-mfpu=$(TARGET_ARCH_VARIANT_FPU) \
-	-mfloat-abi=softfp
+ifeq ($(strip $(filter-out -mfpu=%,$(TARGET_GLOBAL_CFLAGS))),$(strip $(TARGET_GLOBAL_CFLAGS)))
+arch_variant_cflags += -mfpu=$(TARGET_ARCH_VARIANT_FPU)
+endif
+ifeq ($(strip $(filter-out -mfloat-abi=%,$(TARGET_GLOBAL_CFLAGS))),$(strip $(TARGET_GLOBAL_CFLAGS)))
+arch_variant_cflags += -mfloat-abi=softfp
+endif
 
 arch_variant_ldflags := \
 	-Wl,--fix-cortex-a8
