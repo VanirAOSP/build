@@ -48,9 +48,13 @@ arch_variant_cflags := \
 	-march=armv7-a
 endif
 
+ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
+TARGET_ARCH_VARIANT_FPU := neon
+endif
+
 arch_variant_cflags += \
-	-mfloat-abi=softfp \
-	-mfpu=neon
+	-mfpu=$(TARGET_ARCH_VARIANT_FPU) \
+	-mfloat-abi=softfp
 
 arch_variant_ldflags := \
 	-Wl,--fix-cortex-a8
