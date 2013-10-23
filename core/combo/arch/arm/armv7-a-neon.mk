@@ -11,7 +11,7 @@ ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 	cpu_for_optimizations := $(strip $(TARGET_ARCH_VARIANT_CPU))
 else
 # infer TARGET_ARCH_VARIANT_CPU from TARGET_CPU_VARIANT
-ifeq ($(strip $(TARGET_CPU_VARIANT)), cortex-a15)
+ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a15)
 	cpu_for_optimizations := cortex-a15
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a9)
@@ -34,7 +34,7 @@ endif
 endif
 endif #end of cpu stuff
 
-ifneq ($(cpu_for_optimizations), armv7-a)
+ifneq ($(cpu_for_optimizations),armv7-a)
 ifeq ($(cpu_for_optimizations),cortex-a15)
 	arch_cpu_without_ghosts := cortex-a9  #cortex-a15 has ghosts
 else
@@ -75,7 +75,7 @@ ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
 ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
 ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224
 endif
-ifeq ($(cpu_for_optimizations), cortex-a5)
+ifeq ($(cpu_for_optimizations),cortex-a5)
 ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
 ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
 ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224
