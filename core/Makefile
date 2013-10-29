@@ -1719,7 +1719,6 @@ $(INTERNAL_SDK_TARGET): $(deps)
 			-m $(PRIVATE_DEP_FILE) \
 			-I / \
 			-I . \
-			-I / \
 			-I $(PRODUCT_OUT) \
 			-I $(HOST_OUT) \
 			-I $(TARGET_COMMON_OUT_ROOT) \
