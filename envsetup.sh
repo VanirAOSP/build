@@ -1390,23 +1390,18 @@ linaroinit
 export TARGET_SIMULATOR=false
 export BUILD_TINY_ANDROID=
 retval=0
-pathpat="^.*:[0-9]+"
-ccred=$(echo -e "\033[1;31m")
-ccyellow=$(echo -e "\033[1;33m")
-ccend=$(echo -e "\033[0m")
-[ "$funnycolors" ] && echo -e "$ccyellow BUILDING $ccred WITH $ccyellow COLORED $ccred WARNINGS $ccred AND $ccyellow STUFF$ccend"
     case `uname -s` in
         Darwin)
             local threads=`sysctl hw.ncpu|cut -d" " -f2`
             local load=`expr $threads \* 2`
-            [ ! "$funnycolors" ] && time make -j $load "$@" || time make -j $load "$@" 2>&1 | sed -E -e "/[Ee]rror[: ]/ s%$pathpat%$ccred&$ccend%g" -e "/[Ww]arning[: ]/ s%$pathpat%$ccyellow&$ccend%g"
-            [ ! "$funnycolors" ] && retval=$? || retval=${PIPESTATUS[0]}
+            time make -j $load "$@"
+            retval=$?
             ;;
         *)
             local threads=`grep "^processor" /proc/cpuinfo | wc -l`
             local load=`expr $threads \* 2`
-            [ ! "$funnycolors" ] && time schedtool -B -n 1 -e ionice -n 1 make -j $load "$@" || time schedtool -B -n 1 -e ionice -n 1 make -j $load "$@" 2>&1 | sed -E -e "/[Ee]rror[: ]/ s%$pathpat%$ccred&$ccend%g" -e "/[Ww]arning[: ]/ s%$pathpat%$ccyellow&$ccend%g"
-            [ ! "$funnycolors" ] && retval=$? || retval=${PIPESTATUS[0]}
+            time schedtool -B -n 1 -e ionice -n 1 make -j $load "$@"
+            retval=$?
             ;;
     esac
 if [ $retval -eq 0 ]; then
@@ -1418,8 +1413,13 @@ return $retval
 }
 
 function mkc() {
-    funnycolors=1 mka "$@"
-    return $?
+pathpat="^.*:[0-9]+"
+ccred=$(echo -e "\033[1;31m")
+ccyellow=$(echo -e "\033[1;33m")
+ccend=$(echo -e "\033[0m")
+echo -e "$ccyellow BUILDING $ccred WITH $ccyellow COLORED $ccred WARNINGS $ccred AND $ccyellow STUFF$ccend"
+mka "$@" 2>&1 | sed -E -e "/[Ee]rror[: ]/ s%$pathpat%$ccred&$ccend%g" -e "/[Ww]arning[: ]/ s%$pathpat%$ccyellow&$ccend%g"
+return ${PIPESTATUS[0]}
 }
 
 
