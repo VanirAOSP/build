@@ -1353,10 +1353,10 @@ function linaroinit()
         HOST_ARCH=`uname -m`
         echo "HOST_ARCH = ${HOST_ARCH}"
         if [ ${HOST_ARCH} == "x86_64" ] ; then
-	        PKGS='git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev g++-multilib mingw32 tofrodos python-markdown libxml2-utils xsltproc uboot-mkimage openjdk-6-jdk openjdk-6-jre vim-common'
+               PKGS='git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev g++-multilib mingw32 tofrodos python-markdown libxml2-utils xsltproc uboot-mkimage openjdk-6-jdk openjdk-6-jre vim-common'
         else
-	        echo "ERROR: Only 64bit Host(Build) machines are supported at the moment."
-	        exit 1
+               echo "ERROR: Only 64bit Host(Build) machines are supported at the moment."
+               exit 1
         fi
 
         PKGS+=' lib32readline-gplv2-dev'
@@ -1367,17 +1367,18 @@ function linaroinit()
 
         MISSING=`dpkg-query -W -f='${Status}\n' ${PKGS} 2>&1 | grep 'No packages found matching' | cut -d' ' -f5`
         if [ -n "$MISSING" ] ; then
-	        echo "Missing required packages:"
-	        for m in $MISSING ; do
-		        echo -n "${m%?} "
-	        done
-	        echo
-	        return 1
+               echo "Missing required packages:"
+               for m in $MISSING ; do
+                       echo -n "${m%?} "
+               done
+               echo
+               return 1
         fi
     fi
     popd >& /dev/null
     return 0
 }
+
 
 function mka() {
 T=$(gettop)
@@ -1393,18 +1394,19 @@ pathpat="^.*:[0-9]+"
 ccred=$(echo -e "\033[1;31m")
 ccyellow=$(echo -e "\033[1;33m")
 ccend=$(echo -e "\033[0m")
+[ "$funnycolors" ] && echo -e "$ccyellow BUILDING $ccred WITH $ccyellow COLORED $ccred WARNINGS $ccred AND $ccyellow STUFF$ccend"
     case `uname -s` in
         Darwin)
             local threads=`sysctl hw.ncpu|cut -d" " -f2`
             local load=`expr $threads \* 2`
-            time make -j $load "$@" #2>&1 | sed -E -e "/[Ee]rror[: ]/ s%$pathpat%$ccred&$ccend%g" -e "/[Ww]arning[: ]/ s%$pathpat%$ccyellow&$ccend%g"
-            retval=$? #{PIPESTATUS[0]}
+            [ ! "$funnycolors" ] && time make -j $load "$@" || time make -j $load "$@" 2>&1 | sed -E -e "/[Ee]rror[: ]/ s%$pathpat%$ccred&$ccend%g" -e "/[Ww]arning[: ]/ s%$pathpat%$ccyellow&$ccend%g"
+            [ ! "$funnycolors" ] && retval=$? || retval=${PIPESTATUS[0]}
             ;;
         *)
             local threads=`grep "^processor" /proc/cpuinfo | wc -l`
             local load=`expr $threads \* 2`
-            time schedtool -B -n 1 -e ionice -n 1 make -j $load "$@" #2>&1 | sed -E -e "/[Ee]rror[: ]/ s%$pathpat%$ccred&$ccend%g" -e "/[Ww]arning[: ]/ s%$pathpat%$ccyellow&$ccend%g"
-            retval=$? #${PIPESTATUS[0]}
+            [ ! "$funnycolors" ] && time schedtool -B -n 1 -e ionice -n 1 make -j $load "$@" || time schedtool -B -n 1 -e ionice -n 1 make -j $load "$@" 2>&1 | sed -E -e "/[Ee]rror[: ]/ s%$pathpat%$ccred&$ccend%g" -e "/[Ww]arning[: ]/ s%$pathpat%$ccyellow&$ccend%g"
+            [ ! "$funnycolors" ] && retval=$? || retval=${PIPESTATUS[0]}
             ;;
     esac
 if [ $retval -eq 0 ]; then
@@ -1413,6 +1415,11 @@ else
     notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $T/build/buildfailed.png -t 10000
 fi
 return $retval
+}
+
+function mkc() {
+    funnycolors=1 mka "$@"
+    return $?
 }
 
 
