@@ -129,6 +129,6 @@ endif # LOCAL_STRIP_MODULE
 
 
 $(cleantarget): PRIVATE_CLEAN_FILES += \
-			$(linked_module) \
-			$(symbolic_output) \
-			$(compress_output)
+    $(linked_module) \
+    $(symbolic_output) \
+    $(compress_output)

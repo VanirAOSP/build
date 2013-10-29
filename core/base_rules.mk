@@ -451,7 +451,8 @@ endif
 ## make clean- targets
 ###########################################################
 cleantarget := clean-$(LOCAL_MODULE)
-$(cleantarget) : PRIVATE_MODULE := $(LOCAL_MODULE) \
+$(cleantarget) : PRIVATE_MODULE := $(LOCAL_MODULE)
+$(cleantarget) : PRIVATE_CLEAN_FILES := \
     $(LOCAL_BUILT_MODULE) \
     $(LOCAL_INSTALLED_MODULE) \
     $(intermediates)
