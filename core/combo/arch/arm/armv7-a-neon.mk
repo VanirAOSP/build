@@ -60,25 +60,3 @@ endif
 
 arch_variant_ldflags := \
 	-Wl,--fix-cortex-a8
-
-#TODO: fine-tune generic values
-ifeq ($(cpu_for_optimizations),cortex-a15)
-ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
-ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
-#ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224
-endif
-ifeq ($(cpu_for_optimizations),cortex-a9)
-ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
-ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
-ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224
-endif
-ifeq ($(cpu_for_optimizations),cortex-a8)
-ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
-ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
-ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224
-endif
-ifeq ($(cpu_for_optimizations),cortex-a5)
-ARCH_ARM_HAVE_NEON_UNALIGNED_ACCESS    := true
-ARCH_ARM_NEON_MEMSET_DIVIDER           := 132
-ARCH_ARM_NEON_MEMCPY_ALIGNMENT_DIVIDER := 224
-endif
