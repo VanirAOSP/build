@@ -35,6 +35,7 @@ endif
 endif
 endif
 endif
+endif
 endif #end of cpu stuff
 
 ifneq ($(cpu_for_optimizations),armv7-a)
