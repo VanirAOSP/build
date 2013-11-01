@@ -33,12 +33,9 @@ else
 endif
 endif
 endif
-<<<<<<< HEAD
 endif
 endif
 endif #end of cpu stuff
-=======
->>>>>>> aosp44
 
 ifneq ($(cpu_for_optimizations),armv7-a)
 ifeq ($(cpu_for_optimizations),cortex-a15)
