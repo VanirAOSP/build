@@ -24,7 +24,6 @@ PRODUCT_PACKAGES := \
     Bluetooth \
     Calculator \
     CertInstaller \
-    DrmProvider \
     Email \
     Exchange2 \
     Gallery2 \

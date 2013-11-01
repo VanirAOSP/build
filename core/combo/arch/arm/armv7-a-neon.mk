@@ -17,6 +17,9 @@ else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a9)
 	cpu_for_optimizations := cortex-a9
 else
+ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a8)
+	arch_variant_cflags := -mcpu=cortex-a8
+else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a7)
 	cpu_for_optimizations := cortex-a7
 else
@@ -30,9 +33,12 @@ else
 endif
 endif
 endif
+<<<<<<< HEAD
 endif
 endif
 endif #end of cpu stuff
+=======
+>>>>>>> aosp44
 
 ifneq ($(cpu_for_optimizations),armv7-a)
 ifeq ($(cpu_for_optimizations),cortex-a15)

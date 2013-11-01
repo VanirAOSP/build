@@ -23,14 +23,22 @@ PRODUCT_PACKAGES := \
 	Email \
 	Exchange2 \
 	FusedLocation \
+	Gallery \
+	Keyguard \
+	Music \
 	Mms \
-	Phone \
+	OpenWnn \
+	PrintSpooler \
+	libWnnEngDic \
+	libWnnJpnDic \
+	libwnndict \
+	TeleService \
+	PinyinIME \
 	SoftKeyboard \
 	SystemUI \
 	Launcher2 \
 	Development \
 	DevelopmentSettings \
-	DrmProvider \
 	Fallback \
 	Settings \
 	SdkSetup \
@@ -49,8 +57,7 @@ PRODUCT_PACKAGES := \
 	CalendarProvider \
 	SmokeTest \
 	SmokeTestApp \
-	rild \
-	Gallery
+	rild
 
 # Define the host tools and libs that are parts of the SDK.
 -include sdk/build/product_sdk.mk

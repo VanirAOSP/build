@@ -19,22 +19,18 @@
 # devices (including non-phones and non-tablets), modify
 # core_minimal.mk instead.
 
-PRODUCT_PROPERTY_OVERRIDES := \
-    ro.config.notification_sound=OnTheHunt.ogg \
-    ro.config.alarm_alert=Alarm_Classic.ogg
-
 PRODUCT_PACKAGES += \
     BasicDreams \
     Browser \
     Contacts \
-    ContactsProvider \
-    DefaultContainerService \
-    Home \
+    DocumentsUI \
+    DownloadProviderUi \
+    ExternalStorageProvider \
     KeyChain \
     PicoTts \
+    PacProcessor \
+    ProxyHandler \
     SharedStorageBackup \
-    TelephonyProvider \
-    UserDictionaryProvider \
     VpnDialogs \
     atrace \
     libandroidfw \
@@ -94,4 +90,4 @@ ifeq ($(WITH_HOST_DALVIK),true)
         dalvik
 endif
 
-$(call inherit-product, $(SRC_TARGET_DIR)/product/core_minimal.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/core_base.mk)
