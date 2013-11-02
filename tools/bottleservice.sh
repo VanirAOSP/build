@@ -51,7 +51,8 @@ kernelsource="android_`echo $TARGET_KERNEL_SOURCE | sed 's/\//_/g'`"
 
 source .repo/manifests/kernel_special_cases.sh $device
 
-[ $remote ] && [ "$remote" = "cm" ] && export remote=
+[ ! $remote ] && remote=$defaultremote
+[ ! $remoteversion ] && remote=$defaultrevision
 
 if [ ! -e .repo/local_manifests ] || [ ! -e .repo/local_manifests/bottleservice.xml ]; then
     mkdir -p .repo/local_manifests
