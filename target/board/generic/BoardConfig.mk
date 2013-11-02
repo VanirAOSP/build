@@ -5,7 +5,7 @@
 
 # The generic product target doesn't have any hardware-specific pieces.
 TARGET_NO_BOOTLOADER := true
-TARGET_NO_KERNEL := true
+TARGET_NO_KERNEL := false
 TARGET_ARCH := arm
 
 # Note: we build the platform images for ARMv7-A _without_ NEON.
