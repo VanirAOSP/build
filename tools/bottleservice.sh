@@ -52,7 +52,7 @@ kernelsource="android_`echo $TARGET_KERNEL_SOURCE | sed 's/\//_/g'`"
 source .repo/manifests/kernel_special_cases.sh $device
 
 [ ! $remote ] && remote=$defaultremote
-[ ! $remoteversion ] && remote=$defaultrevision
+[ ! $remoterevision ] && remoterevision=$defaultrevision
 
 if [ ! -e .repo/local_manifests ] || [ ! -e .repo/local_manifests/bottleservice.xml ]; then
     mkdir -p .repo/local_manifests
@@ -60,15 +60,15 @@ if [ ! -e .repo/local_manifests ] || [ ! -e .repo/local_manifests/bottleservice.
 <manifest>
 </manifest>' > .repo/local_manifests/bottleservice.xml
 fi
-if [ `cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL_SOURCE\"" | wc -l` -gt 1 ]; then
-   echo " UH OH! You have duplicate repos for $TARGET_KERNEL_SOURCE in bottleservice.xml"
-   echo " Let's pick one arbitrarily and get rid of the rest."
-   line=`cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL_SOURCE\"" | head -n 1`
-   cat .repo/local_manifests/bottleservice.xml | grep -v "</manifest>" | egrep -v "path=\"$TARGET_KERNEL_SOURCE\"" > .repo/local_manifests/tmp.xml
-   echo "$line" >> .repo/local_manifests/tmp.xml
-   echo "</manifest>" >> .repo/local_manifests/tmp.xml
-   mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
-fi
+#if [ `cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL_SOURCE\"" | wc -l` -gt 1 ]; then
+#   echo " UH OH! You have duplicate repos for $TARGET_KERNEL_SOURCE in bottleservice.xml"
+#   echo " Let's pick one arbitrarily and get rid of the rest."
+#   line=`cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL_SOURCE\"" | head -n 1`
+#   cat .repo/local_manifests/bottleservice.xml | grep -v "</manifest>" | egrep -v "path=\"$TARGET_KERNEL_SOURCE\"" > .repo/local_manifests/tmp.xml
+#   echo "$line" >> .repo/local_manifests/tmp.xml
+#   echo "</manifest>" >> .repo/local_manifests/tmp.xml
+#   mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
+#fi
 getkernelline='path="'$TARGET_KERNEL_SOURCE'" name="'$kernelsource'"'
 [ $remote ] && getkernelline=$getkernelline' remote="'$remote'"'
 [ $remoterevision ] && getkernelline=$getkernelline' revision="'$remoterevision'"'
@@ -82,12 +82,16 @@ if [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
    echo " removing $device from previous kernel line: $line"
    for x in `echo $line | sed 's/.*\/> //g' | sed 's/<!-- //g' | sed 's/ -->/ /g'`; do
        if [ ! "$device" = $x ]; then
-           remainingdevs="$remainingdevs<!-- $x -->"
+           remainingdevs="$remainingdevs $x"
        fi
    done
    echo " remaining line that used to have device = `echo "$line" | sed 's/<!--.*//g'`$remainingdevs"
    if [ `echo $remainingdevs | wc -c` -gt 1 ]; then
-       echo "`echo "$line" | sed 's/<!--.*//g'`$remainingdevs" >> .repo/local_manifests/tmp.xml
+       comments=""
+       for x in $remainingdevs; do
+          comments="$comments<!-- $x -->"
+       done
+       echo "`echo "$line" | sed 's/<!--.*//g'`$comments" >> .repo/local_manifests/tmp.xml
    else
        echo " deleting line used by no devices"
    fi
@@ -110,23 +114,37 @@ if [ $haskernelline -eq 0 ]; then
     echo " Adding a line for $device's kernel to .repo/local_manifests/bottleservice.xml,
     and adding another bottle of Cristal to your tab."
     echo " "
-    pushd . >& /dev/null
-    cd .repo/local_manifests
-    cat bottleservice.xml | grep -v '</manifest>' > tmp.xml
+    cat .repo/local_manifests/bottleservice.xml | grep -v '</manifest>' > .repo/local_manifests/tmp.xml
     NEWLINE="<project path=\"$TARGET_KERNEL_SOURCE\" name=\"$kernelsource\""
     [ $remote ] && NEWLINE="$NEWLINE remote=\"$remote\""
     [ $remoterevision ] && NEWLINE="$NEWLINE revision=\"$remoterevision\""
     NEWLINE="$NEWLINE /> <!-- $device -->"
-    echo "  $NEWLINE" >> tmp.xml
-    echo "</manifest>" >> tmp.xml
-    mv tmp.xml bottleservice.xml
+    echo "  $NEWLINE" >> .repo/local_manifests/tmp.xml
+    echo "</manifest>" >> .repo/local_manifests/tmp.xml
+    mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
     echo " Added:  $NEWLINE to bottleservice.xml"
-    echo " "
-    echo " re-syncing!"
-    popd >& /dev/null
-    . build/envsetup.sh >& /dev/null
-    reposync -c -f -j32
-    echo " "
-    echo " re-sync complete"
+    if  [ ! $IN_THE_MIDDLE_OF_CASCADING_RESYNC ] && [ ! -z "$remainingdevs" ]; then
+        echo ""
+        echo "*** It looks like the bottleservice project for multiple device was changed."
+        echo "*** Double-checking validity of all bottleserviced devices' kernel projects by automagically re-lunching them"
+        echo ""
+        export IN_THE_MIDDLE_OF_CASCADING_RESYNC=1
+        source build/envsetup.sh >& /dev/null
+        cat .repo/local_manifests/bottleservice.xml | grep project | sed 's/.*\/>//g' | sed 's/<!--//g' | sed 's/-->//g' | while read line ; do
+          for x in $line; do
+            for choice in ${LUNCH_MENU_CHOICES[@]}; do
+                if [[ $choice == *$x* ]]; then
+                    lunch $choice >& /dev/null && echo "RE-LUNCHED $x"&& break
+                fi
+            done
+          done
+        done
+        echo " "
+        echo " re-syncing!"
+        . build/envsetup.sh >& /dev/null
+        reposync -c -f -j32
+        echo " "
+        echo " re-sync complete"
+    fi
 fi
 exit 0
