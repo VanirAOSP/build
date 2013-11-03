@@ -76,7 +76,7 @@ hasdevice=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->
 if [ $precompiled ] && [ $hasdevice -gt 0 ] || [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
    #device comment is in the file, but its kernel is the wrong one
    line=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->"`
-   cat .repo/local_manifests/bottleservice.xml | egrep -v "$line" > .repo/local_manifests/tmp.xml
+   cat .repo/local_manifests/bottleservice.xml | grep -v "</manifest>" | egrep -v "$line" > .repo/local_manifests/tmp.xml
    remainingdevs=""
    echo " removing $device from previous kernel line: $line"
    for x in `echo $line | sed 's/.*\/> //g' | sed 's/<!-- //g' | sed 's/ -->/ /g'`; do
