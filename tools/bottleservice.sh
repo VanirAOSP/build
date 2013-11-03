@@ -123,7 +123,7 @@ if [ $haskernelline -eq 0 ]; then
     echo "</manifest>" >> .repo/local_manifests/tmp.xml
     mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
     echo " Added:  $NEWLINE to bottleservice.xml"
-    if  [ ! $IN_THE_MIDDLE_OF_CASCADING_RESYNC ] && [ ! -z "$remainingdevs" ]; then
+    if  [ ! $IN_THE_MIDDLE_OF_CASCADING_RESYNC ]; then
         echo ""
         echo "*** It looks like the bottleservice project for multiple device was changed."
         echo "*** Double-checking validity of all bottleserviced devices' kernel projects by automagically re-lunching them"
