@@ -50,7 +50,6 @@ fi
 kernelsource="android_`echo $TARGET_KERNEL_SOURCE | sed 's/\//_/g'`"
 
 source .repo/manifests/kernel_special_cases.sh $device
-
 [ ! $remote ] && remote=$defaultremote
 [ ! $remoterevision ] && remoterevision=$defaultrevision
 
@@ -74,7 +73,7 @@ getkernelline='path="'$TARGET_KERNEL_SOURCE'" name="'$kernelsource'"'
 [ $remoterevision ] && getkernelline=$getkernelline' revision="'$remoterevision'"'
 haskernelline=`cat .repo/local_manifests/bottleservice.xml | egrep "$getkernelline" | wc -l`
 hasdevice=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->" | wc -l`
-if [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
+if [ $precompiled ] && [ $hasdevice -gt 0 ] || [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
    #device comment is in the file, but its kernel is the wrong one
    line=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->"`
    cat .repo/local_manifests/bottleservice.xml | egrep -v "$line" > .repo/local_manifests/tmp.xml
@@ -106,7 +105,7 @@ elif [ $haskernelline -gt 0 ] && [ $hasdevice -eq 0 ]; then
     echo "</manifest>" >> .repo/local_manifests/tmp.xml
     mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
 fi
-if [ $haskernelline -eq 0 ]; then
+if [ ! $precompiled ] && [ $haskernelline -eq 0 ]; then
     #add kernel to the file
     echo " "
     echo " VANIR BOTTLESERVICE. YOU KNOW HOW WE DO."
