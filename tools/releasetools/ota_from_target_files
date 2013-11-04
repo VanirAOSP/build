@@ -487,9 +487,9 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("   -rw-r--r-- means -rwxrwxrwx")
   Item.GetMetadata(input_zip)
   Item.Get("system").SetPermissions(script)
-  script.SetPermissionsRecursive("/system/etc/init.d", 0, 0, 0755, 0755)
-  script.SetPermissionsRecursive("/data/cron", 0, 0, 0755, 0755)
-  script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0755)
+  script.SetPermissionsRecursive("/system/etc/init.d", 0, 0, 0755, 0755, None, None)
+  script.SetPermissionsRecursive("/data/cron", 0, 0, 0755, 0755, None, None)
+  script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0755, None, None)
 
   script.Print(" ")
   script.Print("Installing Colonel...")
