@@ -79,7 +79,7 @@ TARGET_arm_CFLAGS :=    -O3 \
                         -funswitch-loops \
                         -funsafe-loop-optimizations \
                         -ftree-vectorize \
-                        -pipe $(STRICT_ALIASING_WARNINGS)
+                        $(STRICT_ALIASING_WARNINGS) #-pipe
 
 # THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
 TARGET_thumb_CFLAGS :=  -mthumb \
@@ -87,7 +87,7 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -fomit-frame-pointer \
                         -fstrict-aliasing \
                         -funsafe-math-optimizations \
-                        -pipe $(STRICT_ALIASING_WARNINGS)
+                        $(STRICT_ALIASING_WARNINGS) #-pipe
 
 #SHUT THE F$#@ UP!
 TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
@@ -137,8 +137,7 @@ TARGET_GLOBAL_CFLAGS += \
 			-Werror=format-security \
 			-D_FORTIFY_SOURCE=0 \
 			-fno-short-enums \
-			-pipe \
-			$(arch_variant_cflags) $(STRICT_ALIASING_WARNINGS)
+			$(arch_variant_cflags) $(STRICT_ALIASING_WARNINGS) # -pipe
 
 android_config_h := $(call select-android-config-h,linux-arm)
 TARGET_ANDROID_CONFIG_CFLAGS := -include $(android_config_h) -I $(dir $(android_config_h))
