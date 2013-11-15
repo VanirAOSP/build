@@ -136,7 +136,7 @@ if [ $haskernelline -eq 0 ]; then
             cat .repo/local_manifests/bottleservice.xml | grep project | sed 's/.*\/>//g' | sed 's/<!--//g' | sed 's/-->//g' | while read line ; do
               for x in $line; do
                 for choice in ${LUNCH_MENU_CHOICES[@]}; do
-                    if [[ $choice == *$x* ]]; then
+                    if [[ $choice == *$x* ]] && [[ $choice == vanir_* ]]; then
                         lunch $choice && echo "RE-LUNCHED $x"&& break
                     fi
                 done
