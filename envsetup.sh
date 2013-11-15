@@ -66,7 +66,7 @@ function forall_vanir()
   pushd . >& /dev/null
   cd $T
   pathlist=""
-  for x in `cat $(gettop)/.repo/manifest.xml | grep \<project | sed 's/.*project //g' | grep 'remote=\"vanir\"' | sed 's/[ ]*\/*>//g' | sed 's/groups=[\"a-zA-Z0-9,\-]*//g' | sed 's/.*path="//g' | sed 's/\".*//g'`; do
+  for x in `cat $(gettop)/.repo/manifest.xml | sed 's/<!--.*-->//g' | grep \<project | sed 's/.*project //g' | grep 'remote=\"vanir\"' | sed 's/[ ]*\/*>//g' | sed 's/groups=[\"a-zA-Z0-9,\-]*//g' | sed 's/.*path="//g' | sed 's/\".*//g'`; do
     pathlist="$pathlist $x"
   done
   cmd="`echo $* | sed 's/\"/\\\"/g'`"
