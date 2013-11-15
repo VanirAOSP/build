@@ -74,10 +74,11 @@ getkernelline='path="'$TARGET_KERNEL_SOURCE'" name="'$kernelsource'"'
 [ $remoterevision ] && getkernelline=$getkernelline' revision="'$remoterevision'"'
 haskernelline=`cat .repo/local_manifests/bottleservice.xml | egrep "$getkernelline" | wc -l`
 hasdevice=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->" | wc -l`
-if [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
+needschecking=
+if [ $precompiled ] && [ $hasdevice -gt 0 ] || [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
    #device comment is in the file, but its kernel is the wrong one
    line=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->"`
-   cat .repo/local_manifests/bottleservice.xml | egrep -v "$line" > .repo/local_manifests/tmp.xml
+   cat .repo/local_manifests/bottleservice.xml | grep -v "</manifest>" | egrep -v "$line" > .repo/local_manifests/tmp.xml
    remainingdevs=""
    echo " removing $device from previous kernel line: $line"
    for x in `echo $line | sed 's/.*\/> //g' | sed 's/<!-- //g' | sed 's/ -->/ /g'`; do
@@ -86,6 +87,7 @@ if [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
        fi
    done
    if [ `echo $remainingdevs | wc -c` -gt 1 ]; then
+       needschecking=1
        comments=""
        for x in $remainingdevs; do
           comments="$comments<!-- $x -->"
@@ -124,21 +126,23 @@ if [ $haskernelline -eq 0 ]; then
     mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
     echo " Added:  $NEWLINE to bottleservice.xml"
     if  [ ! $IN_THE_MIDDLE_OF_CASCADING_RESYNC ]; then
-        echo ""
-        echo "*** It looks like the bottleservice project for multiple device was changed."
-        echo "*** Double-checking validity of all bottleserviced devices' kernel projects by automagically re-lunching them"
-        echo ""
-        export IN_THE_MIDDLE_OF_CASCADING_RESYNC=1
-        source build/envsetup.sh >& /dev/null
-        cat .repo/local_manifests/bottleservice.xml | grep project | sed 's/.*\/>//g' | sed 's/<!--//g' | sed 's/-->//g' | while read line ; do
-          for x in $line; do
-            for choice in ${LUNCH_MENU_CHOICES[@]}; do
-                if [[ $choice == *$x* ]]; then
-                    lunch $choice >& /dev/null && echo "RE-LUNCHED $x"&& break
-                fi
+        if [ $needschecking ]; then
+            echo ""
+            echo "*** It looks like the bottleservice project for multiple device was changed."
+            echo "*** Double-checking validity of all bottleserviced devices' kernel projects by automagically re-lunching them"
+            echo ""
+            export IN_THE_MIDDLE_OF_CASCADING_RESYNC=1
+            source build/envsetup.sh >& /dev/null
+            cat .repo/local_manifests/bottleservice.xml | grep project | sed 's/.*\/>//g' | sed 's/<!--//g' | sed 's/-->//g' | while read line ; do
+              for x in $line; do
+                for choice in ${LUNCH_MENU_CHOICES[@]}; do
+                    if [[ $choice == *$x* ]]; then
+                        lunch $choice && echo "RE-LUNCHED $x"&& break
+                    fi
+                done
+              done
             done
-          done
-        done
+        fi
         echo " "
         echo " re-syncing!"
         . build/envsetup.sh >& /dev/null
