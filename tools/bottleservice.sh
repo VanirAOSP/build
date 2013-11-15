@@ -59,6 +59,7 @@ if [ ! -e .repo/local_manifests ] || [ ! -e .repo/local_manifests/bottleservice.
 <manifest>
 </manifest>' > .repo/local_manifests/bottleservice.xml
 fi
+needschecking=
 if [ `cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL_SOURCE\"" | wc -l` -gt 1 ]; then
    echo " UH OH! You have duplicate repos for $TARGET_KERNEL_SOURCE in bottleservice.xml"
    echo " Let's pick one arbitrarily and get rid of the rest."
@@ -67,13 +68,13 @@ if [ `cat .repo/local_manifests/bottleservice.xml | egrep "path=\"$TARGET_KERNEL
    echo "$line" >> .repo/local_manifests/tmp.xml
    echo "</manifest>" >> .repo/local_manifests/tmp.xml
    mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
+   needschecking=1
 fi
 getkernelline='path="'$TARGET_KERNEL_SOURCE'" name="'$kernelsource'"'
 [ $remote ] && getkernelline=$getkernelline' remote="'$remote'"'
 [ $remoterevision ] && getkernelline=$getkernelline' revision="'$remoterevision'"'
 haskernelline=`cat .repo/local_manifests/bottleservice.xml | egrep "$getkernelline" | wc -l`
 hasdevice=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->" | wc -l`
-needschecking=
 if [ $precompiled ] && [ $hasdevice -gt 0 ] || [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
    #device comment is in the file, but its kernel is the wrong one
    line=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->"`
