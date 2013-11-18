@@ -31,7 +31,7 @@ PRODUCT_PACKAGES := \
 	TeleService \
 	SoftKeyboard \
 	SystemUI \
-	Launcher2 \
+	Launcher3 \
 	Development \
 	DevelopmentSettings \
 	Fallback \
@@ -45,15 +45,17 @@ PRODUCT_PACKAGES := \
 	LiveWallpapersPicker \
 	ApiDemos \
 	GestureBuilder \
+	CubeLiveWallpapers \
+	QuickSearchBox \
 	WidgetPreview \
 	librs_jni \
 	ConnectivityTest \
 	GpsLocationTest \
 	CalendarProvider \
+	Calendar \
 	SmokeTest \
 	SmokeTestApp \
-	rild \
-	Gallery
+	rild
 
 # Define the host tools and libs that are parts of the SDK.
 -include sdk/build/product_sdk.mk
