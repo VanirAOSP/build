@@ -1730,7 +1730,7 @@ popd >& /dev/null
 source $(gettop)/build/nukehawtness
 
 parse_git_dirty() {
- [[ $(git status 2> /dev/null | tail -n1) != "nothing to commit (working directory clean)" ]] && echo " \*"
+ [ $(git status --porcelain 2> /dev/null | wc -l) -ne 0 ] && echo " \*"
 }
 parse_git_branch() {     
  [ "$(parse_git_dirty)" = "" ] && echo -en "\033[1;32m" || echo -en "\033[1;31m"
