@@ -1444,6 +1444,8 @@ function linaroinit()
 
 function mka() {
 T=$(gettop)
+CWD=$(pwd)
+croot
 if [ ! "$T" ]; then
     echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
     return
@@ -1471,6 +1473,7 @@ if [ $retval -eq 0 ]; then
 else
     notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $T/build/buildfailed.png -t 10000
 fi
+cd "$CWD"
 return $retval
 }
 

@@ -14,7 +14,7 @@ build command list:
 - resgrep:   Greps on all local res/*.xml files.
 - mgrep:     Greps on all local .mk or "make" files.
 - godir:     Go to the directory containing a file.
-- mka:       Builds using SCHED_BATCH on all processors
+- mka:       Builds using SCHED_BATCH on all processors. targets work in any subdirectory.
 - mka bacon: Primary build command.  builds ota and runs squisher/optimizations using SCHED_BATCH on all processors (-j8).
 - mkaflash:  Same as mka in the top of the tree with the addition of flashing the rom, gapps, and addon zips.
 - mkapush:   Same as mka with the addition of adb pushing to the device.
@@ -27,6 +27,8 @@ Steps to build:
 From source root:
 . build/envsetup.sh && lunch
 choose the number of the target device
+
+to build vanir spec builds from any directory:
 mka bacon
 
 How to to clean your out directory/cache:
