@@ -216,6 +216,9 @@ $(info ************************************************************)
 $(error stop)
 endif
 
+# Encapsulate stock emulator build code by a variable that can be defined in the device tree for people
+# that for some reason want to continue building it.
+ifeq ($(ENABLE_EMULATOR),true)
 ifndef BUILD_EMULATOR
 ifeq (darwin,$(HOST_OS))
 GCC_REALPATH = $(realpath $(shell which $(HOST_CC)))
@@ -239,6 +242,7 @@ $(shell echo 'VERSIONS_CHECKED := $(VERSION_CHECK_SEQUENCE_NUMBER)' \
         > $(OUT_DIR)/versions_checked.mk)
 $(shell echo 'BUILD_EMULATOR ?= $(BUILD_EMULATOR)' \
         >> $(OUT_DIR)/versions_checked.mk)
+endif
 endif
 
 # These are the modifier targets that don't do anything themselves, but
