@@ -1577,7 +1577,7 @@ DIR=$OUT
 #to do: fix the colors
 	if [ -d  "$DIR" ]; then
 	echo ""
-	echo $CL_RED" Removing" $CL_RST" $TARGET_PRODUCT out directory:"
+	echo " Removing" " $TARGET_PRODUCT out directory:"
 	echo " Location:"
 	echo " $OUT"
 	rm -R -f $OUT
@@ -1586,12 +1586,12 @@ DIR=$OUT
 	echo "  ."
 	echo "  ."
 	echo "  ."
-	echo $CL_RST" Destroyed."
+	echo " Destroyed."
 	echo ""
 	return;
 	else 
 	echo ""
-	echo $CL_YLW" Already" $CL_RED" SMASHED it !!!" $CL_RST
+	echo " Already" "SMASHED it !!!"
 	echo ""
 	fi
 }
