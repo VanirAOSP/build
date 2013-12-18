@@ -50,6 +50,18 @@ STRICT_ALIASING_WARNINGS := \
                         -Werror=strict-aliasing
 endif
 
+ifeq ($(strip $(BONE_STOCK)),)
+TARGET_ARM_O := 3
+TARGET_THUMB_O := 3
+TARGET_THUMB_STRICT := \
+    -fstrict-aliasing
+else
+TARGET_ARM_O := 2
+TARGET_THUMB_O := s
+TARGET_THUMB_STRICT := \
+    -fno-strict-aliasing
+endif
+
 include $(TARGET_ARCH_SPECIFIC_MAKEFILE)
 
 # You can set TARGET_TOOLS_PREFIX to get gcc from somewhere else
@@ -73,7 +85,7 @@ endif
 
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
-TARGET_arm_CFLAGS :=    -O3 \
+TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
                         -fomit-frame-pointer \
                         -fstrict-aliasing    \
                         -funswitch-loops \
@@ -83,11 +95,10 @@ TARGET_arm_CFLAGS :=    -O3 \
 
 # THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
 TARGET_thumb_CFLAGS :=  -mthumb \
-                        -O3 \
+                        -O$(TARGET_THUMB_O) \
                         -fomit-frame-pointer \
-                        -fstrict-aliasing \
                         -funsafe-math-optimizations \
-                        -pipe $(STRICT_ALIASING_WARNINGS)
+                        -pipe $(TARGET_THUMB_STRICT) $(STRICT_ALIASING_WARNINGS)
 
 #SHUT THE F$#@ UP!
 TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
@@ -100,10 +111,12 @@ TARGET_thumb_CFLAGS +=  -Wno-unused-parameter \
 
 # Turn off strict-aliasing if we're building an AOSP variant without the
 # patchset...
+ifeq ($(strip $(BONE_STOCK)),)
 ifeq ($(DEBUG_NO_STRICT_ALIASING),yes)
 TARGET_arm_CFLAGS += -fno-strict-aliasing -Wno-error=strict-aliasing
 TARGET_thumb_CFLAGS += -fno-strict-aliasing -Wno-error=strict-aliasing
 endif   
+endif
 
 # Set FORCE_ARM_DEBUGGING to "true" in your buildspec.mk
 # or in your environment to force a full arm build, even for
