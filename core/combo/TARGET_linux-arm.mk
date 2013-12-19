@@ -91,14 +91,14 @@ TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
                         -funswitch-loops \
                         -funsafe-loop-optimizations \
                         -ftree-vectorize \
-                        -pipe $(STRICT_ALIASING_WARNINGS)
+                        $(STRICT_ALIASING_WARNINGS)
 
 # THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
 TARGET_thumb_CFLAGS :=  -mthumb \
                         -O$(TARGET_THUMB_O) \
                         -fomit-frame-pointer \
                         -funsafe-math-optimizations \
-                        -pipe $(TARGET_THUMB_STRICT) $(STRICT_ALIASING_WARNINGS)
+                        $(TARGET_THUMB_STRICT) $(STRICT_ALIASING_WARNINGS)
 
 #SHUT THE F$#@ UP!
 TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
