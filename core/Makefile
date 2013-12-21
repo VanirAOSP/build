@@ -1421,11 +1421,15 @@ ifneq ($(TARGET_CUSTOM_RELEASETOOL),)
 	@echo -e ${CL_YLW}"Running custom releasetool..."${CL_RST}
 	$(hide) $(TARGET_CUSTOM_RELEASETOOL)
 else
-	@echo -e ${CL_YLW}"Running releasetool..."${CL_RST}	
+	@echo -e ${CL_YLW}"Running releasetool..."${CL_RST}
 ifeq ($(DHO_VENDOR),)
   DHO_VENDOR := vanir
 endif
+ifneq ($(strip $(QCOM_FORCE_NONMOTO_DALVIK)),)
+	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher
+else
 	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher $(TARGET_BOARD_PLATFORM)
+endif
 endif
 
 .PHONY: printvars
