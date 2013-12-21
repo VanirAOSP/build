@@ -213,7 +213,8 @@ $(info $(space))
 $(info Please follow the machine setup instructions at)
 $(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
 $(info ************************************************************)
-$(error stop)
+$(info $(space))
+$(info Continue at your own peril!)
 endif
 
 # Encapsulate stock emulator build code by a variable that can be defined in the device tree for people
