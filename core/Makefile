@@ -1423,9 +1423,9 @@ ifneq ($(TARGET_CUSTOM_RELEASETOOL),)
 else
 	@echo -e ${CL_YLW}"Running releasetool..."${CL_RST}
 ifeq ($(DHO_VENDOR),)
-  DHO_VENDOR := vanir
+	DHO_VENDOR := vanir
 endif
-ifneq ($(strip $(QCOM_FORCE_NONMOTO_DALVIK)),)
+ifeq ($(strip $(FORCE_SQIPRECOMPILED_DALVIK)),)
 	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher
 else
 	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher $(TARGET_BOARD_PLATFORM)
