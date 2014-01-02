@@ -44,10 +44,13 @@ ifeq ($(strip $(wildcard $(TARGET_ARCH_SPECIFIC_MAKEFILE))),)
 $(error Unknown ARM architecture version: $(TARGET_ARCH_VARIANT))
 endif
 
-ifeq ($(DONT_WARN_STRICT_ALIASING),)
+ifeq ($(strip $(DONT_WARN_STRICT_ALIASING)),)
 STRICT_ALIASING_WARNINGS := \
                         -Wstrict-aliasing=2 \
                         -Werror=strict-aliasing
+else
+STRICT_ALIASING_WARNINGS := \
+                        -Wno-strict-aliasing
 endif
 
 ifeq ($(strip $(BONE_STOCK)),)
