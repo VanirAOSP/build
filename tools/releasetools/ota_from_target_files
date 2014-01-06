@@ -469,12 +469,14 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("  Vanir - KitKat 4.4 ")
   script.Print("    by Team Vanir")
   script.Print(" ")
-  script.Mount("/system")
-  script.RunBackup("backup")
-  script.Unmount("/system")
 
   if OPTIONS.wipe_user_data:
     script.FormatPartition("/data")
+  script.Print("Backing up gapps...")
+  script.Mount("/system")
+  script.Mount("/data")
+  script.RunBackup("backup")
+  script.Unmount("/system")
 
   if "selinux_fc" in OPTIONS.info_dict:
     WritePolicyConfig(OPTIONS.info_dict["selinux_fc"], output_zip)
@@ -482,10 +484,8 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print(" ")
   script.Print("De Novo Lite Wipe:")
   script.Print("  system, old logs, orphans (tee hee)")
-  script.Print(" ")
   script.FormatPartition("/system")
   script.Mount("/system")
-  script.Mount("/data")
   script.DeleteRecursive(["/cache"])
   script.DeleteRecursive(["/data/cron"])
   script.DeleteRecursive(["/data/dalvik-cache"])
@@ -494,30 +494,26 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.DeleteFiles(["/data/system/dropbox/*.txt"])
   script.DeleteRecursive(["/data/media/0/Android/data/com.amazon.venezia/files/apks"])
 
-  script.Print(" ")
   script.Print("Installing the ROM...")
   script.UnpackPackageDir("system", "/system")
   script.DeleteFiles(["/data/cron/root"])
   script.UnpackPackageDir("data", "/data")
 
-  script.Print(" ")
+  script.Print("Symlinking...")
   symlinks = CopySystemFiles(input_zip, output_zip)
   script.MakeSymlinks(symlinks)
 
   boot_img = common.GetBootableImage("boot.img", "boot.img",
                                      OPTIONS.input_tmp, "BOOT")
 
-  script.Print(" ")
   script.Print("Setting permissions...")
-  script.Print("   -rw-r--r-- means -rwxrwxrwx")
   Item.GetMetadata(input_zip)
   Item.Get("system").SetPermissions(script)
   script.SetPermissionsRecursive("/system/etc/init.d", 0, 0, 0755, 0755, None, None)
   script.SetPermissionsRecursive("/data/cron", 0, 0, 0755, 0755, None, None)
   script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0755, None, None)
 
-  script.Print(" ")
-  script.Print("Installing boot.img")
+  script.Print("Installing boot.img...")
 
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
@@ -535,17 +531,13 @@ def WriteFullOTAPackage(input_zip, output_zip):
   if OPTIONS.extra_script is not None:
     script.AppendExtra(OPTIONS.extra_script)
 
-  script.Print(" ")
   script.Print("Resurrecting gapps from pre-flash backup")
   script.ShowProgress(0.2, 10)
   script.RunBackup("restore")
-  script.Print("Zombie gapps in the hizouse")
 
   script.Print(" ")
   script.Print("CLEAN UP THE BLOOD!")
   script.Print("YOU SHOULD PROBABLY GET TESTED!");
-  script.Print(" ")
-  script.Print(" ")
   script.Print(" ")
 
   script.UnmountAll()
