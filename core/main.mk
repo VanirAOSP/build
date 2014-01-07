@@ -333,24 +333,19 @@ user_variant := $(filter user userdebug,$(TARGET_BUILD_VARIANT))
 enable_target_debugging := true
 tags_to_install :=
 ifneq (,$(user_variant))
-  # Security is for bitches
-  ADDITIONAL_DEFAULT_PROPERTIES += ro.secure=0
+  ADDITIONAL_DEFAULT_PROPERTIES += ro.secure=1
 
-  ifeq ($(user_variant),eng)
+  ifeq ($(user_variant),userdebug)
     # Pick up some extra useful tools
     tags_to_install += debug
 
-    # this makes things a bit spammy
-    enable_target_debugging := true
-
     # Enable Dalvik lock contention logging for userdebug builds.
-    ADDITIONAL_BUILD_PROPERTIES += dalvik.vm.lockprof.threshold=850
+    ADDITIONAL_BUILD_PROPERTIES += dalvik.vm.lockprof.threshold=500
   else
     # Disable debugging in plain user builds.
     enable_target_debugging :=
   endif
 
-  # Forcefully turn off odex
   # Turn on Dalvik preoptimization for user builds, but only if not
   # explicitly disabled and the build is running on Linux (since host
   # Dalvik isn't built for non-Linux hosts).
