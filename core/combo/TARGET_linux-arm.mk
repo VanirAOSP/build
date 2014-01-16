@@ -55,7 +55,11 @@ endif
 
 ifeq ($(strip $(BONE_STOCK)),)
 TARGET_ARM_O := 3
+ifeq ($(strip $(TARGET_IS_A_CHEAP_ASUS_TABLET)),true)
+TARGET_THUMB_O := s
+else
 TARGET_THUMB_O := 3
+endif
 TARGET_THUMB_STRICT := \
     -fstrict-aliasing
 else
