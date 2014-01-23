@@ -1462,9 +1462,8 @@ retval=0
             retval=$?
             ;;
         *)
-            local threads=`grep "^processor" /proc/cpuinfo | wc -l`
-            local load=`expr $threads \* 2`
-            time schedtool -B -n 1 -e ionice -n 1 make -j $load "$@"
+            local cores=`nproc --all`
+            time schedtool -B -n 1 -e ionice -n 1 make -j $cores "$@"
             retval=$?
             ;;
     esac
