@@ -36,7 +36,7 @@ endif #end of cpu stuff
 
 ifneq ($(cpu_for_optimizations),armv7-a)
 ifeq ($(cpu_for_optimizations),cortex-a15)
-	arch_cpu_without_ghosts := cortex-a9  #cortex-a15 has ghosts
+	arch_cpu_without_ghosts := cortex-a15 #LET THERE BE GHOSTS
 else
 	arch_cpu_without_ghosts := $(cpu_for_optimizations)
 endif
