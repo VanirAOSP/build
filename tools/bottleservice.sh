@@ -8,7 +8,7 @@ export TARGET_KERNEL_SOURCE=
 bfs()
 {
     local frontier=""
-#    echo "bfs currently @ $*"
+    echo "bfs currently @ $*"
     for x in $*; do
         if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_KERNEL_SOURCE | wc -l` -gt 0 ]; then
             if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_KERNEL_SOURCE | grep TARGET_KERNEL_VERSION | wc -l` -gt 0 ]; then
