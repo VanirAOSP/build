@@ -10,6 +10,14 @@ bfs()
     local frontier=""
     echo "bfs currently @ $*"
     for x in $*; do
+        if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_NO_KERNEL | wc -l` -gt 0 ]; then
+            if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_NO_KERNEL | grep TARGET_NO_KERNEL | wc -l` -gt 0 ]; then
+                export TARGET_NO_KERNEL="`cat $x | grep TARGET_NO_KERNEL | sed 's/.*:=//g' | sed 's/[\t ]*//g' | head -n 1`"
+            fi
+            export TARGET_NO_KERNEL="`cat $x | sed 's/[ ]*#.*//g' | grep TARGET_NO_KERNEL | sed 's/.*:=//g' | sed 's/[\t ]*//g' | sed 's/(//g' | sed 's/)//g' | head -n 1`"
+            export TARGET_NO_KERNEL=`eval echo $TARGET_NO_KERNEL`
+            return 0
+        fi
         if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_KERNEL_SOURCE | wc -l` -gt 0 ]; then
             if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_KERNEL_SOURCE | grep TARGET_KERNEL_VERSION | wc -l` -gt 0 ]; then
                 export TARGET_KERNEL_VERSION="`cat $x | grep TARGET_KERNEL_VERSION | sed 's/.*:=//g' | sed 's/[\t ]*//g' | head -n 1`"
@@ -42,6 +50,10 @@ start=""
 [ -e $devicedir/BoardConfig.mk ] && start="$start $devicedir/BoardConfig.mk"
 [ -e $devicedir/BoardCommonConfig.mk ] && start="$start $devicedir/BoardCommonConfig.mk"
 bfs $start
+
+if [ $TARGET_NO_KERNEL ] && [ "$TARGET_NO_KERNEL" = "true" ]; then
+    exit 0
+fi
 
 if [ ! $TARGET_KERNEL_SOURCE ]; then
     TARGET_KERNEL_SOURCE=`echo $devicedir | sed -e 's/^device/kernel/g'`
