@@ -1387,6 +1387,13 @@ name := $(name)-ota-$(FILE_NAME_TAG)
 
 INTERNAL_OTA_PACKAGE_TARGET := $(PRODUCT_OUT)/$(name).zip
 
+ifeq ($($(strip DHO_VENDOR)),)
+  DHO_VENDOR := vanir
+endif
+ifeq ($(strip $(FORCE_PRECOMPILED_DALVIK)), true)
+  SQUISHER_ARGS := $(TARGET_BOARD_PLATFORM)
+endif
+
 $(INTERNAL_OTA_PACKAGE_TARGET): KEY_CERT_PAIR := $(DEFAULT_KEY_CERT_PAIR)
 
 ifeq ($(TARGET_RELEASETOOL_OTA_FROM_TARGET_SCRIPT),)
@@ -1423,14 +1430,7 @@ ifneq ($(TARGET_CUSTOM_RELEASETOOL),)
 	$(hide) $(TARGET_CUSTOM_RELEASETOOL)
 else
 	@echo -e ${CL_YLW}"Running releasetool..."${CL_RST}
-ifeq ($(DHO_VENDOR),)
-	DHO_VENDOR := vanir
-endif
-ifeq ($(strip $(FORCE_SQIPRECOMPILED_DALVIK)),)
-	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher
-else
-	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher $(TARGET_BOARD_PLATFORM)
-endif
+	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher $(SQUISHER_ARGS)
 endif
 
 .PHONY: printvars
