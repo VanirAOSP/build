@@ -142,14 +142,22 @@ ifeq ($(TARGET_ARCH),arm)
       endif
     endif
     ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),)
-      TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
+       TARGET_KERNEL_CUSTOM_TOOLCHAIN:=linaro-4.7
+    else
+       TARGET_KERNEL_CUSTOM_TOOLCHAIN:=$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)
+    endif
+    ifeq ($(TARGET_ARCH_VARIANT_CPU),)
+       TARGET_ARCH_VARIANT_CPU:=generic
+    else
+       TARGET_ARCH_VARIANT_CPU:=$(TARGET_ARCH_VARIANT_CPU)
     endif
     ifeq ($(HOST_OS),darwin)
+      TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
       ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilts/gcc/darwin-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-"
     else
-      ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-"
+      ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)-$(TARGET_ARCH_VARIANT_CPU)/bin/arm-gnueabi-"
     endif
-    ccache = 
+    ccache =
 endif
 
 ifeq ($(HOST_OS),darwin)
