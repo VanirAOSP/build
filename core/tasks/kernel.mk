@@ -112,16 +112,6 @@ KERNEL_HEADERS_INSTALL := $(KERNEL_OUT)/usr
 KERNEL_MODULES_INSTALL := system
 KERNEL_MODULES_OUT := $(TARGET_OUT)/lib/modules
 
-define mv-modules
-    mdpath=`find $(KERNEL_MODULES_OUT) -type f -name modules.order`;\
-    if [ "$$mdpath" != "" ];then\
-        mpath=`dirname $$mdpath`;\
-        ko=`find $$mpath/kernel -type f -name *.ko`;\
-        for i in $$ko; do $(ARM_EABI_TOOLCHAIN)/arm-eabi-strip --strip-unneeded $$i;\
-        mv $$i $(KERNEL_MODULES_OUT)/; done;\
-    fi
-endef
-
 define clean-module-folder
     mdpath=`find $(KERNEL_MODULES_OUT) -type f -name modules.order`;\
     if [ "$$mdpath" != "" ];then\
@@ -153,11 +143,32 @@ ifeq ($(TARGET_ARCH),arm)
     endif
     ifeq ($(HOST_OS),darwin)
       TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
-      ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilts/gcc/darwin-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-"
+      TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/darwin-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-
+      ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
     else
-      ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)-$(TARGET_ARCH_VARIANT_CPU)/bin/arm-gnueabi-"
+      TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)-$(TARGET_ARCH_VARIANT_CPU)/bin/arm-gnueabi-
+      ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
     endif
     ccache =
+define mv-modules
+    mdpath=`find $(KERNEL_MODULES_OUT) -type f -name modules.order`;\
+    if [ "$$mdpath" != "" ];then\
+        mpath=`dirname $$mdpath`;\
+        ko=`find $$mpath/kernel -type f -name *.ko`;\
+        for i in $$ko; do $(TOOL_PREFIX)strip --strip-unneeded $$i;\
+        mv $$i $(KERNEL_MODULES_OUT)/; done;\
+    fi
+endef
+else
+define mv-modules
+    mdpath=`find $(KERNEL_MODULES_OUT) -type f -name modules.order`;\
+    if [ "$$mdpath" != "" ];then\
+        mpath=`dirname $$mdpath`;\
+        ko=`find $$mpath/kernel -type f -name *.ko`;\
+        for i in $$ko; do $(ARM_EABI_TOOLCHAIN)/arm-eabi-strip --strip-unneeded $$i;\
+        mv $$i $(KERNEL_MODULES_OUT)/; done;\
+    fi
+endef
 endif
 
 ifeq ($(HOST_OS),darwin)
