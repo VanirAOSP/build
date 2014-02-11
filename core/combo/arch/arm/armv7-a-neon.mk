@@ -35,13 +35,9 @@ endif
 endif #end of cpu stuff
 
 ifneq ($(cpu_for_optimizations),armv7-a)
-ifeq ($(cpu_for_optimizations),cortex-a15)
-	arch_cpu_without_ghosts := cortex-a15 #LET THERE BE GHOSTS
-else
-	arch_cpu_without_ghosts := $(cpu_for_optimizations)
-endif
+TARGET_ARCH_VARIANT_CPU := $(cpu_for_optimizations)
 arch_variant_cflags := \
-	-mcpu=$(arch_cpu_without_ghosts) \
+	-mcpu=$(cpu_for_optimizations) \
 	-mtune=$(cpu_for_optimizations)
 else
 arch_variant_cflags := \
