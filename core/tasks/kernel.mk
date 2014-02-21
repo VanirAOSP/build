@@ -131,26 +131,29 @@ ifeq ($(TARGET_ARCH),arm)
         endif
       endif
     endif
+    ifeq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN), true)
+       TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
+    endif
     ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),)
        TARGET_KERNEL_CUSTOM_TOOLCHAIN:=linaro-4.7
-    else
-       TARGET_KERNEL_CUSTOM_TOOLCHAIN:=$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)
     endif
     ifeq ($(TARGET_ARCH_VARIANT_CPU),)
        TARGET_ARCH_VARIANT_CPU:=generic
-    else
-       TARGET_ARCH_VARIANT_CPU:=$(TARGET_ARCH_VARIANT_CPU)
     endif
     ifeq ($(HOST_OS),darwin)
       TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
       TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/darwin-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-
       ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
     else
-      T_K_C_T_STRIPPER := $(shell echo $(TARGET_KERNEL_CUSTOM_TOOLCHAIN) | sed -e 's/[a-z]//g')
-      T_K_C_T_DASHER := $(shell echo $(T_K_C_T_STRIPPER) | sed -e 's/-//g')
-      T_K_C_T := linaro-$(T_K_C_T_DASHER)
-      TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(T_K_C_T)-$(TARGET_ARCH_VARIANT_CPU)/bin/arm-gnueabi-
-      ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
+      ifeq ($(USE_AOSP_TOOLCHAINS), true)
+        ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-"
+      else
+        T_K_C_T_STRIPPER := $(shell echo $(TARGET_KERNEL_CUSTOM_TOOLCHAIN) | sed -e 's/[a-z]//g')
+        T_K_C_T_DASHER := $(shell echo $(T_K_C_T_STRIPPER) | sed -e 's/-//g')
+        T_K_C_T := linaro-$(T_K_C_T_DASHER)
+        TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(T_K_C_T)-$(TARGET_ARCH_VARIANT_CPU)/bin/arm-gnueabi-
+        ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
+      endif
     endif
     ccache =
 define mv-modules
