@@ -164,6 +164,9 @@ TARGET_GLOBAL_CFLAGS += \
 			-I $(dir $(android_config_h)) \
 			$(STRICT_ALIASING_WARNINGS)
 
+TARGET_GLOBAL_CPPFLAGS += \
+			$(arch_variant_cflags)
+
 android_config_h := $(call select-android-config-h,linux-arm)
 TARGET_ANDROID_CONFIG_CFLAGS := -include $(android_config_h) -I $(dir $(android_config_h))
 TARGET_GLOBAL_CFLAGS += $(TARGET_ANDROID_CONFIG_CFLAGS)
