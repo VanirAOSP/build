@@ -1458,14 +1458,20 @@ export BUILD_TINY_ANDROID=
 retval=0
     case `uname -s` in
         Darwin)
-            local threads=`sysctl hw.ncpu|cut -d" " -f2`
-            local load=`expr $threads \* 2`
-            time make -j $load "$@"
+            if [ ! $VANIR_PARALLEL_JOBS ]; then
+                local threads=`sysctl hw.ncpu|cut -d" " -f2`
+                local load=`expr $threads \* 2`
+                VANIR_PARALLEL_JOBS="-j $load"
+            fi
+            time make $VANIR_PARALLEL_JOBS "$@"
             retval=$?
             ;;
         *)
-            local cores=`nproc --all`
-            time schedtool -B -n 1 -e ionice -n 1 make -j $cores "$@"
+            if [ ! $VANIR_PARALLEL_JOBS ]; then
+                local cores=`nproc --all`
+                VANIR_PARALLEL_JOBS="-j $cores"
+            fi
+            time schedtool -B -n 1 -e ionice -n 1 make $VANIR_PARALLEL_JOBS "$@"
             retval=$?
             ;;
     esac
