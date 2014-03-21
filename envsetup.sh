@@ -1728,13 +1728,14 @@ check_bash_version && {
     done
 }
 
-# SWITCH TO A VERSION OF REPO THAT DOESN'T SPAM PROJECT NAMES
-pushd . >& /dev/null
-cd $(gettop)/.repo/repo
-[ `git remote -v | grep vanir | wc -l` -eq 0 ] && git remote add vanir http://www.emccann.net/repo
-git fetch vanir >& /dev/null
-git checkout vanir/master >& /dev/null
-popd >& /dev/null
+if [ $STFU_REPO ]; then
+    pushd . >& /dev/null
+    cd $(gettop)/.repo/repo
+    [ `git remote -v | grep vanir | wc -l` -eq 0 ] && git remote add vanir http://www.emccann.net/repo
+    git fetch vanir >& /dev/null
+    git checkout vanir/master >& /dev/null
+    popd >& /dev/null
+fi
 
 #rst (repo start helper), rup (repo upload helper)
 source $(gettop)/build/nukehawtness
