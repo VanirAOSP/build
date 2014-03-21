@@ -1475,10 +1475,12 @@ retval=0
             retval=$?
             ;;
     esac
-if [ $retval -eq 0 ]; then
-    notify-send "VANIR" "$TARGET_PRODUCT build completed." -i $T/build/buildwin.png -t 10000
-else
-    notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $T/build/buildfailed.png -t 10000
+if [ ! $VANIR_DISABLE_BUILD_COMPLETION_NOTIFICATIONS ]; then
+    if [ $retval -eq 0 ]; then
+        notify-send "VANIR" "$TARGET_PRODUCT build completed." -i $T/build/buildwin.png -t 10000
+    else
+        notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $T/build/buildfailed.png -t 10000
+    fi
 fi
 cd "$CWD"
 return $retval
