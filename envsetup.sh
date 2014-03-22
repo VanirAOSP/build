@@ -1458,7 +1458,7 @@ export BUILD_TINY_ANDROID=
 retval=0
     case `uname -s` in
         Darwin)
-            if [ ! $VANIR_PARALLEL_JOBS ]; then
+            if [ $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
                 local threads=`sysctl hw.ncpu|cut -d" " -f2`
                 local load=`expr $threads \* 2`
                 VANIR_PARALLEL_JOBS="-j $load"
@@ -1467,7 +1467,7 @@ retval=0
             retval=$?
             ;;
         *)
-            if [ ! $VANIR_PARALLEL_JOBS ]; then
+            if [ ! $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
                 local cores=`nproc --all`
                 VANIR_PARALLEL_JOBS="-j $cores"
             fi
