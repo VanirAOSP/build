@@ -125,6 +125,21 @@ ifeq ($(strip $(LOCAL_CLANG)),true)
 endif
 
 ####################################################
+## GRAPHITE loop transformation
+####################################################
+
+ifneq ($(strip $(ENABLE_GRAPHITE)),)
+  ifeq ($(strip $(LOCAL_DISABLE_GRAPHITE)),)
+    ifeq ($(strip $(LOCAL_CLANG)),)
+      ifeq ($(strip $(LOCAL_IS_HOST_MODULE)),)
+        LOCAL_CFLAGS += -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block
+        LOCAL_CPPFLAGS += -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block
+      endif
+    endif
+  endif
+endif
+
+####################################################
 ## Add FDO flags if FDO is turned on and supported
 ####################################################
 ifeq ($(strip $(LOCAL_NO_FDO_SUPPORT)),)
