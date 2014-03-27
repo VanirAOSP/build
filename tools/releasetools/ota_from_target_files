@@ -509,7 +509,6 @@ def WriteFullOTAPackage(input_zip, output_zip):
 
   script.Print("Installing the ROM...")
   script.UnpackPackageDir("system", "/system")
-  script.DeleteFiles(["/data/cron/root"])
   script.UnpackPackageDir("data", "/data")
 
   script.Print("Symlinking...")
@@ -523,7 +522,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   Item.GetMetadata(input_zip)
   Item.Get("system").SetPermissions(script)
   script.SetPermissionsRecursive("/system/etc/init.d", 0, 0, 0755, 0755, None, None)
-  script.SetPermissionsRecursive("/data/cron", 0, 0, 0755, 0755, None, None)
+  script.SetPermissionsRecursive("/system/etc/boot.d", 0, 0, 0755, 0755, None, None)
   script.SetPermissionsRecursive("/system/etc/cron", 0, 0, 0755, 0755, None, None)
 
   script.Print("Installing boot.img...")
