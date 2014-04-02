@@ -92,6 +92,7 @@ endif
 
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
+# ARM specific
 TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
                         -fomit-frame-pointer \
                         -fstrict-aliasing    \
@@ -100,7 +101,7 @@ TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
                         -ftree-vectorize \
                         $(STRICT_ALIASING_WARNINGS)
 
-# THUMB SUX BALLS. but we'll still compile it here and get rid of always true shit.
+# THUMB2 specific
 TARGET_thumb_CFLAGS :=  -mthumb \
                         -O$(TARGET_THUMB_O) \
                         -fomit-frame-pointer \
@@ -157,6 +158,7 @@ TARGET_GLOBAL_CFLAGS += \
 			-Wa,--noexecstack \
 			-Werror=format-security \
 			-D_FORTIFY_SOURCE=0 \
+			-fstrict-aliasing \
 			-fno-short-enums \
 			-pipe \
 			$(arch_variant_cflags) \
