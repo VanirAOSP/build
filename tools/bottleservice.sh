@@ -11,12 +11,11 @@ bfs()
     echo "bfs currently @ $*"
     for x in $*; do
         if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_NO_KERNEL | wc -l` -gt 0 ]; then
-            if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_NO_KERNEL | grep TARGET_NO_KERNEL | wc -l` -gt 0 ]; then
-                export TARGET_NO_KERNEL="`cat $x | grep TARGET_NO_KERNEL | sed 's/.*:=//g' | sed 's/[\t ]*//g' | head -n 1`"
-            fi
             export TARGET_NO_KERNEL="`cat $x | sed 's/[ ]*#.*//g' | grep TARGET_NO_KERNEL | sed 's/.*:=//g' | sed 's/[\t ]*//g' | sed 's/(//g' | sed 's/)//g' | head -n 1`"
             export TARGET_NO_KERNEL=`eval echo $TARGET_NO_KERNEL`
-            return 0
+            if [ "$TARGET_NO_KERNEL" = "true" ]; then
+                return 1
+            fi
         fi
         if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_KERNEL_SOURCE | wc -l` -gt 0 ]; then
             if [ `cat $x | sed 's/[ ]*#.*//g' | grep TARGET_KERNEL_SOURCE | grep TARGET_KERNEL_VERSION | wc -l` -gt 0 ]; then
