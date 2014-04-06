@@ -35,7 +35,10 @@ bfs()
 
 device=`echo $* | sed 's/.*_//g'`
 
-devicedir=`find device -name '*'"$device" -type d | head -n 1` #if we get more than one result, then it\'s a bad day in the magical forest
+devicedir=`find device -name "$device" -type d`
+if [ ! $devicedir ] || [ `echo $devicedir | wc -c` -le 1 ]; then
+    devicedir=`find device -name '*'"$device" -type d | head -n 1`
+fi
 if [ ! $devicedir ] || [ `echo $devicedir | wc -c` -le 1 ]; then
     devicedir=`find device -name "$device"'*' -type d | head -n 1`
 fi
