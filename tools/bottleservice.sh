@@ -115,7 +115,6 @@ champagne()
                 echo "*** Double-checking validity of all bottleserviced devices' kernel projects by automagically re-lunching them"
                 echo ""
                 export IN_THE_MIDDLE_OF_CASCADING_RESYNC=1
-                source build/envsetup.sh >& /dev/null
                 cat .repo/local_manifests/bottleservice.xml | grep project | sed 's/.*\/>//g' | sed 's/<!--//g' | sed 's/-->//g' | while read line ; do
                   for x in $line; do
                     for choice in ${LUNCH_MENU_CHOICES[@]}; do
@@ -128,7 +127,6 @@ champagne()
             fi
             echo " "
             echo " re-syncing!"
-            . build/envsetup.sh >& /dev/null
             reposync -c -f -j32
             echo " "
             echo " re-sync complete"
