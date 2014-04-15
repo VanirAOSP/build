@@ -571,13 +571,6 @@ function lunch()
         echo
         return 1
     fi
-    T=$(gettop)
-    if [ $T ]; then
-        pushd . >& /dev/null
-        cd $T
-        build/tools/bottleservice.sh $product || return 1
-        popd >& /dev/null
-    fi
 
     export TARGET_PRODUCT=$product
     export TARGET_BUILD_VARIANT=$variant
@@ -588,6 +581,16 @@ function lunch()
     fixup_common_out_dir
 
     set_stuff_for_environment
+
+    T=$(gettop)
+    if [ $T ]; then
+        pushd . >& /dev/null
+        cd $T
+        source build/tools/bottleservice.sh
+        champagne $product || return 1
+        popd >& /dev/null
+    fi
+
     printconfig
 }
 
