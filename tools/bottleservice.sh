@@ -132,5 +132,6 @@ champagne()
             echo " re-sync complete"
         fi
     fi
+    unset IN_THE_MIDDLE_OF_CASCADING_RESYNC
     return 0
 }
