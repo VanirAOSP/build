@@ -62,10 +62,6 @@ TARGET_GLOBAL_CFLAGS := $(filter-out -mfpu=%,$(TARGET_GLOBAL_CFLAGS))
 TARGET_GLOBAL_CPPFLAGS := $(filter-out -mfpu=%,$(TARGET_GLOBAL_CPPFLAGS))
 arch_variant_cflags += -mfpu=$(TARGET_ARCH_VARIANT_FPU)
 
-ifneq ($(findstring neon,$(TARGET_ARCH_VARIANT_FPU)),)
-arch_variant_cflags += -fno-tree-vectorize
-endif
-
 #is a float-abi explicitly defined?
 ifeq ($(strip $(TARGET_ARCH_VARIANT_FLOAT_ABI)),)
 	#no, so figure out if one is set on the GLOBAL_CFLAGS

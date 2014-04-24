@@ -93,6 +93,7 @@ TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
                         -fstrict-aliasing    \
                         -funswitch-loops \
                         -funsafe-loop-optimizations \
+                        -ftree-vectorize \
                         $(STRICT_ALIASING_WARNINGS)
 
 # THUMB2 specific
