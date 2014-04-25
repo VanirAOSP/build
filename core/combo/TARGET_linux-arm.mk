@@ -103,6 +103,13 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -funsafe-math-optimizations \
                         $(TARGET_THUMB_STRICT) $(STRICT_ALIASING_WARNINGS)
 
+# Workaround for broken video recording when compiling thumb with -Os on FLO and HH
+ifeq ($(AN_ASSHAT_HAS_BROKEN_MY_CAMERA_SOURCE),true)
+  ifeq ($(strip $(BONE_STOCK)),)
+    TARGET_thumb_CFLAGS +=  -fprefetch-loop-arrays
+  endif
+endif
+
 #SHUT THE F$#@ UP!
 TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
                         -Wno-unused-value \
