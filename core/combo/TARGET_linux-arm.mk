@@ -106,7 +106,16 @@ TARGET_thumb_CFLAGS :=  -mthumb \
 # Workaround for broken video recording when compiling thumb with -Os on FLO and HH
 ifeq ($(AN_ASSHAT_HAS_BROKEN_MY_CAMERA_SOURCE),true)
   ifeq ($(strip $(BONE_STOCK)),)
-    TARGET_thumb_CFLAGS +=  -fprefetch-loop-arrays
+    # Manually disable the -Os flags in -O2 excluding the problem suspects -fno-reorder*
+    # These flags cannot be enabled globally with -Os or the compiler will error where -Os and -Werror are assigned.
+    TARGET_thumb_CFLAGS +=  -O2 \
+                            -fno-align-functions \
+                            -fno-align-jumps \
+                            -fno-align-loops \
+                            -fno-align-labels \
+                            -fno-prefetch-loop-arrays
+                    #       -fno-reorder-blocks
+                    #       -fno-reorder-blocks-and-partition
   endif
 endif
 

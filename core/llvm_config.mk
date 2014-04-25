@@ -20,7 +20,11 @@ CLANG_CONFIG_EXTRA_CFLAGS := \
 
 CLANG_CONFIG_UNKNOWN_CFLAGS := \
   -funswitch-loops \
-  -fprefetch-loop-arrays
+  -fno-align-functions \
+  -fno-align-jumps \
+  -fno-align-loops \
+  -fno-align-labels \
+  -fno-prefetch-loop-arrays
 
 ifeq ($(TARGET_ARCH),arm)
   RS_TRIPLE := armv7-none-linux-gnueabi

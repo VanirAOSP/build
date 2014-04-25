@@ -278,7 +278,6 @@ $(proto_java_sources_file_stamp) : $(proto_sources_fullpath) $(PROTOC)
 LOCAL_INTERMEDIATE_TARGETS += $(proto_java_sources_file_stamp)
 endif # proto_sources
 
-
 ###########################################################
 ## Java: Compile .java files to .class
 ###########################################################
