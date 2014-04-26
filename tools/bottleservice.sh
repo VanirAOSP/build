@@ -119,7 +119,7 @@ champagne()
                   for x in $line; do
                     for choice in ${LUNCH_MENU_CHOICES[@]}; do
                         if [[ $choice == *$x* ]] && [[ $choice == vanir_* ]]; then
-                            lunch $choice && echo "RE-LUNCHED $x"&& break
+                            lunch $choice && echo "RE-LUNCHED $choice"&& break
                         fi
                     done
                   done
