@@ -49,11 +49,11 @@ $(combo_target)HAVE_KERNEL_MODULES := 0
 $(combo_target)GLOBAL_CFLAGS := -fno-exceptions -Wno-multichar
 ifeq ($(strip $(BONE_STOCK)),)
 ifeq ($(DONT_WARN_STRICT_ALIASING),)
-$(combo_target)RELEASE_CFLAGS := -O3 -g -Wstrict-aliasing=2
+$(combo_target)RELEASE_CFLAGS := -O3 -g
 ifneq ($(strip $(combo_target)),HOST_)
-$(combo_target)RELEASE_CFLAGS += -Werror=strict-aliasing
+$(combo_target)RELEASE_CFLAGS += -Wstrict-aliasing=2 -Werror=strict-aliasing
 else
-$(combo_target)RELEASE_CFLAGS += -Wno-error=strict-aliasing
+$(combo_target)RELEASE_CFLAGS += -Wno-error=strict-aliasing -Wno-strict-aliasing
 endif
 else
 $(combo_target)RELEASE_CFLAGS := -O3 -g
