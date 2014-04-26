@@ -23,8 +23,16 @@
 # Build a target string like "linux-arm" or "darwin-x86".
 combo_os_arch := $($(combo_target)OS)-$($(combo_target)ARCH)
 
-# Set reasonable defaults for the various variables
+# Include TARGET_NEEDS_EXTRA_DEBUGGING in your BoardConfig.mk to include GDB
+# and assertion macro debugging, and to summon the tooth fairy (not your mom... the real one)
+ifneq ($(TARGET_NEEDS_EXTRA_DEBUGGING),true)
+DEBUG_SYMBOL_FLAGS := -g0 -DNDEBUG
+DEBUG_FRAME_POINTER_FLAGS := -fomit-frame-pointer
+else
+DEBUG_SYMBOL_FLAGS := -g
+endif
 
+# Set reasonable defaults for the various variables
 $(combo_target)CC := $(CC)
 $(combo_target)CXX := $(CXX)
 $(combo_target)AR := $(AR)
@@ -49,14 +57,14 @@ $(combo_target)HAVE_KERNEL_MODULES := 0
 $(combo_target)GLOBAL_CFLAGS := -fno-exceptions -Wno-multichar
 ifeq ($(strip $(BONE_STOCK)),)
 ifeq ($(DONT_WARN_STRICT_ALIASING),)
-$(combo_target)RELEASE_CFLAGS := -O3 -g
+$(combo_target)RELEASE_CFLAGS := -O3 $(DEBUG_SYMBOL_FLAGS)
 ifneq ($(strip $(combo_target)),HOST_)
 $(combo_target)RELEASE_CFLAGS += -Wstrict-aliasing=2 -Werror=strict-aliasing
 else
 $(combo_target)RELEASE_CFLAGS += -Wno-error=strict-aliasing -Wno-strict-aliasing
 endif
 else
-$(combo_target)RELEASE_CFLAGS := -O3 -g
+$(combo_target)RELEASE_CFLAGS := -O3 $(DEBUG_SYMBOL_FLAGS)
 ifneq ($(strip $(combo_target)),HOST_)
 $(combo_target)RELEASE_CFLAGS += -Wno-strict-aliasing
 endif

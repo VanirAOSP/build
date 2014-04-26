@@ -12,11 +12,10 @@ define clang-flags-subst
   $(eval $(call do-clang-flags-subst,$(1),$(2)))
 endef
 
-
 CLANG_CONFIG_EXTRA_CFLAGS := \
   -O3 \
   -D__compiler_offsetof=__builtin_offsetof \
-  $(TARGET_THUMB_STRICT)
+  $(TARGET_THUMB_STRICT) $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
 
 CLANG_CONFIG_UNKNOWN_CFLAGS := \
   -funswitch-loops

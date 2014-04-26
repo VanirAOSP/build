@@ -95,14 +95,14 @@ TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
                         -funswitch-loops \
                         -funsafe-loop-optimizations \
                         -ftree-vectorize \
-                        $(STRICT_ALIASING_WARNINGS)
+                        $(STRICT_ALIASING_WARNINGS) $(DEBUG_SYMBOL_FLAGS)
 
 # THUMB2 specific
 TARGET_thumb_CFLAGS :=  -mthumb \
                         -O$(TARGET_THUMB_O) \
                         -fomit-frame-pointer \
                         -funsafe-math-optimizations \
-                        $(TARGET_THUMB_STRICT) $(STRICT_ALIASING_WARNINGS)
+                        $(TARGET_THUMB_STRICT) $(STRICT_ALIASING_WARNINGS) $(DEBUG_SYMBOL_FLAGS)
 
 #SHUT THE F$#@ UP!
 TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
@@ -125,7 +125,7 @@ endif
 # Set FORCE_ARM_DEBUGGING to "true" in your buildspec.mk
 # or in your environment to force a full arm build, even for
 # files that are normally built as thumb; this can make
-# gdb debugging easier.  Don't forget to do a clean build.
+# gdb debugging easier. Don't forget to do a clean build.
 #
 # NOTE: if you try to build a -O0 build with thumb, several
 # of the libraries (libpv, libwebcore, libkjs) need to be built
@@ -160,7 +160,7 @@ TARGET_GLOBAL_CFLAGS += \
 			$(arch_variant_cflags) \
 			-include $(android_config_h) \
 			-I $(dir $(android_config_h)) \
-			$(STRICT_ALIASING_WARNINGS)
+			$(STRICT_ALIASING_WARNINGS) $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
 
 TARGET_GLOBAL_CPPFLAGS += \
 			$(arch_variant_cflags)
@@ -205,17 +205,16 @@ TARGET_GLOBAL_LDFLAGS += \
 
 # more always true garglemesh:
 TARGET_GLOBAL_CFLAGS += -mthumb-interwork
-
 TARGET_GLOBAL_CPPFLAGS += -fvisibility-inlines-hidden
 
 # More flags/options can be added here
 TARGET_RELEASE_CFLAGS += \
 			-DNDEBUG \
-			-g \
+                        -g \
 			-fgcse-after-reload \
 			-frerun-cse-after-loop \
 			-frename-registers \
-			-pipe
+			-pipe $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
 libc_root := bionic/libc
 libm_root := bionic/libm
 libstdc++_root := bionic/libstdc++
