@@ -54,7 +54,12 @@ STRICT_ALIASING_WARNINGS := \
 endif
 
 ifeq ($(strip $(BONE_STOCK)),)
-TARGET_ARM_O := s
+TARGET_ARM_O := 3
+ifeq ($(strip $(TARGET_IS_A_CHEAP_ASUS_TABLET)),true)
+TARGET_THUMB_O := s
+else
+TARGET_THUMB_O := 3
+endif
 TARGET_THUMB_STRICT := \
     -fstrict-aliasing
 else
@@ -102,22 +107,6 @@ TARGET_thumb_CFLAGS :=  -mthumb \
                         -fomit-frame-pointer \
                         -funsafe-math-optimizations \
                         $(TARGET_THUMB_STRICT) $(STRICT_ALIASING_WARNINGS)
-
-# Workaround for broken video recording when compiling thumb with -Os on FLO and HH
-ifeq ($(AN_ASSHAT_HAS_BROKEN_MY_CAMERA_SOURCE),true)
-  ifeq ($(strip $(BONE_STOCK)),)
-    # Manually disable the -Os flags in -O2 excluding the problem suspects -fno-reorder*
-    # These flags cannot be enabled globally with -Os or the compiler will error where -Os and -Werror are assigned.
-    TARGET_thumb_CFLAGS +=  -O2 \
-                            -fno-align-functions \
-                            -fno-align-jumps \
-                            -fno-align-loops \
-                            -fno-align-labels \
-                            -fno-prefetch-loop-arrays
-                    #       -fno-reorder-blocks
-                    #       -fno-reorder-blocks-and-partition
-  endif
-endif
 
 #SHUT THE F$#@ UP!
 TARGET_arm_CFLAGS +=    -Wno-unused-parameter \
