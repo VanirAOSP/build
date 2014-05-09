@@ -175,6 +175,8 @@ TARGET_GLOBAL_CFLAGS += \
 			-fstrict-aliasing \
 			-fno-short-enums \
 			-pipe \
+			-no-canonical-prefixes \
+			-fno-canonical-system-headers \
 			$(arch_variant_cflags) \
 			-include $(android_config_h) \
 			-I $(dir $(android_config_h)) \
@@ -220,6 +222,11 @@ TARGET_GLOBAL_LDFLAGS += \
 			-Wl,--warn-shared-textrel \
 			-Wl,--fatal-warnings \
 			$(arch_variant_ldflags) $(gcc_variant_ldflags)
+
+ifeq ($(TARGET_CLANG_VERSION),msm-%)
+	TARGET_GLOBAL_LDFLAGS += \
+	    -no-canonical-prefixes
+endif
 
 # more always true garglemesh:
 TARGET_GLOBAL_CFLAGS += -mthumb-interwork
