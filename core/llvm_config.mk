@@ -107,10 +107,19 @@ $(call clang-flags-subst,-Wno-unused-but-set-parameter,)
 # clang does not support -mcpu=cortex-a15 yet - fall back to armv7-a for now
 $(call clang-flags-subst,-mcpu=cortex-a15,-march=armv7-a)
 
+ifneq ($(MAXIMUM_OVERDRIVE),true)
+# GCC uses clang's address sanitizer to detect memory errors in the program through debugging tools like gdb. They do this
+# using an extra instrumentation module llvm pass during compilation and a runtime library that replaces the malloc function.
+#
+# Output code performance can be effected if a "hot" function that is known to speed up the code gets flagged during the extra
+# compiler pass but the primary benefit of turning it off is greatly speeding up your build time.   If you choose to add this
+# you should still compile without it occassionally to verify the code for your build is still sound.
+
 ADDRESS_SANITIZER_CONFIG_EXTRA_CFLAGS := -fsanitize=address
 ADDRESS_SANITIZER_CONFIG_EXTRA_LDFLAGS := -Wl,-u,__asan_preinit
 ADDRESS_SANITIZER_CONFIG_EXTRA_SHARED_LIBRARIES := libdl libasan_preload
 ADDRESS_SANITIZER_CONFIG_EXTRA_STATIC_LIBRARIES := libasan
+endif
 
 # This allows us to use the superset of functionality that compiler-rt
 # provides to Clang (for supporting features like -ftrapv).

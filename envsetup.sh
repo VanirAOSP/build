@@ -17,6 +17,7 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - resgrep: Greps on all local res/*.xml files.
 - godir:   Go to the directory containing a file.
 - mka:      Builds using SCHED_BATCH on all processors
+- mkdirty   same as mka, without clang address sanitizer. Might compile faster... but increases likelihood of your phone needing to get tested at the free clinic.
 - mkap:     Builds the module(s) using mka and pushes them to the device.
 - cmka:     Cleans and builds using mka.
 - cmkap:     Cleans and builds using mka, then crams it in your phone's gullet.
@@ -1489,6 +1490,12 @@ if [ ! $VANIR_DISABLE_BUILD_COMPLETION_NOTIFICATIONS ]; then
 fi
 cd "$CWD"
 return $retval
+}
+
+function mkdirty() {
+    # possibly faster compile, with possible issues that wouldn't otherwise exist... possibly
+    MAXIMUM_OVERDRIVE=true mka "$@"
+    return $?
 }
 
 function mkc() {
