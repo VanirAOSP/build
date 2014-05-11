@@ -1466,7 +1466,7 @@ retval=0
             if [ $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
                 local threads=`sysctl hw.ncpu|cut -d" " -f2`
                 local load=`expr $threads \* 2`
-                VANIR_PARALLEL_JOBS="-j $load"
+                VANIR_PARALLEL_JOBS="-j$load"
             fi
             time make $VANIR_PARALLEL_JOBS "$@"
             retval=$?
@@ -1474,7 +1474,7 @@ retval=0
         *)
             if [ ! $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
                 local cores=`nproc --all`
-                VANIR_PARALLEL_JOBS="-j $cores"
+                VANIR_PARALLEL_JOBS="-j$cores"
             fi
             time schedtool -B -n 1 -e ionice -n 1 make $VANIR_PARALLEL_JOBS "$@"
             retval=$?
