@@ -37,6 +37,11 @@ else
 	TARGET_PREBUILT_INT_KERNEL_TYPE := zImage
 endif
 
+ifeq ($(HOST_OS),darwin)
+  MAKE_FLAGS := C_INCLUDE_PATH=$(ANDROID_BUILD_TOP)/external/elfutils/libelf
+  TARGET_KERNEL_USE_AOSP_TOOLCHAIN := true
+endif
+
 ## Do be discontinued in a future version. Notify builder about target
 ## kernel format requirement
 ifeq ($(BOARD_KERNEL_IMAGE_NAME),)
@@ -131,30 +136,25 @@ ifeq ($(TARGET_ARCH),arm)
         endif
       endif
     endif
-    ifeq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN), true)
-       TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
+    ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN), linaro-4.9)
+      ALIAS := arm-eabi-
+    else
+      ALIAS := arm-gnueabi-
     endif
     ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),)
        TARGET_KERNEL_CUSTOM_TOOLCHAIN:=linaro-4.7
     endif
-    ifeq ($(TARGET_ARCH_VARIANT_CPU),)
-       TARGET_ARCH_VARIANT_CPU:=generic
-    endif
-    ifeq ($(HOST_OS),darwin)
+    ifeq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN), true)
       TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
-      TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/darwin-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-
+      TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-
       ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
-    else
-      ifeq ($(USE_AOSP_TOOLCHAINS), true)
-        ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-"
       else
         T_K_C_T_STRIPPER := $(shell echo $(TARGET_KERNEL_CUSTOM_TOOLCHAIN) | sed -e 's/[a-z]//g')
         T_K_C_T_DASHER := $(shell echo $(T_K_C_T_STRIPPER) | sed -e 's/-//g')
         T_K_C_T := linaro-$(T_K_C_T_DASHER)
-        TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(T_K_C_T)-$(TARGET_ARCH_VARIANT_CPU)/bin/arm-gnueabi-
+        TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(T_K_C_T)-$(cpu_for_optimizations)/bin/$(ALIAS)
         ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
       endif
-    endif
     ccache =
 define mv-modules
     mdpath=`find $(KERNEL_MODULES_OUT) -type f -name modules.order`;\
@@ -175,10 +175,6 @@ define mv-modules
         mv $$i $(KERNEL_MODULES_OUT)/; done;\
     fi
 endef
-endif
-
-ifeq ($(HOST_OS),darwin)
-  MAKE_FLAGS := C_INCLUDE_PATH=$(ANDROID_BUILD_TOP)/external/elfutils/libelf
 endif
 
 ifeq ($(TARGET_KERNEL_MODULES),)
