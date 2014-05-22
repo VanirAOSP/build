@@ -92,6 +92,11 @@ champagne()
         mv .repo/local_manifests/tmp.xml .repo/local_manifests/bottleservice.xml
     fi
     if [ ! $precompiled ] && [ $haskernelline -eq 0 ]; then
+        #if bottlservice is prevented (which is useful to maintain versioning consistency while building nightlies, then we should exit non-zero here
+        if [ $VANIR_BOTTLESERVICE_DISABLE ]; then
+            echo "WARNING: SKIPPING BOTTLESERVICE FOR $device, WHICH NEEDS A F&^%ING BOTTLE SERVED TO IT."
+            return 1
+        fi
         #add kernel to the file
         echo " "
         echo " VANIR BOTTLESERVICE. YOU KNOW HOW WE DO."
