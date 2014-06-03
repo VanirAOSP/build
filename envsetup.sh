@@ -55,25 +55,15 @@ WHITE='\[\033[1;37m\]'
 NONE='\[\033[0m\]'
 
 #run a command inside all projects tracked on the vanir remote in the manifest
-function forall_vanir()
-{
-  T=$(gettop)
-  if [ ! "$T" ]; then
-    echo "Couldn't locate the top of the tree.  Try setting TOP." >&2
-    return
-  fi
-  local cmd
-  local pathlist
-  pushd . >& /dev/null
-  cd $T
-  pathlist=""
-  for x in `cat $(gettop)/.repo/manifest.xml | sed 's/<!--.*-->//g' | grep \<project | sed 's/.*project //g' | grep 'remote=\"vanir\"' | sed 's/[ ]*\/*>//g' | sed 's/groups=[\"a-zA-Z0-9,\-]*//g' | sed 's/.*path="//g' | sed 's/\".*//g'`; do
-    pathlist="$pathlist $x"
+alias forall_vanir="
+  cd \$ANDROID_BUILD_TOP
+  pathlist=\"\"
+  set -f
+  cat \$ANDROID_BUILD_TOP/.repo/manifest.xml | sed 's/<!--.*-->//g' | grep \"<project\" | sed 's/.*project //g' | grep 'remote=\"vanir\"' | sed 's/[ ]*\\/*>//g' | sed 's/groups=[\"a-zA-Z0-9,\\-]*//g' | sed 's/.*path=\"//g' | sed 's/\".*//g' | while read LINE; do
+    pathlist=\"\$pathlist \$LINE\"
   done
-  cmd="`echo $* | sed 's/\"/\\\"/g'`"
-  repo forall $pathlist -c "eval $cmd"
-  popd >& /dev/null
-}
+  set +f
+  repo forall \$pathlist -c"
 
 # Get the value of a build variable as an absolute path.
 function get_abs_build_var()
