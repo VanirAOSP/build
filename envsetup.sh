@@ -66,7 +66,7 @@ function forall_vanir()
   echo $pathlist
   set +f
   [ ! "$pathlist" ] && echo "FAIL" && return 1
-  repo forall -r $pathlist -c $@
+  repo forall -r $pathlist -c "$@"
 }
 
 # Get the value of a build variable as an absolute path.
