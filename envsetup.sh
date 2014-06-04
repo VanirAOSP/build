@@ -55,6 +55,8 @@ WHITE='\[\033[1;37m\]'
 NONE='\[\033[0m\]'
 
 #run a command inside all projects tracked on the vanir remote in the manifest
+function forall_vanir()
+{
 alias forall_vanir="
   cd \$ANDROID_BUILD_TOP
   pathlist=\"\"
@@ -64,6 +66,9 @@ alias forall_vanir="
   done
   set +f
   repo forall \$pathlist -c"
+    [ $# -gt 0 ] && forall_vanir $@
+}
+forall_vanir
 
 # Get the value of a build variable as an absolute path.
 function get_abs_build_var()
