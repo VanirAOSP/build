@@ -60,11 +60,13 @@ function forall_vanir()
   cd $ANDROID_BUILD_TOP
   pathlist=""
   set -f
-  cat $ANDROID_BUILD_TOP/.repo/manifest.xml | sed 's/<!--.*-->//g' | grep "<project" | sed 's/.*project //g' | grep 'remote="vanir"' | sed 's/[ ]*\/*>//g' | sed 's/groups=["a-zA-Z0-9,\-]*//g' | sed 's/.*path=\"//g' | sed 's/\".*//g' | while read LINE; do
-    pathlist="$pathlist $LINE"
+  for x in `cat $ANDROID_BUILD_TOP/.repo/manifest.xml | sed 's/<!--.*-->//g' | grep "<project" | sed 's/.*project //g' | grep 'remote="vanir"' | sed 's/[ ]*\/*>//g' | sed 's/groups=["a-zA-Z0-9,\-]*//g' | sed 's/.*path=\"//g' | sed 's/".*//g'`; do
+    pathlist="$pathlist $x"
   done
+  echo $pathlist
   set +f
-  repo forall $pathlist -c $@
+  [ ! "$pathlist" ] && echo "FAIL" && return 1
+  repo forall -r $pathlist -c $@
 }
 
 # Get the value of a build variable as an absolute path.
