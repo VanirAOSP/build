@@ -68,6 +68,9 @@ Usage:  ota_from_target_files [flags] input_target_files output_ota_package
       first, so that any changes made to the system partition are done
       using the new recovery (new kernel, etc.).
 
+  --no_separate_recovery <ANYTHING>
+      Vanir doesn't include "recoveries"... we just use them to restore when a nightly breaks some shit.
+
 """
 
 import sys
@@ -108,6 +111,7 @@ OPTIONS.backuptool = True
 OPTIONS.override_device = 'auto'
 OPTIONS.override_prop = False
 OPTIONS.two_step = False
+OPTIONS.no_separate_recovery = True
 
 def MostPopularKey(d, default):
   """Given a dict, return the key corresponding to the largest
@@ -1067,6 +1071,8 @@ def main(argv):
       OPTIONS.override_prop = bool(a.lower() == 'true')
     elif o in ("-2", "--two_step"):
       OPTIONS.two_step = True
+    elif o in ("--no_separate_recovery"):
+      # return success so we can ignore it. trololol
     else:
       return False
     return True
@@ -1084,7 +1090,8 @@ def main(argv):
                                               "backup=",
                                               "override_device=",
                                               "override_prop=",
-                                              "two_step"],
+                                              "two_step",
+                                              "no_separate_recovery="],
                              extra_option_handler=option_handler)
 
   if len(args) != 2:
