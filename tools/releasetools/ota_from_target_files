@@ -1074,6 +1074,7 @@ def main(argv):
     elif o in ("-2", "--two_step"):
       OPTIONS.two_step = True
     elif o in ("--no_separate_recovery"):
+      noop=1
       # return success so we can ignore it. trololol
     else:
       return False
