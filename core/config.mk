@@ -501,4 +501,7 @@ include $(BUILD_SYSTEM)/qcom_target.mk
 ## last, to avoid accidental resetting by device configs
 $(eval include vendor/vanir/sepolicy/sepolicy.mk)
 
+# Vanir kernel stuff
+include $(BUILD_SYSTEM)/kernel_config.mk
+
 include $(BUILD_SYSTEM)/dumpvar.mk

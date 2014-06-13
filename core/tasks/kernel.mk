@@ -37,11 +37,6 @@ else
 	TARGET_PREBUILT_INT_KERNEL_TYPE := zImage
 endif
 
-ifeq ($(HOST_OS),darwin)
-  MAKE_FLAGS := C_INCLUDE_PATH=$(ANDROID_BUILD_TOP)/external/elfutils/libelf
-  TARGET_KERNEL_USE_AOSP_TOOLCHAIN := true
-endif
-
 ## Do be discontinued in a future version. Notify builder about target
 ## kernel format requirement
 ifeq ($(BOARD_KERNEL_IMAGE_NAME),)
@@ -126,35 +121,18 @@ endef
 
 ifeq ($(TARGET_ARCH),arm)
     ifneq ($(USE_CCACHE),)
-     # search executable
-      ccache =
-      ifneq ($(strip $(wildcard $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_EXTRA_TAG)/ccache/ccache)),)
-        ccache := $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_EXTRA_TAG)/ccache/ccache
-      else
-        ifneq ($(strip $(wildcard $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_TAG)/ccache/ccache)),)
-          ccache := $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_TAG)/ccache/ccache
+        # search executable
+        ccache =
+        ifneq ($(strip $(wildcard $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_EXTRA_TAG)/ccache/ccache)),)
+            ccache := $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_EXTRA_TAG)/ccache/ccache
+        else
+            ifneq ($(strip $(wildcard $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_TAG)/ccache/ccache)),)
+                ccache := $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_TAG)/ccache/ccache
+            endif
         endif
-      endif
-    endif
-    ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN), linaro-4.9)
-      ALIAS := arm-eabi-
-    else
-      ALIAS := arm-gnueabi-
-    endif
-    ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),)
-       TARGET_KERNEL_CUSTOM_TOOLCHAIN:=linaro-4.7
-    endif
-    ifeq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN), true)
-      TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
-      TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-
-      ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
-      else
-        T_K_C_T_STRIPPER := $(shell echo $(TARGET_KERNEL_CUSTOM_TOOLCHAIN) | sed -e 's/[a-z]//g')
-        T_K_C_T_DASHER := $(shell echo $(T_K_C_T_STRIPPER) | sed -e 's/-//g')
-        T_K_C_T := linaro-$(T_K_C_T_DASHER)
-        TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(T_K_C_T)-$(cpu_for_optimizations)/bin/$(ALIAS)
-        ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
-      endif
+    endif # ifneq ($(USE_CCACHE),)
+include $(BUILD_SYSTEM)/kernel_config.mk
+    ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(TOOL_PREFIX)"
     ccache =
 define mv-modules
     mdpath=`find $(KERNEL_MODULES_OUT) -type f -name modules.order`;\
@@ -165,7 +143,7 @@ define mv-modules
         mv $$i $(KERNEL_MODULES_OUT)/; done;\
     fi
 endef
-else
+    else # ifeq ($(TARGET_ARCH),arm)
 define mv-modules
     mdpath=`find $(KERNEL_MODULES_OUT) -type f -name modules.order`;\
     if [ "$$mdpath" != "" ];then\
@@ -175,7 +153,7 @@ define mv-modules
         mv $$i $(KERNEL_MODULES_OUT)/; done;\
     fi
 endef
-endif
+endif # ifeq ($(TARGET_ARCH),arm)
 
 ifeq ($(TARGET_KERNEL_MODULES),)
     TARGET_KERNEL_MODULES := no-external-modules
