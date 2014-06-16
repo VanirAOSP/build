@@ -68,8 +68,8 @@ Usage:  ota_from_target_files [flags] input_target_files output_ota_package
       first, so that any changes made to the system partition are done
       using the new recovery (new kernel, etc.).
 
-  --no_separate_recovery <ANYTHING>
-      Vanir doesn't include "recoveries"... we just use them to restore when a nightly breaks some shit.
+  --no_separate_recovery <bool>
+      *cross your fingers*
 
 """
 
@@ -994,9 +994,9 @@ else
     script.Print("Unpacking new files...")
     script.UnpackPackageDir("system", "/system")
 
-  #if updating_recovery:
-  #  script.Print("Unpacking new recovery...")
-  #  script.UnpackPackageDir("recovery", "/system")
+  if updating_recovery and not OPTIONS.no_separate_recovery:
+    script.Print("Unpacking new recovery...")
+    script.UnpackPackageDir("recovery", "/system")
 
   if len(renames) > 0:
     script.Print("Renaming files...")
@@ -1080,7 +1080,7 @@ def main(argv):
     elif o in ("-2", "--two_step"):
       OPTIONS.two_step = True
     elif o in ("--no_separate_recovery"):
-      OPTIONS.no_separate_recovery = True
+      OPTIONS.no_separate_recovery = bool(a.lower() == 'true')
     else:
       return False
     return True
