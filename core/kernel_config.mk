@@ -23,7 +23,11 @@ endif
 
 # meat and potatoes
 ifeq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN),true)
-    TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
+    ifneq ($(TARGET_KERNEL_CUSTOM_AOSP_TOOLCHAIN),)
+        TARGET_KERNEL_CUSTOM_TOOLCHAIN:=$(TARGET_KERNEL_CUSTOM_AOSP_TOOLCHAIN)
+    else
+        TARGET_KERNEL_CUSTOM_TOOLCHAIN:=arm-eabi-4.7
+    endif
     TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-
 else
     T_K_C_T_STRIPPER := $(shell echo $(TARGET_KERNEL_CUSTOM_TOOLCHAIN) | sed -e 's/[a-z]//g')
