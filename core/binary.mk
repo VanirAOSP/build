@@ -339,9 +339,18 @@ renderscript_flags := -Wall -Werror
 renderscript_flags += $(LOCAL_RENDERSCRIPT_FLAGS)
 
 LOCAL_RENDERSCRIPT_INCLUDES := \
-    $(TOPDIR)external/clang/lib/Headers \
     $(TOPDIR)frameworks/rs/scriptc \
     $(LOCAL_RENDERSCRIPT_INCLUDES)
+
+ifeq ($(TARGET_CLANG_VERSION),)
+LOCAL_RENDERSCRIPT_INCLUDES += \
+    $(TOPDIR)external/clang/lib/Headers
+endif
+
+ifneq ($(TARGET_CLANG_VERSION),)
+LOCAL_RENDERSCRIPT_INCLUDES += \
+    $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
+endif
 
 ifneq ($(LOCAL_RENDERSCRIPT_INCLUDES_OVERRIDE),)
 LOCAL_RENDERSCRIPT_INCLUDES := $(LOCAL_RENDERSCRIPT_INCLUDES_OVERRIDE)
