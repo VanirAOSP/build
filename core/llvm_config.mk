@@ -18,7 +18,8 @@ CLANG_CONFIG_EXTRA_CFLAGS := \
   $(TARGET_THUMB_STRICT) $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
 
 CLANG_CONFIG_UNKNOWN_CFLAGS := \
-  -funswitch-loops
+  -funswitch-loops \
+  -funsafe-loop-optimizations
 
 ifeq ($(TARGET_ENABLE_LTO),true)
 CLANG_CONFIG_UNKNOWN_CFLAGS += \
