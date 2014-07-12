@@ -63,7 +63,6 @@ function forall_vanir()
   for x in `cat $ANDROID_BUILD_TOP/.repo/manifest.xml | sed 's/<!--.*-->//g' | grep "<project" | sed 's/.*project //g' | grep 'remote="vanir"' | sed 's/[ ]*\/*>//g' | sed 's/groups=["a-zA-Z0-9,\-]*//g' | sed 's/.*path=\"//g' | sed 's/".*//g'`; do
     pathlist="$pathlist $x"
   done
-  echo $pathlist
   set +f
   [ ! "$pathlist" ] && echo "FAIL" && return 1
   repo forall -r $pathlist -c "$@"
