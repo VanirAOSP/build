@@ -35,8 +35,12 @@ TARGET_ARCH_VARIANT := armv5te
 endif
 
 # default target GCC version
+ifneq ($(strip $(BONE_STOCK)),)
+TARGET_GCC_VERSION := 4.7
+else
 ifeq ($(strip $(TARGET_GCC_VERSION)),)
 TARGET_GCC_VERSION := 4.8-linaro
+endif
 endif
 
 TARGET_ARCH_SPECIFIC_MAKEFILE := $(BUILD_COMBOS)/arch/$(TARGET_ARCH)/$(TARGET_ARCH_VARIANT).mk
