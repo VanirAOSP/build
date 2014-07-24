@@ -97,8 +97,16 @@ TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
                         -fomit-frame-pointer \
                         -fstrict-aliasing    \
                         -funswitch-loops \
-                        -funsafe-loop-optimizations \
-                        -ftree-vectorize \
+                        -funsafe-loop-optimizations
+# aosp gcc 4.7 barfs with ftree-vectorize
+ifneq ($(filter 4.7 4.7.%, $(shell $(TARGET_CC) --version)),)
+ifeq ($(TARGET_ARM_O),3)
+TARGET_arm_CFLAGS += \
+                       -ftree-vectorize
+endif
+endif
+
+TARGET_arm_CFLAGS += \
                         $(STRICT_ALIASING_WARNINGS) $(DEBUG_SYMBOL_FLAGS)
 
 # THUMB2 specific
