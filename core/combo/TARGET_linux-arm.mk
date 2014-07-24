@@ -62,6 +62,15 @@ TARGET_ARM_O := 3
 TARGET_THUMB_O := s
 TARGET_THUMB_STRICT := \
     -fstrict-aliasing
+# aosp gcc 4.7 barfs with ftree-vectorize
+ifneq ($(filter 4.7 4.7.%, $(shell $(TARGET_CC) --version)),)
+TARGET_EXTRA_BULLSHIT_1 += \
+                       -ftree-vectorize
+endif
+TARGET_EXTRA_BULLSHIT_2 += \
+                       -funsafe-loop-optimizations
+TARGET_THUMB_BULLSHIT += \
+                       -funsafe-math-optimizations
 else
 TARGET_ARM_O := 2
 TARGET_THUMB_O := s
@@ -95,16 +104,8 @@ TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 # ARM specific
 TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
                         -fomit-frame-pointer \
-                        -fstrict-aliasing    \
-                        -funswitch-loops \
-                        -funsafe-loop-optimizations
-# aosp gcc 4.7 barfs with ftree-vectorize
-ifneq ($(filter 4.7 4.7.%, $(shell $(TARGET_CC) --version)),)
-ifeq ($(TARGET_ARM_O),3)
-TARGET_arm_CFLAGS += \
-                       -ftree-vectorize
-endif
-endif
+                        -fstrict-aliasing $(TARGET_EXTRA_BULLSHIT_1) \
+                        -funswitch-loops $(TARGET_EXTRA_BULLSHIT_2)
 
 TARGET_arm_CFLAGS += \
                         $(STRICT_ALIASING_WARNINGS) $(DEBUG_SYMBOL_FLAGS)
@@ -112,8 +113,7 @@ TARGET_arm_CFLAGS += \
 # THUMB2 specific
 TARGET_thumb_CFLAGS :=  -mthumb \
                         -O$(TARGET_THUMB_O) \
-                        -fomit-frame-pointer \
-                        -funsafe-math-optimizations \
+                        -fomit-frame-pointer $(TARGET_THUMB_BULLSHIT) \
                         $(TARGET_THUMB_STRICT) $(STRICT_ALIASING_WARNINGS) $(DEBUG_SYMBOL_FLAGS)
 
 #SHUT THE F$#@ UP!
