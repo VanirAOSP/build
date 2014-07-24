@@ -14,15 +14,8 @@ ifeq ($(USE_AOSP_TOOLCHAINS),true)
 endif
 
 # default
-ifneq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),)
-TARGET_KERNEL_CUSTOM_TOOLCHAIN := linaro-4.7
-endif
-
-# mangling too support horendous nomenclature
-ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),linaro-4.9)
-    TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS := arm-eabi-
-else
-    TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS := arm-gnueabi-
+ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),)
+    TARGET_KERNEL_CUSTOM_TOOLCHAIN := linaro-4.7
 endif
 
 # allow setting the cpu variant for unsupported cpu's like cortex-a7
@@ -42,6 +35,13 @@ ifeq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN),true)
 
     TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-
 else
+    # mangling too support horendous nomenclature
+    ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),linaro-4.9)
+        TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS := arm-eabi-
+    else
+        TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS := arm-gnueabi-
+    endif
+
     T_K_C_T_STRIPPER := $(shell echo $(TARGET_KERNEL_CUSTOM_TOOLCHAIN) | sed -e 's/[a-z]//g')
     T_K_C_T_DASHER := $(shell echo $(T_K_C_T_STRIPPER) | sed -e 's/-//g')
     T_K_C_T := linaro-$(T_K_C_T_DASHER)
