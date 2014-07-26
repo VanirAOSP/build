@@ -769,6 +769,9 @@ boottarball: $(INSTALLED_BOOTTARBALL_TARGET)
 .PHONY: userdataimage
 userdataimage: $(INSTALLED_USERDATAIMAGE_TARGET)
 
+.PHONY: recoveryimage
+recoveryimage: $(INSTALLED_RECOVERYIMAGE_TARGET)
+
 ifneq (,$(filter userdataimage, $(MAKECMDGOALS)))
 $(call dist-for-goals, userdataimage, $(BUILT_USERDATAIMAGE_TARGET))
 endif
