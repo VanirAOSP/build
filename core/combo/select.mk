@@ -23,6 +23,11 @@
 # Build a target string like "linux-arm" or "darwin-x86".
 combo_os_arch := $($(combo_target)OS)-$($(combo_target)ARCH)
 
+
+ifeq ($(TARGET_BUILD_VARIANT),eng)
+TARGET_NEEDS_EXTRA_DEBUGGING := true
+endif
+
 # Include TARGET_NEEDS_EXTRA_DEBUGGING in your BoardConfig.mk to include GDB
 # and assertion macro debugging, and to summon the tooth fairy (not your mom... the real one)
 ifneq ($(TARGET_NEEDS_EXTRA_DEBUGGING),true)
