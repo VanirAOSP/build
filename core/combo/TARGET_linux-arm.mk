@@ -125,6 +125,12 @@ TARGET_thumb_CFLAGS +=  -Wno-unused-parameter \
                         -Wno-unused-value \
                         -Wno-unused-function
 
+# Global defines for skia neon optimization
+ifeq ($(ARCH_ARM_HAVE_NEON),true)
+  TARGET_GLOBAL_CFLAGS += -DSKPAINTOPTIONS_OPT
+  TARGET_GLOBAL_CPPFLAGS += -DSKPAINTOPTIONS_OPT
+endif
+
 # Turn off strict-aliasing if we're building an AOSP variant without the
 # patchset...
 ifeq ($(strip $(BONE_STOCK)),)
