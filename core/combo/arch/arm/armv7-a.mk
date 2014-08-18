@@ -14,3 +14,6 @@ arch_variant_cflags := \
 
 arch_variant_ldflags := \
 	-Wl,--fix-cortex-a8
+
+TARGET_GLOBAL_CFLAGS += -DARCH_ARM_NO_NEON
+TARGET_GLOBAL_CPPFLAGS += -DARCH_ARM_NO_NEON
