@@ -123,8 +123,8 @@ $(call clang-flags-subst,-Wno-unused-but-set-parameter,)
 ifeq ($(TARGET_CLANG_VERSION),)
 $(call clang-flags-subst,-mcpu=cortex-a15,-march=armv7-a)
 else
-# or use krait2 for krait cpu variants using msm-3.4 clang...
-ifeq ($(TARGET_CLANG_VERSION),msm-3.4)
+# or use krait2 for krait cpu variants using msm-3.4 or msm-3.5 clang...
+ifeq (,$(findstring $(TARGET_CLANG_VERSION),msm))
 ifeq ($(TARGET_CPU_VARIANT),krait)
 $(call clang-flags-subst,-mtune=cortex-a15,-mtune=krait2)
 $(call clang-flags-subst,-mcpu=cortex-a15,-mcpu=krait2)
