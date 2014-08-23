@@ -52,6 +52,11 @@ ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
 	endif # ifneq ($(currentfpu),)
 endif # ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU),)
 
+# Stay safe!!! Wear Protection From Now On!!! Keep msm-3.5 out of the rest
+ifeq ($(TARGET_CLANG_VERSION),msm-3.5)
+	TARGET_ARCH_VARIANT_FPU := neon
+endif
+
 #get rid of existing instances of -mfpu in TARGET_GLOBAL_CP*FLAGS
 TARGET_GLOBAL_CFLAGS := $(filter-out -mfpu=%,$(TARGET_GLOBAL_CFLAGS))
 TARGET_GLOBAL_CPPFLAGS := $(filter-out -mfpu=%,$(TARGET_GLOBAL_CPPFLAGS))
