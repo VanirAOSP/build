@@ -35,9 +35,14 @@ ifeq ($(TARGET_ARCH),arm)
     -target arm-linux-androideabi \
     -nostdlibinc \
     -B$(TARGET_TOOLCHAIN_ROOT)/arm-linux-androideabi/bin
+ifneq ($(TARGET_CLANG_VERSION),msm-3.5)
   CLANG_CONFIG_EXTRA_CFLAGS += \
     $(CLANG_CONFIG_EXTRA_ASFLAGS) \
     -mllvm -arm-enable-ehabi
+else
+  CLANG_CONFIG_EXTRA_CFLAGS += \
+    $(CLANG_CONFIG_EXTRA_ASFLAGS)
+endif
   CLANG_CONFIG_EXTRA_LDFLAGS += \
     -target arm-linux-androideabi \
     -B$(TARGET_TOOLCHAIN_ROOT)/arm-linux-androideabi/bin
