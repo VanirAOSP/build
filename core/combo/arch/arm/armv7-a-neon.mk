@@ -40,6 +40,7 @@ arch_variant_cflags += \
 endif
 
 #is an FPU explicitly defined?
+ifneq ($(TARGET_CLANG_VERSION),msm-3.5)
 ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
 	#no, so figure out if one is set on the GLOBAL_CFLAGS
 	currentfpu := $(strip $(filter -mfpu=%,$(TARGET_GLOBAL_CFLAGS)))
@@ -51,6 +52,9 @@ ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
 		TARGET_ARCH_VARIANT_FPU := neon
 	endif # ifneq ($(currentfpu),)
 endif # ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU),)
+else
+	TARGET_ARCH_VARIANT_FPU := neon
+endif
 
 #get rid of existing instances of -mfpu in TARGET_GLOBAL_CP*FLAGS
 TARGET_GLOBAL_CFLAGS := $(filter-out -mfpu=%,$(TARGET_GLOBAL_CFLAGS))
