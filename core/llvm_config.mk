@@ -118,13 +118,8 @@ $(call clang-flags-subst,-Wno-psabi,)
 $(call clang-flags-subst,-Wno-unused-but-set-variable,)
 $(call clang-flags-subst,-Wno-unused-but-set-parameter,)
 
-# clang does not support cortex-a15, so FIRST (original)...
-# fall back to -march=armv7-a ...IF NO TARGET_CLANG_VERSION.
-ifeq ($(TARGET_CLANG_VERSION),)
-$(call clang-flags-subst,-mcpu=cortex-a15,-march=armv7-a)
-else
-# or use krait2 for krait cpu variants using msm-3.4 or msm-3.5 clang...
-ifeq ($(filter-out msm%,$(TARGET_CLANG_VERSION)),)
+# with msm prebuilt clang, use krait2 for krait devices instead of a15
+ifneq (,$(filter-out msm-3.4 msm-3.5,$(TARGET_CLANG_VERSION)))
 ifeq ($(TARGET_CPU_VARIANT),krait)
 $(call clang-flags-subst,-mtune=cortex-a15,-mtune=krait2)
 $(call clang-flags-subst,-mcpu=cortex-a15,-mcpu=krait2)
@@ -132,7 +127,9 @@ $(call clang-flags-subst,-mtune=cortex-a9,-mtune=krait2)
 $(call clang-flags-subst,-mcpu=cortex-a9,-mcpu=krait2)
 endif
 endif
-endif
+
+# if mcpu=cortex-a15 is still present, flip it to armv7-a
+$(call clang-flags-subst,-mcpu=cortex-a15,-march=armv7-a)
 
 ifneq ($(MAXIMUM_OVERDRIVE),true)
 # GCC uses clang's address sanitizer to detect memory errors in the program through debugging tools like gdb. They do this
