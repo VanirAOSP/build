@@ -118,20 +118,20 @@ $(call clang-flags-subst,-Wno-psabi,)
 $(call clang-flags-subst,-Wno-unused-but-set-variable,)
 $(call clang-flags-subst,-Wno-unused-but-set-parameter,)
 
-# clang does not support cortex-a15, so FIRST (original)...
-# fall back to -march=armv7-a ...IF NO TARGET_CLANG_VERSION.
-ifeq ($(TARGET_CLANG_VERSION),)
-$(call clang-flags-subst,-mcpu=cortex-a15,-march=armv7-a)
-else
-# or use krait2 for krait cpu variants using msm-3.4 or msm-3.5 clang...
+# clang does not support cortex-a15 so use krait2 for msm clang...
+ifneq ($(TARGET_CLANG_VERSION),)
 ifeq ($(filter-out msm%,$(TARGET_CLANG_VERSION)),)
-ifeq ($(TARGET_CPU_VARIANT),krait)
+ifeq ($(TARGET_ARCH_VARIANT_CPU),cortex-a15)
 $(call clang-flags-subst,-mtune=cortex-a15,-mtune=krait2)
 $(call clang-flags-subst,-mcpu=cortex-a15,-mcpu=krait2)
 $(call clang-flags-subst,-mtune=cortex-a9,-mtune=krait2)
 $(call clang-flags-subst,-mcpu=cortex-a9,-mcpu=krait2)
 endif
 endif
+else
+# else fall back to -march=armv7-a ...IF NO TARGET_CLANG_VERSION.
+$(call clang-flags-subst,-mcpu=cortex-a15,-march=armv7-a)
+$(call clang-flags-subst,-mtune=cortex-a15,)
 endif
 
 ifneq ($(MAXIMUM_OVERDRIVE),true)
