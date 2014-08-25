@@ -31,17 +31,18 @@ endif
 
 ifeq ($(TARGET_ARCH),arm)
   RS_TRIPLE := armv7-none-linux-gnueabi
-  CLANG_CONFIG_EXTRA_ASFLAGS += \
+   CLANG_CONFIG_EXTRA_ASFLAGS += \
     -target arm-linux-androideabi \
     -nostdlibinc \
     -B$(TARGET_TOOLCHAIN_ROOT)/arm-linux-androideabi/bin
-  CLANG_CONFIG_EXTRA_CFLAGS += \
-    $(CLANG_CONFIG_EXTRA_ASFLAGS) \
-    -mllvm -arm-enable-ehabi
-  CLANG_CONFIG_EXTRA_LDFLAGS += \
+   CLANG_CONFIG_EXTRA_CFLAGS += \
+   $(CLANG_CONFIG_EXTRA_ASFLAGS) \
+    -mllvm -arm-enable-ehabi \
+    $(CLANG_MSM_EXTRA_CFLAGS)
+   CLANG_CONFIG_EXTRA_LDFLAGS += \
     -target arm-linux-androideabi \
     -B$(TARGET_TOOLCHAIN_ROOT)/arm-linux-androideabi/bin
-  CLANG_CONFIG_UNKNOWN_CFLAGS += \
+   CLANG_CONFIG_UNKNOWN_CFLAGS += \
     -mthumb-interwork \
     -fgcse-after-reload \
     -frerun-cse-after-loop \
@@ -108,6 +109,10 @@ HOST_GLOBAL_CLANG_FLAGS += $(filter-out $(CLANG_CONFIG_UNKNOWN_CFLAGS),$(HOST_GL
 TARGET_arm_CLANG_CFLAGS += $(filter-out $(CLANG_CONFIG_UNKNOWN_CFLAGS),$(TARGET_arm_CFLAGS))
 TARGET_thumb_CLANG_CFLAGS += $(filter-out $(CLANG_CONFIG_UNKNOWN_CFLAGS),$(TARGET_thumb_CFLAGS))
 
+CLANG_CONFIG_EXTRA_CFLAGS += $(CLANG_MSM_EXTRA_CFLAGS)
+CLANG_CONFIG_EXTRA_ASFLAGS += $(CLANG_MSM_EXTRA_CFLAGS)
+CLANG_CONFIG_EXTRA_LDFLAGS += $(CLANG_MSM_EXTRA_CFLAGS)
+
 # llvm does not yet support -march=armv5e nor -march=armv5te, fall back to armv5 or armv5t
 $(call clang-flags-subst,-march=armv5te,-march=armv5t)
 $(call clang-flags-subst,-march=armv5e,-march=armv5)
@@ -118,16 +123,9 @@ $(call clang-flags-subst,-Wno-psabi,)
 $(call clang-flags-subst,-Wno-unused-but-set-variable,)
 $(call clang-flags-subst,-Wno-unused-but-set-parameter,)
 
-# with msm prebuilt clang, use krait2 for krait devices instead of a15
-ifneq (,$(TARGET_CLANG_VERSION))
-ifeq (,$(filter-out msm-%,$(TARGET_CLANG_VERSION)))
-ifeq ($(TARGET_CPU_VARIANT),krait)
-$(call clang-flags-subst,-mtune=cortex-a15,-mtune=krait2)
-$(call clang-flags-subst,-mcpu=cortex-a15,-mcpu=krait2)
-$(call clang-flags-subst,-mtune=cortex-a9,-mtune=krait2)
-$(call clang-flags-subst,-mcpu=cortex-a9,-mcpu=krait2)
-endif
-endif
+ifeq ($(TARGET_CLANG_VERSION),)
+# clang does not support -mcpu=cortex-a15 yet - fall back to armv7-a for now
+$(call clang-flags-subst,-mcpu=cortex-a15,-march=armv7-a)
 endif
 
 # if cortex-a15 is still present, flip it to a9

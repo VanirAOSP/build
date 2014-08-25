@@ -77,3 +77,17 @@ arch_variant_cflags += -mfloat-abi=$(TARGET_ARCH_VARIANT_FLOAT_ABI)
 
 arch_variant_ldflags += \
 	-Wl,--fix-cortex-a8
+
+######################################
+## SNAPDRAGON CLANG/LLVM 3.4
+######################################
+ifeq ($(TARGET_CLANG_VERSION),msm-3.4)
+# krait specific clang optimizations
+ifeq ($(TARGET_CPU_VARIANT),krait)
+CLANG_MSM_EXTRA_CFLAGS += \
+  -mtune=krait2 \
+  -mcpu=krait2 \
+  -mfloat-abi=softfp \
+  -mfpu=neon-vfpv4
+endif
+endif
