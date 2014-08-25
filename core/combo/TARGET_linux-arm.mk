@@ -43,6 +43,12 @@ TARGET_GCC_VERSION := 4.8-linaro
 endif
 endif
 
+ifeq ($(strip $(TARGET_ENABLE_PREBUILT_CLANG)),true)
+  ifeq ($(strip $(TARGET_CLANG_VERSION)),)
+    TARGET_CLANG_VERSION := msm-3.4
+  endif
+endif
+
 TARGET_ARCH_SPECIFIC_MAKEFILE := $(BUILD_COMBOS)/arch/$(TARGET_ARCH)/$(TARGET_ARCH_VARIANT).mk
 ifeq ($(strip $(wildcard $(TARGET_ARCH_SPECIFIC_MAKEFILE))),)
 $(error Unknown ARM architecture version: $(TARGET_ARCH_VARIANT))
