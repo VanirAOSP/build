@@ -462,6 +462,8 @@ TARGET_CLANG_VERSION := msm-3.4
 endif
 endif
 
+TARGET_CLANG_VERSION :=
+
 # define llvm tools and global flags
 include $(BUILD_SYSTEM)/llvm_config.mk
 
