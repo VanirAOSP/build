@@ -456,10 +456,14 @@ ifeq ($(TARGET_DEFAULT_JAVA_LIBRARIES),)
   TARGET_DEFAULT_JAVA_LIBRARIES := core core-junit ext framework framework2
 endif
 
-ifeq ($(strip $(TARGET_ENABLE_PREBUILT_CLANG)),true)
-ifeq ($(TARGET_CLANG_VERSION),)
-TARGET_CLANG_VERSION := msm-3.4
-endif
+ifneq ($(BONE_STOCK),true)
+  ifeq ($(strip $(TARGET_ENABLE_PREBUILT_CLANG)),true)
+    ifeq ($(strip $(TARGET_CLANG_VERSION)),)
+      TARGET_CLANG_VERSION := msm-3.4
+    endif
+  endif
+else
+  TARGET_CLANG_VERSION :=
 endif
 
 # define llvm tools and global flags
