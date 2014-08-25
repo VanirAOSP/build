@@ -113,14 +113,12 @@ endif
 
 ifneq ($(TARGET_CLANG_VERSION),)
 ifeq ($(strip $(LOCAL_CLANG)),true)
-ifneq ($(strip $(LOCAL_STOCK_CLANG)),true)
 ifeq ($(strip $(LOCAL_IS_HOST_MODULE)),)
         LOCAL_CC :=  prebuilts/clang/$(BUILD_OS)-x86/host/$(TARGET_CLANG_VERSION)/bin/clang$(HOST_EXECUTABLE_SUFFIX)
         LOCAL_CXX := prebuilts/clang/$(BUILD_OS)-x86/host/$(TARGET_CLANG_VERSION)/bin/clang++$(HOST_EXECUTABLE_SUFFIX)
         LLVM_AS := prebuilts/clang/$(BUILD_OS)-x86/host/$(TARGET_CLANG_VERSION)/bin/llvm-as$(HOST_EXECUTABLE_SUFFIX)
         LLVM_LINK := prebuilts/clang/$(BUILD_OS)-x86/host/$(TARGET_CLANG_VERSION)/bin/llvm-link$(HOST_EXECUTABLE_SUFFIX)
         CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES :=  prebuilts/clang/$(BUILD_OS)-x86/host/$(TARGET_CLANG_VERSION)/lib/clang/$(TARGET_CLANG_VERSION)/include
-endif
 endif
 endif
 endif
@@ -200,22 +198,11 @@ my_target_c_includes := $(TARGET_C_INCLUDES)
 endif # LOCAL_SDK_VERSION
 
 ifneq ($(TARGET_CLANG_VERSION),)
-  ifeq ($(LOCAL_STOCK_CLANG),true)
-  my_target_global_cflags := $(TARGET_GLOBAL_CLANG_FLAGS)
-  my_target_c_includes += $(STOCK_CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
-  else
-  my_target_global_cflags := $(TARGET_GLOBAL_CFLAGS)
-  endif
-endif
-
-ifneq ($(TARGET_CLANG_VERSION),)
-  ifeq ($(LOCAL_STOCK_CLANG),)
-    ifeq ($(LOCAL_CLANG),true)
-      my_target_global_cflags := $(TARGET_GLOBAL_CLANG_FLAGS)
-      my_target_c_includes += $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
-      else
-      my_target_global_cflags := $(TARGET_GLOBAL_CFLAGS)
-    endif
+  ifeq ($(LOCAL_CLANG),true)
+    my_target_global_cflags := $(TARGET_GLOBAL_CLANG_FLAGS)
+    my_target_c_includes += $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
+    else
+    my_target_global_cflags := $(TARGET_GLOBAL_CFLAGS)
   endif
 endif
 
@@ -338,17 +325,17 @@ endif
 renderscript_flags := -Wall -Werror
 renderscript_flags += $(LOCAL_RENDERSCRIPT_FLAGS)
 
-
-ifeq ($(TARGET_CLANG_VERSION),)
 LOCAL_RENDERSCRIPT_INCLUDES := \
-    $(TOPDIR)external/clang/lib/Headers
-else
-LOCAL_RENDERSCRIPT_INCLUDES := \
-    $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
-endif
-LOCAL_RENDERSCRIPT_INCLUDES += \
     $(TOPDIR)frameworks/rs/scriptc \
     $(LOCAL_RENDERSCRIPT_INCLUDES)
+
+ifeq ($(TARGET_CLANG_VERSION),)
+LOCAL_RENDERSCRIPT_INCLUDES += \
+    $(TOPDIR)external/clang/lib/Headers
+else
+LOCAL_RENDERSCRIPT_INCLUDES += \
+    $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
+endif
 
 ifneq ($(LOCAL_RENDERSCRIPT_INCLUDES_OVERRIDE),)
 LOCAL_RENDERSCRIPT_INCLUDES := $(LOCAL_RENDERSCRIPT_INCLUDES_OVERRIDE)
