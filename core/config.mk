@@ -458,7 +458,15 @@ endif
 
 ifneq ($(BONE_STOCK),true)
   ifeq ($(strip $(TARGET_ENABLE_PREBUILT_CLANG)),true)
+    # default to msm-3.4 if no prebuilt clang version is set but prebuilt clang is enabled
     ifeq ($(strip $(TARGET_CLANG_VERSION)),)
+      TARGET_CLANG_VERSION := msm-3.4
+    endif
+  endif
+  ifeq ($(strip $(TARGET_ENABLE_PREBUILT_CLANG)),)
+    # support the old build configs since someone didn't update the device
+    # repos accordingly
+    ifeq ($(strip $(TARGET_CLANG_VERSION)),msm-3.4)
       TARGET_CLANG_VERSION := msm-3.4
     endif
   endif
