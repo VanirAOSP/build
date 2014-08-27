@@ -94,11 +94,10 @@ ifeq ($(TARGET_ARCH),x86)
     -mbionic
 endif
 
-ifeq ($(TARGET_CLANG_VERSION),)
-CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES := external/clang/lib/include $(TARGET_OUT_HEADERS)/clang
-else
-STOCK_CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES := external/clang/lib/include $(TARGET_OUT_HEADERS)/clang
+ifeq ($(strip $(TARGET_CLANG_VERSION)),$(filter $(TARGET_CLANG_VERSION),msm-%))
 CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES := prebuilts/clang/$(BUILD_OS)-x86/host/$(TARGET_CLANG_VERSION)/lib/clang/$(TARGET_CLANG_VERSION)/include
+else
+CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES := external/clang/lib/include $(TARGET_OUT_HEADERS)/clang
 endif
 
 # remove unknown flags to define CLANG_FLAGS
