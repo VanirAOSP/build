@@ -90,3 +90,4 @@ CLANG_MSM_EXTRA_CFLAGS += \
   -mcpu=krait2
 endif
 endif
+endif
