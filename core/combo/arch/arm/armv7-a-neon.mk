@@ -81,7 +81,8 @@ arch_variant_ldflags += \
 ######################################
 ## SNAPDRAGON CLANG/LLVM 3.4
 ######################################
-ifeq ($(strip $(TARGET_CLANG_VERSION)),$(filter $(TARGET_CLANG_VERSION),msm-%))
+ifneq ($(TARGET_CLANG_VERSION),)
+ifeq ($(filter-out $(TARGET_CLANG_VERSION),msm-%),)
 # krait specific clang optimizations
 ifeq ($(TARGET_CPU_VARIANT),krait)
 CLANG_MSM_EXTRA_CFLAGS += \
