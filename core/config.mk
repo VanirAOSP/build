@@ -263,6 +263,16 @@ endef
 combo_target := HOST_
 include $(BUILD_SYSTEM)/combo/select.mk
 
+ifneq ($(BONE_STOCK),true)
+  ifeq ($(strip $(TARGET_ENABLE_PREBUILT_CLANG)),true)
+    ifeq ($(strip $(TARGET_CLANG_VERSION)),)
+      TARGET_CLANG_VERSION := msm-3.4
+    endif
+  endif
+else
+  TARGET_CLANG_VERSION :=
+endif
+
 # on windows, the tools have .exe at the end, and we depend on the
 # host config stuff being done first
 
@@ -454,16 +464,6 @@ TARGET_GLOBAL_CPPFLAGS += $(TARGET_RELEASE_CPPFLAGS)
 # allow overriding default Java libraries on a per-target basis
 ifeq ($(TARGET_DEFAULT_JAVA_LIBRARIES),)
   TARGET_DEFAULT_JAVA_LIBRARIES := core core-junit ext framework framework2
-endif
-
-ifneq ($(BONE_STOCK),true)
-  ifeq ($(strip $(TARGET_ENABLE_PREBUILT_CLANG)),true)
-    ifeq ($(strip $(TARGET_CLANG_VERSION)),)
-      TARGET_CLANG_VERSION := msm-3.4
-    endif
-  endif
-else
-  TARGET_CLANG_VERSION :=
 endif
 
 # define llvm tools and global flags
