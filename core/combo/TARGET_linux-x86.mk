@@ -107,6 +107,8 @@ TARGET_GLOBAL_CFLAGS += \
 			-funwind-tables \
 			-fstack-protector \
 			-pipe \
+			-no-canonical-prefixes \
+			-fno-canonical-system-headers \
 			-include $(android_config_h) \
 			-I $(dir $(android_config_h))
 
