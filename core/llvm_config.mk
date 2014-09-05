@@ -19,7 +19,8 @@ CLANG_CONFIG_EXTRA_CFLAGS := \
 
 CLANG_CONFIG_UNKNOWN_CFLAGS := \
   -funswitch-loops \
-  -funsafe-loop-optimizations
+  -funsafe-loop-optimizations \
+  -fno-canonical-system-headers
 
 ifeq ($(TARGET_ENABLE_LTO),true)
 CLANG_CONFIG_UNKNOWN_CFLAGS += \
