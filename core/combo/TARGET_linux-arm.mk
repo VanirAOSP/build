@@ -219,6 +219,7 @@ TARGET_GLOBAL_LDFLAGS += \
 			-Wl,-z,now \
 			-Wl,--warn-shared-textrel \
 			-Wl,--fatal-warnings \
+			-no-canonical-prefixes \
 			$(arch_variant_ldflags) $(gcc_variant_ldflags)
 
 # more always true garglemesh:
