@@ -221,6 +221,10 @@ TARGET_GLOBAL_LDFLAGS += \
 			-Wl,--fatal-warnings \
 			$(arch_variant_ldflags) $(gcc_variant_ldflags)
 
+ifeq ($(TARGET_CLANG_VERSION),msm-%)
+	TARGET_GLOBAL_LDFLAGS += -no-canonical-prefixes
+endif
+
 # more always true garglemesh:
 TARGET_GLOBAL_CFLAGS += -mthumb-interwork
 TARGET_GLOBAL_CPPFLAGS += -fvisibility-inlines-hidden
