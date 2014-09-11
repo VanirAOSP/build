@@ -56,7 +56,9 @@ endif
 
 #is an FPU explicitly defined?
 ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
-	#no, so figure out if one is set on the GLOBAL_CFLAGS
+	TARGET_ARCH_VARIANT_FPU := $(TARGET_ARCH_VARIANT_FPU)
+else
+#no, so figure out if one is set on the GLOBAL_CFLAGS
 	TARGET_ARCH_VARIANT_FPU := $(rec_fpu)
 endif # ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU),)
 
