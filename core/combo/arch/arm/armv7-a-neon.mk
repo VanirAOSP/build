@@ -10,7 +10,7 @@ ARCH_ARM_HAVE_NEON              := true
 ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 	cpu_for_optimizations := $(strip $(TARGET_ARCH_VARIANT_CPU))
 else
-ifeq ($(TARGET_CPU_VARIANT),$(filter $(TARGET_CPU_VARIANT),cortex-a15 krait))
+ifneq (,$(filter cortex-a15 krait,$(TARGET_CPU_VARIANT)))
 	cpu_for_optimizations := cortex-a15
 	rec_fpu := neon-vfpv4
 else
