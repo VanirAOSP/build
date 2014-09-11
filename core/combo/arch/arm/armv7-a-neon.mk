@@ -12,30 +12,23 @@ ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 else
 ifeq ($(TARGET_CPU_VARIANT),$(filter $(TARGET_CPU_VARIANT),cortex-a15 krait))
 	cpu_for_optimizations := cortex-a15
-	rec_fpu := neon-vfpv4
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a9)
 	cpu_for_optimizations := cortex-a9
-	rec_fpu := neon
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a8)
 	cpu_for_optimizations := cortex-a8
-	rec_fpu := neon
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a7)
  	cpu_for_optimizations := cortex-a7
-	rec_fpu := neon-vfpv4
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a5)
  	cpu_for_optimizations := cortex-a5
-	rec_fpu := neon-vfpv4
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),scorpion)
 	cpu_for_optimizations := cortex-a8
-	rec_fpu := neon
 else
 	cpu_for_optimizations := armv7-a
-	rec_fpu := neon
 endif
 endif
 endif
@@ -44,6 +37,12 @@ endif
 endif
 endif #end of cpu stuff
 
+ifeq ($(cpu_for_optimizations),$(filter $(cpu_for_optimizations),cortex-a15 krait cortex-a7 cortex-a5))
+rec_fpu := neon-vfpv4
+else
+rec_fpu := neon
+endif
+ 
 ifneq ($(cpu_for_optimizations),armv7-a)
 TARGET_ARCH_VARIANT_CPU := $(cpu_for_optimizations)
 arch_variant_cflags += \
