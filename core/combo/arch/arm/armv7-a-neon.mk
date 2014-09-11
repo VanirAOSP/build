@@ -10,32 +10,25 @@ ARCH_ARM_HAVE_NEON              := true
 ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 	cpu_for_optimizations := $(strip $(TARGET_ARCH_VARIANT_CPU))
 else
-ifeq ($(TARGET_CPU_VARIANT),$(filter $(TARGET_CPU_VARIANT),cortex-a15 krait))
+ifneq (,$(filter cortex-a15 krait,$(TARGET_CPU_VARIANT)))
 	cpu_for_optimizations := cortex-a15
-	rec_fpu := neon-vfpv4
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a9)
 	cpu_for_optimizations := cortex-a9
-	rec_fpu := neon
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a8)
 	cpu_for_optimizations := cortex-a8
-	rec_fpu := neon
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a7)
  	cpu_for_optimizations := cortex-a7
-	rec_fpu := neon-vfpv4
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a5)
  	cpu_for_optimizations := cortex-a5
-	rec_fpu := neon-vfpv4
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),scorpion)
 	cpu_for_optimizations := cortex-a8
-	rec_fpu := neon
 else
 	cpu_for_optimizations := armv7-a
-	rec_fpu := neon
 endif
 endif
 endif
@@ -55,10 +48,16 @@ arch_variant_cflags += \
 endif
 
 #is an FPU explicitly defined?
-ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
-	#no, so figure out if one is set on the GLOBAL_CFLAGS
+ifneq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
+	TARGET_ARCH_VARIANT_FPU := $(TARGET_ARCH_VARIANT_FPU)
+else #no, so figure out if one is set based on TARGET_CPU_VARIANT
+ifneq (,$(filter cortex-a15 cortex-a7 cortex-a5 krait,$(TARGET_CPU_VARIANT)))
+        rec_fpu := neon-vfpv4
+else
+        rec_fpu := neon
+endif
 	TARGET_ARCH_VARIANT_FPU := $(rec_fpu)
-endif # ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU),)
+endif # ifneq ($(strip $(TARGET_ARCH_VARIANT_FPU),)
 
 #get rid of existing instances of -mfpu in TARGET_GLOBAL_CP*FLAGS
 TARGET_GLOBAL_CFLAGS := $(filter-out -mfpu=%,$(TARGET_GLOBAL_CFLAGS))
