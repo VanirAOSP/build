@@ -7,10 +7,10 @@ ARCH_ARM_HAVE_VFP_D32           := true
 ARCH_ARM_HAVE_NEON              := true
 
 # is arch variant CPU defined?
-ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
+ifeq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
 	cpu_for_optimizations := $(strip $(TARGET_ARCH_VARIANT_CPU))
 else
-ifeq ($(TARGET_CPU_VARIANT),$(filter $(TARGET_CPU_VARIANT),cortex-a15 krait))
+ifneq (,$(filter cortex-a15 krait,$(TARGET_CPU_VARIANT)))
 	cpu_for_optimizations := cortex-a15
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a9)
@@ -37,12 +37,6 @@ endif
 endif
 endif #end of cpu stuff
 
-ifeq ($(cpu_for_optimizations),$(filter $(cpu_for_optimizations),cortex-a15 krait cortex-a7 cortex-a5))
-rec_fpu := neon-vfpv4
-else
-rec_fpu := neon
-endif
- 
 ifneq ($(cpu_for_optimizations),armv7-a)
 TARGET_ARCH_VARIANT_CPU := $(cpu_for_optimizations)
 arch_variant_cflags += \
@@ -55,7 +49,12 @@ endif
 
 #is an FPU explicitly defined?
 ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
-	#no, so figure out if one is set on the GLOBAL_CFLAGS
+#no, so figure out if one is set based on TARGET_CPU_VARIANT
+ifneq (,$(filter cortex-a15 cortex-a7 cortex-a5 krait,$(TARGET_CPU_VARIANT)))
+        rec_fpu := neon-vfpv4
+else
+        rec_fpu := neon
+endif
 	TARGET_ARCH_VARIANT_FPU := $(rec_fpu)
 endif # ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU),)
 
