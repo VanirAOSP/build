@@ -54,11 +54,13 @@ arch_variant_cflags += \
 	-march=armv7-a
 endif
 
-#is an FPU explicitly defined?
-ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
-	#no, so figure out if one is set on the GLOBAL_CFLAGS
+#See if an FPU is explicitly defined?
+ifneq ($(strip $(TARGET_ARCH_VARIANT_FPU)),)
+	TARGET_ARCH_VARIANT_FPU := $(TARGET_ARCH_VARIANT_FPU)
+else
+#if no, use rec_fpu
 	TARGET_ARCH_VARIANT_FPU := $(rec_fpu)
-endif # ifeq ($(strip $(TARGET_ARCH_VARIANT_FPU),)
+endif # ifneq ($(strip $(TARGET_ARCH_VARIANT_FPU),)
 
 #get rid of existing instances of -mfpu in TARGET_GLOBAL_CP*FLAGS
 TARGET_GLOBAL_CFLAGS := $(filter-out -mfpu=%,$(TARGET_GLOBAL_CFLAGS))
