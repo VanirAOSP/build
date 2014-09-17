@@ -163,6 +163,10 @@ endif
 TARGET_DEVICE_DIR := $(patsubst %/,%,$(dir $(board_config_mk)))
 board_config_mk :=
 
+ifeq ($(WITH_QC_PERF),true)
+  TARGET_HAVE_QC_PERF := true
+endif
+
 ## Rebuild the pathmap if there's a recovery variant. Its path probably changed
 ifneq ($(RECOVERY_VARIANT),)
 include $(BUILD_SYSTEM)/pathmap.mk
