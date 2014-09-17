@@ -1,5 +1,9 @@
 # Target-specific configuration
 
+ifeq ($(WITH_QC_PERF),true)
+  TARGET_HAVE_QC_PERF := true
+endif
+
 # Enable DirectTrack on QCOM legacy boards
 ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
 
