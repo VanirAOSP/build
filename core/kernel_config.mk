@@ -40,6 +40,8 @@ else
         TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS := arm-eabi-
     else
         TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS := arm-gnueabi-
+    else
+        TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS := arm-gnueabihf-
     endif
 
     T_K_C_T_STRIPPER := $(shell echo $(TARGET_KERNEL_CUSTOM_TOOLCHAIN) | sed -e 's/[a-z]//g')
