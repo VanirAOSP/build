@@ -35,15 +35,12 @@ ifeq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN),true)
 
     TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-
 else
-    # mangling too support horendous nomenclature
-    ifeq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),linaro-4.9)
-        TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS := arm-eabi-
-    else
-        TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS := arm-gnueabi-
-    endif
-
     T_K_C_T_STRIPPER := $(shell echo $(TARGET_KERNEL_CUSTOM_TOOLCHAIN) | sed -e 's/[a-z]//g')
     T_K_C_T_DASHER := $(shell echo $(T_K_C_T_STRIPPER) | sed -e 's/-//g')
     T_K_C_T := linaro-$(T_K_C_T_DASHER)
-    TOOL_PREFIX:=$(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(T_K_C_T)-$(TARGET_KERNEL_CPU_VARIANT)/bin/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN_ALIAS)
+
+    # prefix auto-determination. hollah for a dollah.
+    POSSIBLE_TOOLCHAIN_PREFIXES := arm-eabi- arm-gnueabi- arm-gnueabihf-
+
+    TOOL_PREFIX := $(patsubst %-gcc,%-,$(firstword $(foreach var, $(POSSIBLE_TOOLCHAIN_PREFIXES), $(wildcard $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(T_K_C_T)-$(TARGET_KERNEL_CPU_VARIANT)/bin/$(var)gcc))))
 endif
