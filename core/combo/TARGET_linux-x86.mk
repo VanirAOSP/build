@@ -107,6 +107,8 @@ TARGET_GLOBAL_CFLAGS += \
 			-funwind-tables \
 			-fstack-protector \
 			-pipe \
+			-no-canonical-prefixes \
+			-fno-canonical-system-headers \
 			-include $(android_config_h) \
 			-I $(dir $(android_config_h))
 
@@ -156,6 +158,11 @@ TARGET_GLOBAL_LDFLAGS += -Wl,-z,noexecstack
 TARGET_GLOBAL_LDFLAGS += -Wl,-z,relro -Wl,-z,now
 TARGET_GLOBAL_LDFLAGS += -Wl,--warn-shared-textrel
 TARGET_GLOBAL_LDFLAGS += -Wl,--gc-sections
+
+ifeq ($(TARGET_CLANG_VERSION),msm-%)
+	TARGET_GLOBAL_LDFLAGS += \
+	    -no-canonical-prefixes
+endif
 
 TARGET_C_INCLUDES := \
 	$(libc_root)/arch-x86/include \
