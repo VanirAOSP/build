@@ -1427,8 +1427,6 @@ name := $(name)-ota-$(FILE_NAME_TAG)
 
 INTERNAL_OTA_PACKAGE_TARGET := $(PRODUCT_OUT)/$(name).zip
 
-export OTA_PACKAGE_PATH :=$(INTERNAL_OTA_PACKAGE_TARGET)
-
 ifeq ($($(strip DHO_VENDOR)),)
   DHO_VENDOR := vanir
 endif
@@ -1471,6 +1469,8 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
 	   $(override_prop) \
 	   $(separate_recovery) \
 	   $(BUILT_TARGET_FILES_PACKAGE) $@
+
+OTA_PACKAGE_PATH := $(INTERNAL_OTA_PACKAGE_TARGET)
 
 .PHONY: otapackage bacon
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
