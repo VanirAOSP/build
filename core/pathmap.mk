@@ -55,8 +55,10 @@ pathmap_INCL := \
 
 ifneq ($(RECOVERY_VARIANT),)
     pathmap_INCL += recovery:bootable/recovery-$(RECOVERY_VARIANT)
+    TARGET_RECOVERY_VARIANT := $(RECOVERY_VARIANT)
 else
     pathmap_INCL += recovery:bootable/recovery
+    TARGET_RECOVERY_VARIANT := aosp
 endif
 
 #
