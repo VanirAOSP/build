@@ -155,17 +155,23 @@ endif
 ifneq ($(words $(board_config_mk)),1)
   $(error Multiple board config files for TARGET_DEVICE $(TARGET_DEVICE): $(board_config_mk))
 endif
+QC_PERF_PRE_BOARDCONF := $(TARGET_HAVE_QC_PERF)
 include $(board_config_mk)
+ifneq ($(WITH_QC_PERF),)
+$(error WITH_QC_PERF is deprecated.)
+endif
+# check for tomfoolery and kill it to death
+ifneq ($(QC_PERF_PRE_BOARDCONF),$(TARGET_HAVE_QC_PERF))
+$(warning YOU CAN'T JUST SET QC PERF IN THE BOARDCONFIG)
+TARGET_HAVE_QC_PERF :=
+endif
+
 -include vendor/extra/BoardConfigExtra.mk
 ifeq ($(TARGET_ARCH),)
   $(error TARGET_ARCH not defined by board config: $(board_config_mk))
 endif
 TARGET_DEVICE_DIR := $(patsubst %/,%,$(dir $(board_config_mk)))
 board_config_mk :=
-
-ifeq ($(WITH_QC_PERF),true)
-  TARGET_HAVE_QC_PERF := true
-endif
 
 ## Rebuild the pathmap if there's a recovery variant. Its path probably changed
 ifneq ($(RECOVERY_VARIANT),)
