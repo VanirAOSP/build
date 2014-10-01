@@ -155,7 +155,17 @@ endif
 ifneq ($(words $(board_config_mk)),1)
   $(error Multiple board config files for TARGET_DEVICE $(TARGET_DEVICE): $(board_config_mk))
 endif
+QC_PERF_PRE_BOARDCONF := $(TARGET_HAVE_QC_PERF)
 include $(board_config_mk)
+ifneq ($(WITH_QC_PERF),)
+$(warning WITH_QC_PERF is deprecated.)
+endif
+# check for tomfoolery and kill it to death
+ifneq ($(QC_PERF_PRE_BOARDCONF),$(TARGET_HAVE_QC_PERF))
+$(warning YOU CAN'T JUST SET QC PERF IN THE BOARDCONFIG)
+TARGET_HAVE_QC_PERF :=
+endif
+
 -include vendor/extra/BoardConfigExtra.mk
 ifeq ($(TARGET_ARCH),)
   $(error TARGET_ARCH not defined by board config: $(board_config_mk))
