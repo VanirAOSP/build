@@ -18,6 +18,7 @@ CLANG_CONFIG_EXTRA_CFLAGS := \
   $(TARGET_THUMB_STRICT) $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
 
 CLANG_CONFIG_UNKNOWN_CFLAGS := \
+  -fforce-addr \
   -funswitch-loops \
   -funsafe-loop-optimizations \
   -fno-canonical-system-headers
