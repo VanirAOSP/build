@@ -136,6 +136,32 @@ ifeq ($(strip $(LOCAL_CLANG)),true)
   my_compiler_dependencies := $(CLANG) $(CLANG_CXX)
 endif
 
+###################################################
+## FLAGS ONLY USED IN PROJECTS WITH GOTO USE
+###################################################
+
+goto-dirs := $(strip art% bionic% bootable/recovery% dalvik% external/aac% external/antlr% external/bison% external/busybox% external/chromium% external/chromium_org% external/clang% external/llvm% external/mksh% external/openssl% external/openssh% external/oprofile% external/skia% external/tinyalsa% external/tinycompress% external/v8% frameworks/av% frameworks/base% frameworks/native% hardware/libhardware% hardware/qcom% kernel% ndk% system/core% system/extras% system/media% system/qcom%)
+
+ifeq ($(LOCAL_PATH), $(strip $(findstring $(goto-dirs),$(LOCAL_PATH))))
+    GOTOFLAG := -fno-gcse
+else
+    GOTOFLAG := -fgcse
+endif
+
+LOCAL_CFLAGS += $(GOTOFLAG)
+
+LOCAL_CPPFLAGS += $(GOTOFLAG)
+
+## And my LDFLAGS
+
+ifeq ($(strip $(LOCAL_CLANG)),true)
+    CLANGOPT := -Ofast
+else
+    CLANGOPT := -O3
+endif
+
+TARGET_GLOBAL_LDFLAGS += $(CLANGOPT) -flto -fuse-linker-plugin
+
 ####################################################
 ## GRAPHITE loop transformation
 ####################################################
