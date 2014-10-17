@@ -131,6 +131,7 @@ endif
 my_compiler_dependencies :=
 ifeq ($(strip $(LOCAL_CLANG)),true)
   LOCAL_CFLAGS += $(CLANG_CONFIG_EXTRA_CFLAGS)
+  LOCAL_CPPFLAGS += $(CLANG_CONFIG_EXTRA_CPPFLAGS)
   LOCAL_ASFLAGS += $(CLANG_CONFIG_EXTRA_ASFLAGS)
   LOCAL_LDFLAGS += $(CLANG_CONFIG_EXTRA_LDFLAGS)
   my_compiler_dependencies := $(CLANG) $(CLANG_CXX)
@@ -197,28 +198,19 @@ my_target_project_includes := $(TARGET_PROJECT_INCLUDES)
 my_target_c_includes := $(TARGET_C_INCLUDES)
 endif # LOCAL_SDK_VERSION
 
-ifneq ($(TARGET_CLANG_VERSION),)
-  ifeq ($(LOCAL_CLANG),true)
-    my_target_global_cflags := $(TARGET_GLOBAL_CLANG_FLAGS)
-    my_target_c_includes += $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
-    else
-    my_target_global_cflags := $(TARGET_GLOBAL_CFLAGS)
-  endif
-endif
-
-ifeq ($(TARGET_CLANG_VERSION),)
 ifeq ($(LOCAL_CLANG),true)
-my_target_global_cflags := $(TARGET_GLOBAL_CLANG_FLAGS)
-my_target_c_includes += $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
-else
-my_target_global_cflags := $(TARGET_GLOBAL_CFLAGS)
-endif
+  my_target_global_cflags := $(TARGET_GLOBAL_CLANG_FLAGS)
+  my_target_global_cppflags := $(TARGET_GLOBAL_CLANGPP_FLAGS)
+  my_target_c_includes += $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
+  else
+  my_target_global_cppflags := $(TARGET_GLOBAL_CPPFLAGS)
+  my_target_global_cflags := $(TARGET_GLOBAL_CFLAGS)
 endif
 
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_PROJECT_INCLUDES := $(my_target_project_includes)
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_C_INCLUDES := $(my_target_c_includes)
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_GLOBAL_CFLAGS := $(my_target_global_cflags)
-$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_GLOBAL_CPPFLAGS := $(TARGET_GLOBAL_CPPFLAGS)
+$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_GLOBAL_CPPFLAGS := $(my_target_global_cppflags)
 
 ###########################################################
 ## Define PRIVATE_ variables used by multiple module types
