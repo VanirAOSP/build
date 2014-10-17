@@ -206,15 +206,6 @@ ifneq ($(TARGET_CLANG_VERSION),)
   endif
 endif
 
-ifeq ($(TARGET_CLANG_VERSION),)
-ifeq ($(LOCAL_CLANG),true)
-my_target_global_cflags := $(TARGET_GLOBAL_CLANG_FLAGS)
-my_target_c_includes += $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
-else
-my_target_global_cflags := $(TARGET_GLOBAL_CFLAGS)
-endif
-endif
-
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_PROJECT_INCLUDES := $(my_target_project_includes)
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_C_INCLUDES := $(my_target_c_includes)
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_GLOBAL_CFLAGS := $(my_target_global_cflags)
