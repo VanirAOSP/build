@@ -685,6 +685,9 @@ recovery_build_prop := $(INSTALLED_BUILD_PROP_TARGET)
 recovery_binary := $(call intermediates-dir-for,EXECUTABLES,recovery)/recovery
 recovery_resources_common := $(call project-path-for,recovery)/res
 recovery_resources_extra := $(call project-path-for,recovery)/res-$(TARGET_RECOVERY_SCREEN_WIDTH)
+ifeq ($(recovery_resources_extra),)
+  recovery_resources_extra :=
+endif
 recovery_resources_private := $(strip $(wildcard $(TARGET_DEVICE_DIR)/recovery/res))
 recovery_root_private := $(strip $(wildcard $(TARGET_DEVICE_DIR)/recovery/root))
 recovery_resource_deps := $(shell find $(recovery_resources_common) $(recovery_resources_extra) \
