@@ -34,15 +34,14 @@ ifeq ($(strip $(TARGET_$(combo_2nd_arch_prefix)ARCH_VARIANT)),)
 TARGET_$(combo_2nd_arch_prefix)ARCH_VARIANT := armv5te
 endif
 
-<<<<<<< HEAD
 # default target GCC version
 ifneq ($(strip $(BONE_STOCK)),)
-TARGET_GCC_VERSION := 4.7
+TARGET_GCC_VERSION := 4.8
 else
 ifeq ($(strip $(TARGET_GCC_VERSION)),)
 TARGET_GCC_VERSION := 4.8-linaro
 endif
-=======
+
 # Decouple NDK library selection with platform compiler version
 $(combo_2nd_arch_prefix)TARGET_NDK_GCC_VERSION := 4.8
 
@@ -50,7 +49,6 @@ ifeq ($(strip $(TARGET_GCC_VERSION_EXP)),)
 $(combo_2nd_arch_prefix)TARGET_GCC_VERSION := 4.8
 else
 $(combo_2nd_arch_prefix)TARGET_GCC_VERSION := $(TARGET_GCC_VERSION_EXP)
->>>>>>> android-5.0.0_r2
 endif
 
 TARGET_ARCH_SPECIFIC_MAKEFILE := $(BUILD_COMBOS)/arch/$(TARGET_$(combo_2nd_arch_prefix)ARCH)/$(TARGET_$(combo_2nd_arch_prefix)ARCH_VARIANT).mk
@@ -107,17 +105,11 @@ $(combo_2nd_arch_prefix)TARGET_STRIP := $($(combo_2nd_arch_prefix)TARGET_TOOLS_P
 
 $(combo_2nd_arch_prefix)TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
-<<<<<<< HEAD
-# ARM specific
-TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
-=======
-$(combo_2nd_arch_prefix)TARGET_arm_CFLAGS :=    -O2 \
->>>>>>> android-5.0.0_r2
+$(combo_2nd_arch_prefix)TARGET_arm_CFLAGS :=    -O$(TARGET_ARM_O) \
                         -fomit-frame-pointer \
                         -fstrict-aliasing $(TARGET_EXTRA_BULLSHIT_1) \
                         -funswitch-loops $(TARGET_EXTRA_BULLSHIT_2)
 
-<<<<<<< HEAD
 TARGET_arm_CFLAGS += \
                         $(STRICT_ALIASING_WARNINGS) $(DEBUG_SYMBOL_FLAGS)
 
@@ -150,13 +142,12 @@ TARGET_arm_CFLAGS += -fno-strict-aliasing -Wno-error=strict-aliasing
 TARGET_thumb_CFLAGS += -fno-strict-aliasing -Wno-error=strict-aliasing
 endif   
 endif
-=======
+
 # Modules can choose to compile some source as thumb.
 $(combo_2nd_arch_prefix)TARGET_thumb_CFLAGS :=  -mthumb \
                         -Os \
                         -fomit-frame-pointer \
                         -fno-strict-aliasing
->>>>>>> android-5.0.0_r2
 
 # Set FORCE_ARM_DEBUGGING to "true" in your buildspec.mk
 # or in your environment to force a full arm build, even for
@@ -181,19 +172,8 @@ else
 endif
 android_config_h := $(call select-android-config-h,linux-arm)
 
-<<<<<<< HEAD
-NO_CANONICAL_SYSTEM_HEADERS :=
-ifeq ($(filter 4.6 4.6.% 4.7 4.7.%, $(shell $(TARGET_CC) --version)),)
-NO_CANONICAL_SYSTEM_HEADERS := \
-			-fno-canonical-system-headers
-endif
-
-TARGET_GLOBAL_CFLAGS += \
-			-msoft-float -fpic $(PIE_GLOBAL_CFLAGS) \
-=======
 $(combo_2nd_arch_prefix)TARGET_GLOBAL_CFLAGS += \
 			-msoft-float \
->>>>>>> android-5.0.0_r2
 			-ffunction-sections \
 			-fdata-sections \
 			-funwind-tables \
@@ -203,13 +183,8 @@ $(combo_2nd_arch_prefix)TARGET_GLOBAL_CFLAGS += \
 			-D_FORTIFY_SOURCE=0 \
 			-fstrict-aliasing \
 			-fno-short-enums \
-<<<<<<< HEAD
-			-pipe \
-			-no-canonical-prefixes $(NO_CANONICAL_SYSTEM_HEADERS)\
-=======
 			-no-canonical-prefixes \
 			-fno-canonical-system-headers \
->>>>>>> android-5.0.0_r2
 			$(arch_variant_cflags) \
 			-include $(android_config_h) \
 			-I $(dir $(android_config_h)) \
@@ -222,21 +197,12 @@ android_config_h := $(call select-android-config-h,linux-arm)
 TARGET_ANDROID_CONFIG_CFLAGS := -include $(android_config_h) -I $(dir $(android_config_h))
 TARGET_GLOBAL_CFLAGS += $(TARGET_ANDROID_CONFIG_CFLAGS)
 
-<<<<<<< HEAD
-# This warning causes dalvik not to build with gcc 4.6+ and -Werror.
-# We cannot turn it off blindly since the option is not available
-# in gcc-4.4.x.  We also want to disable sincos optimization globally
-# by turning off the builtin sin function.
-ifneq ($(filter 4.6 4.6.% 4.7 4.7.% 4.8 4.8.% 4.9 4.9.%, $(shell $(TARGET_CC) --version)),)
-TARGET_GLOBAL_CFLAGS += -Wno-unused-but-set-variable -fno-builtin-sin \
-=======
 # The "-Wunused-but-set-variable" option often breaks projects that enable
 # "-Wall -Werror" due to a commom idiom "ALOGV(mesg)" where ALOGV is turned
 # into no-op in some builds while mesg is defined earlier. So we explicitly
 # disable "-Wunused-but-set-variable" here.
 ifneq ($(filter 4.6 4.6.% 4.7 4.7.% 4.8, $($(combo_2nd_arch_prefix)TARGET_GCC_VERSION)),)
 $(combo_2nd_arch_prefix)TARGET_GLOBAL_CFLAGS += -fno-builtin-sin \
->>>>>>> android-5.0.0_r2
 			-fno-strict-volatile-bitfields
 ifneq ($(filter 4.8 4.8.% 4.9 4.9.%, $(shell $(TARGET_CC) --version)),)
 gcc_variant_ldflags := \
@@ -265,26 +231,12 @@ $(combo_2nd_arch_prefix)TARGET_GLOBAL_LDFLAGS += \
 			-Wl,--fatal-warnings \
 			$(arch_variant_ldflags) $(gcc_variant_ldflags)
 
-<<<<<<< HEAD
-ifeq ($(TARGET_CLANG_VERSION),msm-%)
-	TARGET_GLOBAL_LDFLAGS += \
-	    -no-canonical-prefixes
-endif
-
-# more always true garglemesh:
-TARGET_GLOBAL_CFLAGS += -mthumb-interwork
-TARGET_GLOBAL_CPPFLAGS += -fvisibility-inlines-hidden
-
-# More flags/options can be added here
-TARGET_RELEASE_CFLAGS += \
-=======
 $(combo_2nd_arch_prefix)TARGET_GLOBAL_CFLAGS += -mthumb-interwork
 
 $(combo_2nd_arch_prefix)TARGET_GLOBAL_CPPFLAGS += -fvisibility-inlines-hidden
 
 # More flags/options can be added here
 $(combo_2nd_arch_prefix)TARGET_RELEASE_CFLAGS := \
->>>>>>> android-5.0.0_r2
 			-DNDEBUG \
                         -g \
 			-fgcse-after-reload \
@@ -307,7 +259,6 @@ $(combo_2nd_arch_prefix)TARGET_LIBATOMIC := $(shell $($(combo_2nd_arch_prefix)TA
         $($(combo_2nd_arch_prefix)TARGET_GLOBAL_CFLAGS) -print-file-name=libatomic.a)
 endif
 
-<<<<<<< HEAD
 # Define LTO (Link Time Optimization options)
 
 ifeq ($(strip $(TARGET_ENABLE_LTO)),true)
@@ -356,13 +307,9 @@ ifneq ($(CUSTOM_KERNEL_HEADERS),)
     KERNEL_HEADERS_COMMON := $(CUSTOM_KERNEL_HEADERS)
     KERNEL_HEADERS_ARCH   := $(CUSTOM_KERNEL_HEADERS)
 else
-    KERNEL_HEADERS_COMMON := $(libc_root)/kernel/common
-    KERNEL_HEADERS_ARCH   := $(libc_root)/kernel/arch-$(TARGET_ARCH)
+    KERNEL_HEADERS_COMMON := $(libc_root)/kernel/uapi
+    KERNEL_HEADERS_ARCH   := $(libc_root)/kernel/uapi/asm-$(TARGET_$(combo_2nd_arch_prefix)ARCH)
 endif
-=======
-KERNEL_HEADERS_COMMON := $(libc_root)/kernel/uapi
-KERNEL_HEADERS_ARCH   := $(libc_root)/kernel/uapi/asm-$(TARGET_$(combo_2nd_arch_prefix)ARCH)
->>>>>>> android-5.0.0_r2
 KERNEL_HEADERS := $(KERNEL_HEADERS_COMMON) $(KERNEL_HEADERS_ARCH)
 
 $(combo_2nd_arch_prefix)TARGET_C_INCLUDES := \
@@ -411,13 +358,8 @@ $(hide) $(PRIVATE_CXX) \
 	$(PRIVATE_LDLIBS)
 endef
 
-<<<<<<< HEAD
-define transform-o-to-executable-inner
-$(hide) $(PRIVATE_CXX) -nostdlib -Bdynamic $(PIE_EXECUTABLE_TRANSFORM) \
-=======
 define $(combo_2nd_arch_prefix)transform-o-to-executable-inner
 $(hide) $(PRIVATE_CXX) -nostdlib -Bdynamic -pie \
->>>>>>> android-5.0.0_r2
 	-Wl,-dynamic-linker,/system/bin/linker \
 	-Wl,--gc-sections \
 	-Wl,-z,nocopyreloc \

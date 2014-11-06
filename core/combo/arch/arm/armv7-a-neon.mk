@@ -23,9 +23,6 @@ else
 endif
 endif
 endif
-endif
-endif
-endif
 endif #end of cpu stuff
 
 ifeq ($(cpu_for_optimizations),$(filter $(cpu_for_optimizations),cortex-a15 krait cortex-a7 cortex-a5))

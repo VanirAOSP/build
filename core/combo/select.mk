@@ -42,6 +42,7 @@ endif
 
 
 $(combo_target)GLOBAL_CFLAGS := -fno-exceptions -Wno-multichar
+ifeq ($(strip $(BONE_STOCK)),)
 ifeq ($(DONT_WARN_STRICT_ALIASING),)
 $(combo_target)RELEASE_CFLAGS := -O3 $(DEBUG_SYMBOL_FLAGS)
 ifneq ($(strip $(combo_target)),HOST_)
