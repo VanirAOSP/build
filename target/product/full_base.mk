@@ -21,13 +21,10 @@
 
 PRODUCT_PACKAGES := \
     libfwdlockengine \
-<<<<<<< HEAD
-=======
     OpenWnn \
     libWnnEngDic \
     libWnnJpnDic \
     libwnndict \
->>>>>>> android-5.0.0_r2
     WAPPushManager
 
 # Additional settings used in all AOSP builds

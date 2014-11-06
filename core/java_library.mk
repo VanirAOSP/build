@@ -93,18 +93,9 @@ endif
 
 else # ! boot jar
 $(built_odex): PRIVATE_MODULE := $(LOCAL_MODULE)
-<<<<<<< HEAD
-# Make sure the boot jars get dex-preopt-ed first
-$(built_odex) : $(DEXPREOPT_BOOT_ODEXS)
-$(built_odex) : $(common_javalib.jar) | $(DEXPREOPT) $(DEXOPT)
-	@echo -e ${CL_GRN}"Dexpreopt Jar:"${CL_RST}" $(PRIVATE_MODULE) ($@)"
-	$(hide) rm -f $@
-	@mkdir -p $(dir $@)
-=======
 # Use pattern rule - we may have multiple built odex files.
 $(built_odex) : $(dir $(LOCAL_BUILT_MODULE))% : $(common_javalib.jar)
 	@echo "Dexpreopt Jar: $(PRIVATE_MODULE) ($@)"
->>>>>>> android-5.0.0_r2
 	$(call dexpreopt-one-file,$<,$@)
 
 $(LOCAL_BUILT_MODULE) : $(common_javalib.jar) | $(ACP)

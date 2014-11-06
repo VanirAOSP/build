@@ -43,11 +43,7 @@ ifeq (,$(findstring CYGWIN,$(shell uname -sm)))
 ifneq (1,$(strip $(shell expr $(MAKE_VERSION) \>= 3.81)))
 $(warning ********************************************************************************)
 $(warning *  You are using version $(MAKE_VERSION) of make.)
-<<<<<<< HEAD
-$(warning *  Android is tested to build with versions 3.81 and higher.)
-=======
 $(warning *  Android can only be built by versions 3.81 and higher.)
->>>>>>> android-5.0.0_r2
 $(warning *  see https://source.android.com/source/download.html)
 $(warning ********************************************************************************)
 endif
@@ -142,20 +138,7 @@ $(warning ************************************************************)
 $(error Directory names containing spaces not supported)
 endif
 
-<<<<<<< HEAD
 # Check for the correct version of java
-java_version := $(shell java -version 2>&1 | head -n 1 | grep '^java .*[ "]1\.6[\. "$$]')
-ifneq ($(shell java -version 2>&1 | grep -i openjdk),)
-java_version :=
-endif
-ifeq ($(strip $(java_version)),)
-$(info ************************************************************)
-$(info WTF are you doing?)
-$(info Install Oracle Java 6 DICKBAG)
-$(info $(space))
-$(info Your version is: $(shell java -version 2>&1 | head -n 1).)
-$(info The correct version is: Java SE 1.6.X)
-=======
 java_version_str := $(shell unset _JAVA_OPTIONS && java -version 2>&1)
 javac_version_str := $(shell unset _JAVA_OPTIONS && javac -version 2>&1)
 
@@ -180,33 +163,12 @@ $(info of java.)
 $(info $(space))
 $(info Your version is: $(java_version_str).)
 $(info The required version is: $(required_version))
->>>>>>> android-5.0.0_r2
 $(info $(space))
 $(info Please follow the machine setup instructions at)
-<<<<<<< HEAD
-$(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
-$(info $(space))
-$(info Continue at your own peril!)
-=======
 $(info $(space)$(space)$(space)$(space)https://source.android.com/source/initializing.html)
->>>>>>> android-5.0.0_r2
 $(info ************************************************************)
 endif
 
-<<<<<<< HEAD
-# Check for the correct version of java
-java_version := $(shell java -version 2>&1 | head -n 1 | grep '^java .*[ "]1\.[67][\. "$$]')
-ifneq ($(shell java -version 2>&1 | grep -i openjdk),)
-java_version :=
-endif
-ifeq ($(strip $(java_version)),)
-$(info ************************************************************)
-$(info You are attempting to build with an unsupported version)
-$(info of java.)
-$(info $(space))
-$(info Your version is: $(shell java -version 2>&1 | head -n 1).)
-$(info The correct version is: Java SE 1.6 or 1.7.)
-=======
 # Check for the current JDK.
 #
 # For Java 1.7, we require OpenJDK on linux and Oracle JDK on Mac OS.
@@ -234,36 +196,23 @@ else # if requires_openjdk
 ifneq ($(shell echo '$(java_version_str)' | grep -i openjdk),)
 $(info ************************************************************)
 $(info You are attempting to build with an unsupported JDK.)
->>>>>>> android-5.0.0_r2
 $(info $(space))
 $(info You use OpenJDK but only Sun/Oracle JDK is supported.)
 $(info Please follow the machine setup instructions at)
 $(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
 $(info ************************************************************)
-<<<<<<< HEAD
-endif
-
-# Check for the correct version of javac
-javac_version := $(shell javac -version 2>&1 | head -n 1 | grep '[ "]1\.[67][\. "$$]')
-=======
 $(error stop)
 endif # java version is not Sun Oracle JDK
 endif # if requires_openjdk
 
 # Check for the correct version of javac
->>>>>>> android-5.0.0_r2
 ifeq ($(strip $(javac_version)),)
 $(info ************************************************************)
 $(info You are attempting to build with the incorrect version)
 $(info of javac.)
 $(info $(space))
-<<<<<<< HEAD
-$(info Your version is: $(shell javac -version 2>&1 | head -n 1).)
-$(info The correct version is: 1.6 or 1.7.)
-=======
 $(info Your version is: $(javac_version_str).)
 $(info The required version is: $(required_javac_version))
->>>>>>> android-5.0.0_r2
 $(info $(space))
 $(info Please follow the machine setup instructions at)
 $(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
@@ -272,13 +221,10 @@ $(info $(space))
 $(info Continue at your own peril!)
 endif
 
-<<<<<<< HEAD
 # Encapsulate stock emulator build code by a variable that can be defined in the device tree for people
 # that for some reason want to continue building it.
 ifeq ($(ENABLE_EMULATOR),true)
-=======
 
->>>>>>> android-5.0.0_r2
 ifndef BUILD_EMULATOR
   # Emulator binaries are now provided under prebuilts/android-emulator/
   BUILD_EMULATOR := false
@@ -1115,12 +1061,8 @@ findbugs: $(INTERNAL_FINDBUGS_HTML_TARGET) $(INTERNAL_FINDBUGS_XML_TARGET)
 .PHONY: clean
 clean:
 	@rm -rf $(OUT_DIR)/*
-<<<<<<< HEAD
 	@rm -rf /tmp/vanir_*
 	@echo -e ${CL_GRN}"Entire build directory removed."${CL_RST}
-=======
-	@echo "Entire build directory removed."
->>>>>>> android-5.0.0_r2
 
 .PHONY: clobber
 clobber: clean

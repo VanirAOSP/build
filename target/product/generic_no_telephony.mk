@@ -19,27 +19,11 @@
 
 PRODUCT_PACKAGES := \
     Bluetooth \
-<<<<<<< HEAD
-    Calculator \
-=======
->>>>>>> android-5.0.0_r2
     Camera2 \
     Gallery2 \
-<<<<<<< HEAD
-    InputDevices \
-    Keyguard \
-    LatinIME \
-    Launcher2 \
-=======
     Music \
-    MusicFX \
->>>>>>> android-5.0.0_r2
     OneTimeInitializer \
     Provision \
-<<<<<<< HEAD
-    Settings \
-=======
->>>>>>> android-5.0.0_r2
     SystemUI \
     WallpaperCropper
 

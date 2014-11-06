@@ -77,9 +77,6 @@ BOARD_FLASH_BLOCK_SIZE := 512
 TARGET_USERIMAGES_SPARSE_EXT_DISABLED := true
 
 BOARD_SEPOLICY_DIRS += build/target/board/generic/sepolicy
-<<<<<<< HEAD
-BOARD_SEPOLICY_UNION += domain.te surfaceflinger.te
-=======
 BOARD_SEPOLICY_UNION += \
         bootanim.te \
         device.te \
@@ -96,4 +93,3 @@ ifeq ($(TARGET_PRODUCT),sdk)
   # include an expanded selection of fonts for the SDK.
   EXTENDED_FONT_FOOTPRINT := true
 endif
->>>>>>> android-5.0.0_r2

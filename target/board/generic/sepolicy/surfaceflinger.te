@@ -1,5 +1,2 @@
 allow surfaceflinger self:process execmem;
-<<<<<<< HEAD
-=======
 allow surfaceflinger ashmem_device:chr_file execute;
->>>>>>> android-5.0.0_r2

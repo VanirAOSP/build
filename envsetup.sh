@@ -5,16 +5,11 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - tapas:   tapas [<App1> <App2> ...] [arm|x86|mips|armv5|arm64|x86_64|mips64] [eng|userdebug|user]
 - croot:   Changes directory to the top of the tree.
 - m:       Makes from the top of the tree.
-<<<<<<< HEAD
-- mm:      Builds all of the modules in the current directory.
-- mmp:     Builds all of the modules in the current directory and pushes them to the device.
-- mmm:     Builds all of the modules in the supplied directories.
-- mmmp:    Builds all of the modules in the supplied directories and pushes them to the device.
-=======
 - mm:      Builds all of the modules in the current directory, but not their dependencies.
+- mmp:     Builds all of the modules in the current directory and pushes them to the device.
 - mmm:     Builds all of the modules in the supplied directories, but not their dependencies.
            To limit the modules being built use the syntax: mmm dir/:target1,target2.
->>>>>>> android-5.0.0_r2
+- mmmp:    Builds all of the modules in the supplied directories and pushes them to the device.
 - mma:     Builds all of the modules in the current directory, and their dependencies.
 - mmma:    Builds all of the modules in the supplied directories, and their dependencies.
 - mgrep:   Greps on all local .mk files.
@@ -207,13 +202,9 @@ function setpaths()
     unset ANDROID_KERNEL_TOOLCHAIN_PATH
     case $ARCH in
         arm)
-<<<<<<< HEAD
-            targeteabigccversion=`echo $targetgccversion | sed 's/-linaro//g'`
-            toolchaindir=arm/arm-eabi-$targeteabigccversion/bin
-=======
+            targetgccversion=`echo $targetgccversion | sed 's/-linaro//g'`
             # Legacy toolchain configuration used for ARM kernel compilation
             toolchaindir=arm/arm-eabi-$targetgccversion/bin
->>>>>>> android-5.0.0_r2
             if [ -d "$gccprebuiltdir/$toolchaindir" ]; then
                  export ARM_EABI_TOOLCHAIN="$gccprebuiltdir/$toolchaindir"
                  ANDROID_KERNEL_TOOLCHAIN_PATH="$ARM_EABI_TOOLCHAIN":
@@ -225,10 +216,6 @@ function setpaths()
     esac
 
     export ANDROID_DEV_SCRIPTS=$T/development/scripts:$T/prebuilts/devtools/tools
-<<<<<<< HEAD
-    export ANDROID_BUILD_PATHS=:$(get_build_var ANDROID_BUILD_PATHS):$ANDROID_QTOOLS:$ANDROID_TOOLCHAIN$ARM_EABI_TOOLCHAIN_PATH$CODE_REVIEWS:$ANDROID_DEV_SCRIPTS
-    export PATH=$PATH$ANDROID_BUILD_PATHS
-=======
     export ANDROID_BUILD_PATHS=$(get_build_var ANDROID_BUILD_PATHS):$ANDROID_TOOLCHAIN:$ANDROID_TOOLCHAIN_2ND_ARCH:$ANDROID_KERNEL_TOOLCHAIN_PATH$ANDROID_DEV_SCRIPTS:
 
     # If prebuilts/android-emulator/<system>/ exists, prepend it to our PATH
@@ -250,7 +237,6 @@ function setpaths()
     fi
 
     export PATH=$ANDROID_BUILD_PATHS$PATH
->>>>>>> android-5.0.0_r2
 
     unset ANDROID_JAVA_TOOLCHAIN
     unset ANDROID_PRE_BUILD_PATHS
@@ -288,11 +274,8 @@ function set_stuff_for_environment()
     set_java_home
     setpaths
     set_sequence_number
-<<<<<<< HEAD
-=======
 
     export ANDROID_BUILD_TOP=$(gettop)
->>>>>>> android-5.0.0_r2
     # With this environment variable new GCC can apply colors to warnings/errors
     export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 }
@@ -759,26 +742,12 @@ function findmakefile()
 
 function mm()
 {
-<<<<<<< HEAD
-    local MM_MAKE=make
-    local ARG=
-    for ARG in $@ ; do
-        if [ "$ARG" = mka ]; then
-            MM_MAKE=mka
-        fi
-    done
-    # If we're sitting in the root of the build tree, just do a
-    # normal make.
-    if [ -f build/core/envsetup.mk -a -f Makefile ]; then
-        $MM_MAKE $@
-=======
     local T=$(gettop)
     local DRV=$(getdriver $T)
     # If we're sitting in the root of the build tree, just do a
     # normal make.
     if [ -f build/core/envsetup.mk -a -f Makefile ]; then
         $DRV make $@
->>>>>>> android-5.0.0_r2
     else
         # Find the closest Android.mk file.
         local M=$(findmakefile)
@@ -811,13 +780,8 @@ function mm()
 
 function mmm()
 {
-<<<<<<< HEAD
-    local MMM_MAKE=make
-    T=$(gettop)
-=======
     local T=$(gettop)
     local DRV=$(getdriver $T)
->>>>>>> android-5.0.0_r2
     if [ "$T" ]; then
         local MAKEFILE=
         local MODULES=
@@ -1211,36 +1175,7 @@ function cgrep()
 
 function resgrep()
 {
-<<<<<<< HEAD
-    #if we're in a subdir of res, than don't try to find a res directory below us.
-    [ `pwd | grep '/res' | wc -l` -gt 0 ] && find . -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@" && return 0
-    
-    #if not, assume it's below our folder
-    foundone=
-    for dir in `find . -name .repo -prune -o -name .git -prune -o -name res -type d`; do find $dir -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@"; done;
-    [ ! -z $foundone ] && return 0
-
-    #if res isn't our parent, and we're not in a parent of res, then res is probably our uncle.
-    pushd . >& /dev/null
-    T=$(gettop)
-    reldir=""
-    while [ 1 ]; do
-        if [ -d res ]; then
-            popd >& /dev/null
-            find ${reldir}res -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@"
-            foundone=1
-            return 0
-        elif [ "`pwd`" = "$T" ] || [ "`pwd`" = "/" ]; then
-            foundone=1
-            popd >& /dev/null
-            return 1
-        fi
-        reldir="$reldir../"
-        cd ..
-    done
-=======
     for dir in `find . -name .repo -prune -o -name .git -prune -o -name out -prune -o -name res -type d`; do find $dir -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@"; done;
->>>>>>> android-5.0.0_r2
 }
 
 function mangrep()
@@ -1533,7 +1468,6 @@ function godir () {
     \cd $T/$pathname
 }
 
-<<<<<<< HEAD
 function linaroinit()
 {
     pushd . >& /dev/null
@@ -1816,14 +1750,11 @@ function fixup_common_out_dir() {
     fi
 }
 
-# Force JAVA_HOME to point to java 1.6 if it isn't already set
-=======
 # Force JAVA_HOME to point to java 1.7 or java 1.6  if it isn't already set.
 #
 # Note that the MacOS path for java 1.7 includes a minor revision number (sigh).
 # For some reason, installing the JDK doesn't make it show up in the
 # JavaVM.framework/Versions/1.7/ folder.
->>>>>>> android-5.0.0_r2
 function set_java_home() {
     # Clear the existing JAVA_HOME value if we set it ourselves, so that
     # we can reset it later, depending on the version of java the build
@@ -1921,12 +1852,8 @@ if [ "x$SHELL" != "x/bin/bash" ]; then
 fi
 
 # Execute the contents of any vendorsetup.sh files we can find.
-<<<<<<< HEAD
-for f in `/bin/ls vendor/*/vendorsetup.sh vendor/*/*/vendorsetup.sh device/*/*/vendorsetup.sh 2> /dev/null`
-=======
 for f in `test -d device && find -L device -maxdepth 4 -name 'vendorsetup.sh' 2> /dev/null` \
          `test -d vendor && find -L vendor -maxdepth 4 -name 'vendorsetup.sh' 2> /dev/null`
->>>>>>> android-5.0.0_r2
 do
     echo "including $f"
     . $f

@@ -54,17 +54,10 @@ PRODUCT_PACKAGES += \
     libwebrtc_audio_preprocessing \
     mdnsd \
     requestsync \
-<<<<<<< HEAD
     screenrecord \
     telephony-common \
     voip-common \
-    telephony-msim
-
-$(call inherit-product, $(SRC_TARGET_DIR)/product/core_minimal.mk)
-# Override the PRODUCT_BOOT_JARS set in core_minimal.mk
-PRODUCT_BOOT_JARS := core:conscrypt:okhttp:core-junit:bouncycastle:ext:framework:framework2:telephony-common:voip-common:mms-common:android.policy:services:apache-xml:webviewchromium:telephony-msim
-=======
+    telephony-msim \
     wifi-service
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_minimal.mk)
->>>>>>> android-5.0.0_r2
