@@ -308,10 +308,10 @@ def BuildBootableImage(sourcedir, fs_config_file, info_dict=None):
   assert p1.returncode == 0, "mkbootfs of %s ramdisk failed" % (targetname,)
   assert p2.returncode == 0, "minigzip of %s ramdisk failed" % (targetname,)
 
-<<<<<<< HEAD
+
   """check if uboot is requested"""
   fn = os.path.join(sourcedir, "ubootargs")
-=======
+
   # use MKBOOTIMG from environ, or "mkbootimg" if empty or not set
   mkbootimg = os.getenv('MKBOOTIMG') or "mkbootimg"
 
@@ -323,7 +323,6 @@ def BuildBootableImage(sourcedir, fs_config_file, info_dict=None):
     cmd.append(fn)
 
   fn = os.path.join(sourcedir, "cmdline")
->>>>>>> android-5.0.0_r2
   if os.access(fn, os.F_OK):
     cmd = ["mkimage"]
     for argument in open(fn).read().rstrip("\n").split(" "):
@@ -355,15 +354,9 @@ def BuildBootableImage(sourcedir, fs_config_file, info_dict=None):
       cmd.append("--pagesize")
       cmd.append(open(fn).read().rstrip("\n"))
 
-<<<<<<< HEAD
-    args = info_dict.get("mkbootimg_args", None)
-    if args and args.strip():
-      cmd.extend(args.split())
-=======
   args = info_dict.get("mkbootimg_args", None)
   if args and args.strip():
     cmd.extend(shlex.split(args))
->>>>>>> android-5.0.0_r2
 
     cmd.extend(["--ramdisk", ramdisk_img.name,
                 "--output", img.name])
@@ -1124,21 +1117,9 @@ DataImage = blockimgdiff.DataImage
 
 
 # map recovery.fstab's fs_types to mount/format "partition types"
-<<<<<<< HEAD
-PARTITION_TYPES = { "bml": "BML",
-                    "ext2": "EMMC",
-                    "ext3": "EMMC",
-                    "ext4": "EMMC",
-                    "emmc": "EMMC",
-                    "f2fs": "EMMC",
-                    "mtd": "MTD",
-                    "yaffs2": "MTD",
-                    "vfat": "EMMC" }
-=======
 PARTITION_TYPES = { "yaffs2": "MTD", "mtd": "MTD",
                     "ext4": "EMMC", "emmc": "EMMC",
                     "f2fs": "EMMC" }
->>>>>>> android-5.0.0_r2
 
 def GetTypeAndDevice(mount_point, info):
   fstab = info["fstab"]

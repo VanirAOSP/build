@@ -314,19 +314,10 @@ def RewriteProps(data, misc_info):
         value = EditTags(value)
       elif key == "ro.build.display.id":
         # change, eg, "JWR66N dev-keys" to "JWR66N"
-<<<<<<< HEAD
-        pieces = value.split()
-        if len(pieces) == 2 and pieces[-1].endswith("-keys"):
-          value = pieces[0]
-        elif len(pieces) > 1 and pieces[-1].endswith("-keys"):
-          pieces[-1] = EditTags(pieces[-1])
-          value = " ".join(pieces)
-=======
         value = value.split()
         if len(value) > 1 and value[-1].endswith("-keys"):
           value.pop()
         value = " ".join(value)
->>>>>>> android-5.0.0_r2
       line = key + "=" + value
     if line != original_line:
       print "  replace: ", original_line

@@ -236,18 +236,6 @@ def BuildImage(in_dir, prop_dict, out_file,
     build_command = ["mkuserimg.sh"]
     if "extfs_sparse_flag" in prop_dict:
       build_command.append(prop_dict["extfs_sparse_flag"])
-<<<<<<< HEAD
-      #run_fsck = True
-    if "is_userdataextra" in prop_dict:
-      build_command.extend([in_dir, out_file, fs_type,
-                           "data"])
-    else:
-      build_command.extend([in_dir, out_file, fs_type,
-                            prop_dict["mount_point"]])
-    if "partition_size" in prop_dict:
-      build_command.append(prop_dict["partition_size"])
-    if "selinux_fc" in prop_dict:
-=======
       run_fsck = True
     build_command.extend([in_dir, out_file, fs_type,
                           prop_dict["mount_point"]])
@@ -261,7 +249,6 @@ def BuildImage(in_dir, prop_dict, out_file,
     if fc_config is not None:
       build_command.append(fc_config)
     elif "selinux_fc" in prop_dict:
->>>>>>> android-5.0.0_r2
       build_command.append(prop_dict["selinux_fc"])
   elif fs_type.startswith("f2fs"):
     build_command = ["mkf2fsuserimg.sh"]

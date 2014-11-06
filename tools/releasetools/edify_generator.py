@@ -220,7 +220,6 @@ class EdifyGenerator(object):
     fstab = self.info.get("fstab", None)
     if fstab:
       p = fstab[mount_point]
-<<<<<<< HEAD
       if p.fs_type == 'f2fs':
         self.script.append('run_program("/sbin/mount", "-t", "auto", "%s", "%s");' %
                            (p.device, p.mount_point))
@@ -228,7 +227,7 @@ class EdifyGenerator(object):
         self.script.append('mount("%s", "%s", "%s", "%s");' %
                            (p.fs_type, common.PARTITION_TYPES[p.fs_type],
                             p.device, p.mount_point))
-=======
+
       mount_dict = {}
       if mount_options_by_format is not None:
         for option in mount_options_by_format.split("|"):
@@ -238,7 +237,6 @@ class EdifyGenerator(object):
       self.script.append('mount("%s", "%s", "%s", "%s", "%s");' %
                          (p.fs_type, common.PARTITION_TYPES[p.fs_type],
                           p.device, p.mount_point, mount_dict.get(p.fs_type, "")))
->>>>>>> android-5.0.0_r2
       self.mounts.add(p.mount_point)
 
   def Unmount(self, mount_point):
@@ -343,15 +341,6 @@ class EdifyGenerator(object):
             'write_raw_image("/tmp/boot.img", "%(device)s");' % args
             % args)
       elif partition_type == "EMMC":
-<<<<<<< HEAD
-        self.script.append(
-            'package_extract_file("%(fn)s", "%(device)s");' % args)
-      elif partition_type == "BML":
-	        self.script.append(
-            ('assert(package_extract_file("%(fn)s", "/tmp/%(device)s.img"),\n'
-             '       write_raw_image("/tmp/%(device)s.img", "%(device)s"),\n'
-             '       delete("/tmp/%(device)s.img"));') % args)
-=======
         if mapfn:
           args["map"] = mapfn
           self.script.append(
@@ -359,7 +348,6 @@ class EdifyGenerator(object):
         else:
           self.script.append(
               'package_extract_file("%(fn)s", "%(device)s");' % args)
->>>>>>> android-5.0.0_r2
       else:
         raise ValueError("don't know how to write \"%s\" partitions" % (p.fs_type,))
 
