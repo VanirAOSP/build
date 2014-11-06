@@ -7,23 +7,14 @@ ARCH_ARM_HAVE_VFP_D32           := true
 ARCH_ARM_HAVE_NEON              := true
 
 # is arch variant CPU defined?
-ifneq ($(strip $(TARGET_ARCH_VARIANT_CPU)),)
-	cpu_for_optimizations := $(strip $(TARGET_ARCH_VARIANT_CPU))
+ifneq (,$(filter cortex-a15 krait denver,$(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT)))
+	arch_variant_cflags := -mcpu=cortex-a15
 else
-ifeq ($(TARGET_CPU_VARIANT),$(filter $(TARGET_CPU_VARIANT),cortex-a15 krait))
-	cpu_for_optimizations := cortex-a15
+ifeq ($(strip $(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT)),cortex-a8)
+	arch_variant_cflags := -mcpu=cortex-a8
 else
-ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a9)
-	cpu_for_optimizations := cortex-a9
-else
-ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a8)
-	cpu_for_optimizations := cortex-a8
-else
-ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a7)
- 	cpu_for_optimizations := cortex-a7
-else
-ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a5)
- 	cpu_for_optimizations := cortex-a5
+ifeq ($(strip $(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT)),cortex-a7)
+	arch_variant_cflags := -mcpu=cortex-a7
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),scorpion)
 	cpu_for_optimizations := cortex-a8
