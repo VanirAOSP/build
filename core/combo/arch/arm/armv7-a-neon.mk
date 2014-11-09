@@ -8,13 +8,13 @@ ARCH_ARM_HAVE_NEON              := true
 
 # is arch variant CPU defined?
 ifneq (,$(filter cortex-a15 krait denver,$(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT)))
-	arch_variant_cflags := -mcpu=cortex-a15
+	cpu_for_optimizations := cortex-a15
 else
 ifeq ($(strip $(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT)),cortex-a8)
-	arch_variant_cflags := -mcpu=cortex-a8
+	cpu_for_optimizations := cortex-a8
 else
 ifeq ($(strip $(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT)),cortex-a7)
-	arch_variant_cflags := -mcpu=cortex-a7
+	cpu_for_optimizations := cortex-a7
 else
 ifeq ($(strip $(TARGET_CPU_VARIANT)),scorpion)
 	cpu_for_optimizations := cortex-a8
