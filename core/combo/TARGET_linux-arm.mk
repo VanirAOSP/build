@@ -41,6 +41,7 @@ else
 ifeq ($(strip $(TARGET_GCC_VERSION)),)
 TARGET_GCC_VERSION := 4.8-linaro
 endif
+endif
 
 # Decouple NDK library selection with platform compiler version
 $(combo_2nd_arch_prefix)TARGET_NDK_GCC_VERSION := 4.8
