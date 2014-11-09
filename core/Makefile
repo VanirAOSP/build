@@ -1584,6 +1584,15 @@ name := $(name)-ota-$(FILE_NAME_TAG)
 
 INTERNAL_OTA_PACKAGE_TARGET := $(PRODUCT_OUT)/$(name).zip
 
+export OTA_PACKAGE_PATH :=$(INTERNAL_OTA_PACKAGE_TARGET)
+
+ifeq ($($(strip DHO_VENDOR)),)
+  DHO_VENDOR := vanir
+endif
+ifeq ($(strip $(FORCE_PRECOMPILED_DALVIK)), true)
+  SQUISHER_ARGS := $(TARGET_BOARD_PLATFORM)
+endif
+
 $(INTERNAL_OTA_PACKAGE_TARGET): KEY_CERT_PAIR := $(DEFAULT_KEY_CERT_PAIR)
 
 ifeq ($(TARGET_RELEASETOOL_OTA_FROM_TARGET_SCRIPT),)
@@ -1669,32 +1678,6 @@ $(INTERNAL_UPDATE_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
 	   $(IMG_FROM_TARGET_SCRIPT) -v \
 	   -p $(HOST_OUT) \
 	   $(BUILT_TARGET_FILES_PACKAGE) $@
-
-.PHONY: updatepackage
-updatepackage: $(INTERNAL_UPDATE_PACKAGE_TARGET)
-else
-.PHONY: bacon
-bacon:
-	$(error CANNOT BACON BECAUSE recovery_fstab is UNDEFINED)
-endif    # recovery_fstab is defined
-
-else
-.PHONY: bacon
-bacon:
-	$(error CANNOT BACON BECAUSE TARGET_NO_KERNEL IS TRUE)
-endif    # TARGET_NO_KERNEL != true
-
-else
-.PHONY: bacon
-bacon:
-	$(error CANNOT BACON BECAUSE TARGET_DEVICE == generic*)
-endif    # TARGET_DEVICE != generic*
-
-else
-.PHONY: bacon
-bacon:
-	$(error CANNOT BACON BECAUSE TARGET_PRODUCT == sdk)
-endif    # TARGET_PRODUCT != sdk
 
 # -----------------------------------------------------------------
 # A zip of the symbols directory.  Keep the full paths to make it
