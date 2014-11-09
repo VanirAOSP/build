@@ -120,9 +120,9 @@ ifneq ($(USE_CCACHE),)
   # We don't really use system headers much so the rootdir is
   # fine; ensures these paths are relative for all Android trees
   # on a workstation.
-ifeq ($(CCACHE_BASEDIR),)
-  export CCACHE_BASEDIR := /
-endif
+  ifeq ($(CCACHE_BASEDIR),)
+    export CCACHE_BASEDIR := $(ANDROID_BUILD_TOP)
+  endif
 
   # Workaround for ccache with clang.
   # See http://petereisentraut.blogspot.com/2011/09/ccache-and-clang-part-2.html

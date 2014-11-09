@@ -95,7 +95,7 @@ else # ! boot jar
 $(built_odex): PRIVATE_MODULE := $(LOCAL_MODULE)
 # Use pattern rule - we may have multiple built odex files.
 $(built_odex) : $(dir $(LOCAL_BUILT_MODULE))% : $(common_javalib.jar)
-	@echo "Dexpreopt Jar: $(PRIVATE_MODULE) ($@)"
+	@echo -e ${CL_GRN}"Dexpreopt Jar:"${CL_RST}" $(PRIVATE_MODULE) ($@)"
 	$(call dexpreopt-one-file,$<,$@)
 
 $(LOCAL_BUILT_MODULE) : $(common_javalib.jar) | $(ACP)

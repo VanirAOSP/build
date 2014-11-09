@@ -22,7 +22,7 @@ import os, sys
 # See PROP_NAME_MAX and PROP_VALUE_MAX system_properties.h.
 # The constants in system_properties.h includes the termination NUL,
 # so we decrease the values by 1 here.
-PROP_NAME_MAX = 31
+PROP_NAME_MAX = 32
 PROP_VALUE_MAX = 91
 
 # Put the modifications that you need to make into the /system/build.prop into this
@@ -150,7 +150,7 @@ def main(argv):
     sys.exit(1)
 
   # Drop any blacklisted keys
-  for key in argv[2:]:
+  for key in argv[3:]:
     properties.delete(key)
 
   f = open(filename, 'w+')

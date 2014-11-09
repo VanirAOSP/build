@@ -73,7 +73,7 @@ $(eval $(call check-api, \
 update-api: $(INTERNAL_PLATFORM_API_FILE) | $(ACP)
 	@echo -e ${CL_GRN}"Copying current.txt"${CL_RST}
 	$(hide) $(ACP) $(INTERNAL_PLATFORM_API_FILE) frameworks/base/api/current.txt
-	@echo Copying removed.txt
+	@echo -e ${CL_GRN}"Copying removed.txt"${CL_RST}
 	$(hide) $(ACP) $(INTERNAL_PLATFORM_REMOVED_API_FILE) frameworks/base/api/removed.txt
 
 

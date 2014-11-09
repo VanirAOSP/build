@@ -93,6 +93,13 @@ Usage:  ota_from_target_files [flags] input_target_files output_ota_package
       Specifies the number of worker-threads that will be used when
       generating patches for incremental updates (defaults to 3).
 
+  --backup <boolean>
+      Enable or disable the execution of backuptool.sh.
+      Disabled by default.
+
+  --override_device <device>
+      Override device-specific asserts. Can be a comma-separated list.
+
 """
 
 import sys
@@ -145,6 +152,8 @@ OPTIONS.block_based = False
 OPTIONS.updater_binary = None
 OPTIONS.oem_source = None
 OPTIONS.fallback_to_full = True
+OPTIONS.backuptool = False
+OPTIONS.override_device = 'auto'
 
 def MostPopularKey(d, default):
   """Given a dict, return the key corresponding to the largest
@@ -401,15 +410,23 @@ def SignOutput(temp_zip_name, output_zip_name):
   common.SignFile(temp_zip_name, output_zip_name, OPTIONS.package_key, pw,
                   whole_file=True)
 
-def AppendAssertions(script, info_dict):
-  if OPTIONS.override_device == "auto":
-    if OPTIONS.override_prop:
-      device = GetBuildProp("ro.build.product", info_dict)
-    else:
+
+def AppendAssertions(script, info_dict, oem_dict = None):
+  oem_props = info_dict.get("oem_fingerprint_properties")
+  if oem_props is None or len(oem_props) == 0:
+    if OPTIONS.override_device == "auto":
       device = GetBuildProp("ro.product.device", info_dict)
+    else:
+      device = OPTIONS.override_device
+    script.AssertDevice(device)
   else:
-    device = OPTIONS.override_device
-  script.AssertDevice(device)
+    if oem_dict is None:
+      raise common.ExternalError("No OEM file provided to answer expected assertions")
+    for prop in oem_props.split():
+      if oem_dict.get(prop) is None:
+        raise common.ExternalError("The OEM file is missing the property %s" % prop)
+      script.AssertOemProperty(prop, oem_dict.get(prop))
+
 
 def HasRecoveryPatch(target_files_zip):
   try:
@@ -429,7 +446,6 @@ def GetOemProperty(name, oem_props, oem_dict, info_dict):
   if oem_props is not None and name in oem_props:
     return oem_dict[name]
   return GetBuildProp(name, info_dict)
-
 
 def CalculateFingerprint(oem_props, oem_dict, info_dict):
   if oem_props is None:
@@ -541,10 +557,10 @@ def WriteFullOTAPackage(input_zip, output_zip):
   has_recovery_patch = HasRecoveryPatch(input_zip)
   block_based = OPTIONS.block_based and has_recovery_patch
 
-  if not OPTIONS.omit_prereq:
-    ts = GetBuildProp("ro.build.date.utc", OPTIONS.info_dict)
-    ts_text = GetBuildProp("ro.build.date", OPTIONS.info_dict)
-    script.AssertOlderBuild(ts, ts_text)
+  #if not OPTIONS.omit_prereq:
+  #  ts = GetBuildProp("ro.build.date.utc", OPTIONS.info_dict)
+  #  ts_text = GetBuildProp("ro.build.date", OPTIONS.info_dict)
+  #  script.AssertOlderBuild(ts, ts_text)
 
   AppendAssertions(script, OPTIONS.info_dict, oem_dict)
   device_specific.FullOTA_Assertions()
@@ -590,6 +606,16 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   device_specific.FullOTA_InstallBegin()
 
+  if OPTIONS.backuptool:
+    if block_based:
+      common.ZipWriteStr(output_zip, "system/bin/backuptool.sh",
+                     ""+input_zip.read("SYSTEM/bin/backuptool.sh"))
+      common.ZipWriteStr(output_zip, "system/bin/backuptool.functions",
+                     ""+input_zip.read("SYSTEM/bin/backuptool.functions"))
+    script.Mount("/system")
+    script.RunBackup("backup")
+    script.Unmount("/system")
+
   system_progress = 0.75
 
   #says: VANIR
@@ -632,6 +658,13 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   if HasVendorPartition(input_zip):
 
+  if block_based:
+    common.ZipWriteStr(output_zip, "system/bin/otasigcheck.sh",
+                   ""+input_zip.read("SYSTEM/bin/otasigcheck.sh"))
+  script.Mount("/data")
+  script.ValidateSignatures("data")
+  script.Unmount("/data")
+
   if "selinux_fc" in OPTIONS.info_dict:
     WritePolicyConfig(OPTIONS.info_dict["selinux_fc"], output_zip)
 
@@ -651,7 +684,6 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.Print("Installing the ROM...")
   script.UnpackPackageDir("system", "/system")
   script.UnpackPackageDir("data", "/data")
-
   script.Print("Symlinking...")
   symlinks = CopySystemFiles(input_zip, output_zip)
   script.MakeSymlinks(symlinks)
@@ -706,6 +738,20 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
   script.ShowProgress(0.2, 10)
+  if block_based:
+    script.Mount("/system")
+  script.ValidateSignatures("cleanup")
+  if block_based:
+    script.Unmount("/system")
+
+  if OPTIONS.backuptool:
+    script.ShowProgress(0.02, 10)
+    if block_based:
+      script.Mount("/system")
+    script.RunBackup("restore")
+    if block_based:
+      script.Unmount("/system")
+
   script.WriteRawImage("/boot", "boot.img")  
 
   vanirinitlinks = []
@@ -1542,6 +1588,10 @@ def main(argv):
       OPTIONS.updater_binary = a
     elif o in ("--no_fallback_to_full",):
       OPTIONS.fallback_to_full = False
+    elif o in ("--backup"):
+      OPTIONS.backuptool = bool(a.lower() == 'true')
+    elif o in ("--override_device"):
+      OPTIONS.override_device = a
     else:
       return False
     return True
@@ -1567,7 +1617,8 @@ def main(argv):
                                               "oem_settings=",
                                               "verify",
                                               "no_fallback_to_full",
-                                              ],
+                                              "backup=",
+                                              "override_device="],
                              extra_option_handler=option_handler)
 
   if len(args) != 2:

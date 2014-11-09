@@ -150,18 +150,7 @@ endif
 # are specific to the user's build configuration.
 include $(BUILD_SYSTEM)/envsetup.mk
 
-QC_PERF_PRE_BOARDCONF := $(TARGET_HAVE_QC_PERF)
-include $(board_config_mk)
-ifneq ($(WITH_QC_PERF),)
-$(warning WITH_QC_PERF is deprecated.)
-endif
-# check for tomfoolery and kill it to death
-ifneq ($(QC_PERF_PRE_BOARDCONF),$(TARGET_HAVE_QC_PERF))
-$(warning YOU CAN'T JUST SET QC PERF IN THE BOARDCONFIG)
-TARGET_HAVE_QC_PERF :=
-endif
-
-
+-include vendor/extra/BoardConfigExtra.mk
 # The build system exposes several variables for where to find the kernel
 # headers:
 #   TARGET_DEVICE_KERNEL_HEADERS is automatically created for the current
@@ -576,7 +565,7 @@ TARGET_CPU_SMP ?= true
 DEX2OAT_TARGET_ARCH := $(TARGET_ARCH)
 DEX2OAT_TARGET_CPU_VARIANT := $(TARGET_CPU_VARIANT)
 DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES := default
-ifneq (,$(filter $(DEX2OAT_TARGET_CPU_VARIANT),cortex-a7 cortex-a15 krait denver))
+ifneq (,$(filter $(DEX2OAT_TARGET_CPU_VARIANT),cortex-a7 cortex-a15 krait denver generic))
   DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES := div
 endif
 
@@ -584,7 +573,7 @@ ifdef TARGET_2ND_ARCH
 $(TARGET_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_ARCH := $(TARGET_2ND_ARCH)
 $(TARGET_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_CPU_VARIANT := $(TARGET_2ND_CPU_VARIANT)
 $(TARGET_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES := default
-ifneq (,$(filter $($(TARGET_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_CPU_VARIANT),cortex-a7 cortex-a15 krait denver))
+ifneq (,$(filter $($(TARGET_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_CPU_VARIANT),cortex-a7 cortex-a15 krait denver cortex-a53))
   $(TARGET_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES := div
 endif
 endif

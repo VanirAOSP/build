@@ -104,6 +104,7 @@ include $(BUILD_SYSTEM)/qcom_utils.mk
 -include vendor/google/build/config.mk
 
 VERSION_CHECK_SEQUENCE_NUMBER := 5
+
 -include $(OUT_DIR)/versions_checked.mk
 ifneq ($(VERSION_CHECK_SEQUENCE_NUMBER),$(VERSIONS_CHECKED))
 
@@ -726,15 +727,15 @@ else
 endif
 
 eng_MODULES := $(sort \
-        $(call get-tagged-modules,eng) \
+        $(call module-installed-files, $(call module-names-for-tag-list,eng)) \
         $(call module-installed-files, $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_PACKAGES_ENG)) \
     )
 debug_MODULES := $(sort \
-        $(call get-tagged-modules,debug) \
+        $(call module-installed-files, $(call module-names-for-tag-list,debug)) \
         $(call module-installed-files, $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_PACKAGES_DEBUG)) \
     )
 tests_MODULES := $(sort \
-        $(call get-tagged-modules,tests) \
+        $(call module-installed-files, $(call module-names-for-tag-list,tests)) \
         $(call module-installed-files, $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_PACKAGES_TESTS)) \
     )
 

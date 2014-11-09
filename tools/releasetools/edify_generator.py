@@ -127,7 +127,7 @@ class EdifyGenerator(object):
   def AssertSomeBootloader(self, *bootloaders):
     """Assert that the bootloader version is one of *bootloaders."""
     cmd = ("assert(" +
-           " ||\0".join(['getprop("ro.bootloader") == "%s"' % (b,)
+           " || ".join(['getprop("ro.bootloader") == "%s"' % (b,)
                          for b in bootloaders]) +
            ' ||\0abort("This package supports bootloader(s): ' +
            ", ".join(["%s" % (b,) for b in bootloaders]) +
@@ -238,6 +238,12 @@ class EdifyGenerator(object):
                          (p.fs_type, common.PARTITION_TYPES[p.fs_type],
                           p.device, p.mount_point, mount_dict.get(p.fs_type, "")))
       self.mounts.add(p.mount_point)
+
+  def Unmount(self, mount_point):
+    """Unmount the partiiton with the given mount_point."""
+    if mount_point in self.mounts:
+      self.mounts.remove(mount_point)
+      self.script.append('unmount("%s");' % (mount_point,))
 
   def Unmount(self, mount_point):
     """Unmount the partiiton with the given mount_point."""
