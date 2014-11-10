@@ -4,9 +4,11 @@
 ARCH_MIPS_HAS_FPU	:=true
 ARCH_HAVE_ALIGNED_DOUBLES :=true
 arch_variant_cflags := \
+    -EL \
+    -march=mips32 \
+    -mtune=mips32 \
     -mips32 \
-    -mfp32 \
-    -modd-spreg \
+    -mhard-float
 
 arch_variant_ldflags := \
-    -Wl,-melf32ltsmip
+    -EL
