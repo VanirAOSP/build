@@ -9,6 +9,31 @@ else
 ABP:=$(PWD)/$(HOST_OUT_EXECUTABLES)
 endif
 
+# Add the ARM toolchain bin dir if it actually exists
+ifeq ($(TARGET_ARCH),arm)
+    ifneq ($(wildcard $(PWD)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/arm/arm-linux-androideabi-$(TARGET_GCC_VERSION)/bin),)
+        # this should be copied to HOST_OUT_EXECUTABLES instead
+        ABP:=$(ABP):$(PWD)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/arm/arm-linux-androideabi-$(TARGET_GCC_VERSION)/bin
+    endif
+    ifneq ($(wildcard $(PWD)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/arm/arm-eabi-$(TARGET_GCC_VERSION)/bin),)
+        # this should be copied to HOST_OUT_EXECUTABLES instead
+        ABP:=$(ABP):$(PWD)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/arm/arm-eabi-$(TARGET_GCC_VERSION)/bin
+    endif
+else ifeq ($(TARGET_ARCH),x86)
+
+# Add the x86 toolchain bin dir if it actually exists
+    ifneq ($(wildcard $(PWD)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/x86/i686-linux-android-$(TARGET_GCC_VERSION)/bin),)
+        # this should be copied to HOST_OUT_EXECUTABLES instead
+        ABP:=$(ABP):$(PWD)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/x86/i686-linux-android-$(TARGET_GCC_VERSION)/bin
+    endif
+endif
+
+# Add the mips toolchain bin dir if it actually exists
+ifneq ($(wildcard $(PWD)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/mips/mipsel-linux-android-$(TARGET_GCC_VERSION)/bin),)
+    # this should be copied to HOST_OUT_EXECUTABLES instead
+    ABP:=$(ABP):$(PWD)/prebuilts/gcc/$(HOST_PREBUILT_TAG)/mips/mipsel-linux-android-$(TARGET_GCC_VERSION)/bin
+endif
+
 ANDROID_BUILD_PATHS := $(ABP)
 ANDROID_PREBUILTS := prebuilt/$(HOST_PREBUILT_TAG)
 ANDROID_GCC_PREBUILTS := prebuilts/gcc/$(HOST_PREBUILT_TAG)
@@ -67,6 +92,7 @@ HOST_OS_EXTRA:=$(shell python -c "import platform; print(platform.platform())")
 $(info ============================================)
 $(info   PLATFORM_VERSION_CODENAME=$(PLATFORM_VERSION_CODENAME))
 $(info   PLATFORM_VERSION=$(PLATFORM_VERSION))
+$(info   CM_VERSION=$(CM_VERSION))
 $(info   TARGET_PRODUCT=$(TARGET_PRODUCT))
 $(info   TARGET_BUILD_VARIANT=$(TARGET_BUILD_VARIANT))
 $(info   TARGET_BUILD_TYPE=$(TARGET_BUILD_TYPE))
@@ -74,20 +100,15 @@ $(info   TARGET_BUILD_APPS=$(TARGET_BUILD_APPS))
 $(info   TARGET_ARCH=$(TARGET_ARCH))
 $(info   TARGET_ARCH_VARIANT=$(TARGET_ARCH_VARIANT))
 $(info   TARGET_CPU_VARIANT=$(TARGET_CPU_VARIANT))
-$(info   TARGET_ARCH_VARIANT_CPU=$(TARGET_ARCH_VARIANT_CPU))
-$(info   TARGET_GCC_VERSION=$(TARGET_GCC_VERSION))
-$(info   TARGET_KERNEL_CUSTOM_TOOLCHAIN=$(TARGET_KERNEL_CUSTOM_TOOLCHAIN))
-$(info   TARGET_KERNEL_USE_AOSP_TOOLCHAIN=$(TARGET_KERNEL_USE_AOSP_TOOLCHAIN))
-$(info   RECOVERY_VARIANT=$(RECOVERY_VARIANT))
-$(info   WITH_DEXPREOPT=$(WITH_DEXPREOPT))
-$(info   TARGET_2ND_ARCH=$(TARGET_2ND_ARCH))
-$(info   TARGET_2ND_ARCH_VARIANT=$(TARGET_2ND_ARCH_VARIANT))
-$(info   TARGET_2ND_CPU_VARIANT=$(TARGET_2ND_CPU_VARIANT))
 $(info   HOST_ARCH=$(HOST_ARCH))
 $(info   HOST_OS=$(HOST_OS))
 $(info   HOST_OS_EXTRA=$(HOST_OS_EXTRA))
 $(info   HOST_BUILD_TYPE=$(HOST_BUILD_TYPE))
 $(info   BUILD_ID=$(BUILD_ID))
 $(info   OUT_DIR=$(OUT_DIR))
+ifeq ($(CYNGN_TARGET),true)
+$(info   CYNGN_TARGET=$(CYNGN_TARGET))
+$(info   CYNGN_FEATURES=$(CYNGN_FEATURES))
+endif
 $(info ============================================)
 endif

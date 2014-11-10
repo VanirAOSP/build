@@ -14,6 +14,11 @@
 # limitations under the License.
 #
 
+ifneq ($(LOCAL_MODULE)$(LOCAL_MODULE_CLASS),)
+$(error $(LOCAL_PATH): LOCAL_MODULE or LOCAL_MODULE_CLASS not needed by \
+  BUILD_MULTI_PREBUILT, use BUILD_PREBUILT instead!)
+endif
+
 # Save these before they get cleared by CLEAR_VARS.
 prebuilt_static_libs := $(filter %.a,$(LOCAL_PREBUILT_LIBS))
 prebuilt_shared_libs := $(filter-out %.a,$(LOCAL_PREBUILT_LIBS))
@@ -64,11 +69,7 @@ $(foreach t,$(1), \
   $(if $(7), \
     $(eval LOCAL_BUILT_MODULE_STEM := $(7)) \
    , \
-    $(if $(word 2,$(tw)), \
-      $(eval LOCAL_BUILT_MODULE_STEM := $(LOCAL_MODULE)$(suffix $(LOCAL_SRC_FILES))) \
-     , \
-      $(eval LOCAL_BUILT_MODULE_STEM := $(notdir $(LOCAL_SRC_FILES))) \
-     ) \
+    $(eval LOCAL_BUILT_MODULE_STEM := $(notdir $(LOCAL_SRC_FILES))) \
    ) \
   $(eval LOCAL_MODULE_SUFFIX := $(suffix $(LOCAL_SRC_FILES))) \
   $(if $(filter user,$(TARGET_BUILD_VARIANT)), \
