@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 The Android Open Source Project
+# Copyright (C) 2009 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,19 +16,21 @@
 
 # This is a build configuration for a full-featured build of the
 # Open-Source part of the tree. It's geared toward a US-centric
-# mips64 build quite specifically for the emulator, and might not be
+# build quite specifically for the emulator, and might not be
 # entirely appropriate to inherit from for on-device configurations.
+ifdef NET_ETH0_STARTONBOOT
+  PRODUCT_PROPERTY_OVERRIDES += net.eth0.startonboot=1
+endif
 
-$(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/board/generic_mips64/device.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/board/vbox_x86/device.mk)
 
-PRODUCT_RUNTIMES := runtime_libart_default
+PRODUCT_PACKAGES += \
+       camera.vbox_x86 \
+       lights.vbox_x86 \
+       gps.vbox_x86 \
+       sensors.vbox_x86
 
-include $(SRC_TARGET_DIR)/product/emulator.mk
-
-# Overrides
-PRODUCT_NAME := full_mips64
-PRODUCT_DEVICE := generic_mips64
-PRODUCT_BRAND := Android
-PRODUCT_MODEL := AOSP on MIPS64 Emulator
+PRODUCT_NAME := vbox_x86
+PRODUCT_DEVICE := vbox_x86
+PRODUCT_MODEL := Full Android on x86 VirtualBox

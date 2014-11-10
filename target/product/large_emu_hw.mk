@@ -14,9 +14,39 @@
 # limitations under the License.
 #
 
-$(call inherit-product, $(SRC_TARGET_DIR)/product/sdk_base.mk)
+# This is a generic product for devices with large display but not specialized
+# for a specific device. It includes the base Android platform.
+
+PRODUCT_POLICY := android.policy_mid
+
+PRODUCT_PACKAGES := \
+    CarHome \
+    DeskClock \
+    Bluetooth \
+    Calculator \
+    Calendar \
+    CertInstaller \
+    Email \
+    Exchange2 \
+    Gallery2 \
+    LatinIME \
+    Launcher2 \
+    Music \
+    Provision \
+    QuickSearchBox \
+    Settings \
+    Sync \
+    Updater \
+    CalendarProvider \
+    SyncProvider \
+    bluetooth-health \
+    hostapd \
+    wpa_supplicant.conf
+
+
+$(call inherit-product, $(SRC_TARGET_DIR)/product/core.mk)
 
 # Overrides
 PRODUCT_BRAND := generic
-PRODUCT_NAME := sdk_phone_armv7
 PRODUCT_DEVICE := generic
+PRODUCT_NAME := large_emu_hw

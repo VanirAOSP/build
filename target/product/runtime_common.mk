@@ -39,3 +39,20 @@ PRODUCT_PACKAGES += \
     libssl \
     libz \
     okhttp
+
+# host-only dependencies
+ifeq ($(WITH_HOST_DALVIK),true)
+    PRODUCT_PACKAGES += \
+        apache-xml-hostdex \
+        bouncycastle-hostdex \
+        conscrypt-hostdex \
+        dalvik \
+        libcrypto-host \
+        libexpat-host \
+        libicui18n-host \
+        libicuuc-host \
+        libjavacore \
+        libssl-host \
+        libz-host \
+        okhttp-hostdex
+endif
