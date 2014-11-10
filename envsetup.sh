@@ -1967,3 +1967,5 @@ done
 unset f
 
 addcompletions
+
+export PATH=$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts
