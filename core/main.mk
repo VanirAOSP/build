@@ -84,7 +84,8 @@ dont_bother_goals := clean clobber dataclean installclean \
     ramdisk-nodeps \
     bootimage-nodeps \
     recoveryimage-nodeps \
-    product-graph dump-products
+    product-graph dump-products \
+    burst novo surgical biopsy
 
 ifneq ($(filter $(dont_bother_goals), $(MAKECMDGOALS)),)
 dont_bother := true
@@ -1125,6 +1126,38 @@ clean:
 
 .PHONY: clobber
 clobber: clean
+
+# This should be almost as good as a clobber but keeping many of the time intensive files - DHO
+.PHONY: novo
+novo:
+	@rm -rf $(OUT_DIR)/target/*
+	@echo -e ${CL_GRN}"Target directory removed."${CL_RST}
+
+# This is designed for building in memory.  Clean products, but keep common files - DHO
+.PHONY: burst
+burst:
+	@rm -rf $(OUT_DIR)/target/product/*
+	@echo -e ${CL_GRN}"Product directory removed."${CL_RST}
+
+# This is designed for building in memory + keeping smaller build folders + common files - DHO
+.PHONY: surgical
+surgical:
+	@rm -rf $(OUT_DIR)/target/product/*/obj/
+	@rm -rf $(OUT_DIR)/target/product/*/symbols/
+	@rm -rf $(OUT_DIR)/target/product/*/vanir_*-ota-eng.$(USER).zip
+	@rm -rf $(OUT_DIR)/target/product/*/system.img
+	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
+	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
+
+# This is designed for building on SSD but to whittle away at the bulk file size - DHO
+.PHONY: biopsy
+biopsy:
+	@rm -rf $(OUT_DIR)/target/product/*/vanir_*-ota-eng.dho.zip
+	@rm -rf $(OUT_DIR)/target/product/*/system.img
+	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
+	@rm -rf $(OUT_DIR)/target/product/*/system/app/*
+	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
+
 
 # The rules for dataclean and installclean are defined in cleanbuild.mk.
 
