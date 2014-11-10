@@ -170,7 +170,7 @@ body {
   max-width: 100%;
 }
 
-#header-wrapper #nav-x div.wrap,
+#nav-x .wrap,
 #searchResults.wrap {
     max-width:100%;
 }
@@ -184,17 +184,9 @@ body {
   left:20px; /* !important ... for IE i think */
 }
 
-#sticky-header {
-  padding: 0 20px;
-}
 
-#sticky-header > div {
-  width: 100%;
-}
 
-.sticky-menu {
-  width:100%;
-  left:-20px;
+
 }
 
 .col-right {

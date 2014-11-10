@@ -32,20 +32,19 @@ void usage(void)
     fprintf(stderr, "Zip alignment utility\n");
     fprintf(stderr, "Copyright (C) 2009 The Android Open Source Project\n\n");
     fprintf(stderr,
-        "Usage: zipalign [-f] [-v] [-z] <align> infile.zip outfile.zip\n"
+        "Usage: zipalign [-f] [-v] <align> infile.zip outfile.zip\n"
         "       zipalign -c [-v] <align> infile.zip\n\n" );
     fprintf(stderr,
         "  <align>: alignment in bytes, e.g. '4' provides 32-bit alignment\n");
     fprintf(stderr, "  -c: check alignment only (does not modify file)\n");
     fprintf(stderr, "  -f: overwrite existing outfile.zip\n");
     fprintf(stderr, "  -v: verbose output\n");
-    fprintf(stderr, "  -z: recompress using Zopfli\n");
 }
 
 /*
  * Copy all entries from "pZin" to "pZout", aligning as needed.
  */
-static int copyAndAlign(ZipFile* pZin, ZipFile* pZout, int alignment, bool zopfli)
+static int copyAndAlign(ZipFile* pZin, ZipFile* pZout, int alignment)
 {
     int numEntries = pZin->getNumEntries();
     ZipEntry* pEntry;
@@ -68,12 +67,6 @@ static int copyAndAlign(ZipFile* pZin, ZipFile* pZout, int alignment, bool zopfl
             //    pEntry->getFileName(), (long) pEntry->getFileOffset(),
             //    (long) pEntry->getUncompressedLen());
 
-            if (zopfli) {
-                status = pZout->addRecompress(pZin, pEntry, &pNewEntry);
-                bias += pNewEntry->getCompressedLen() - pEntry->getCompressedLen();
-            } else {
-                status = pZout->add(pZin, pEntry, padding, &pNewEntry);
-            }
         } else {
             /*
              * Copy the entry, adjusting as required.  We assume that the
@@ -86,9 +79,9 @@ static int copyAndAlign(ZipFile* pZin, ZipFile* pZout, int alignment, bool zopfl
             //printf("--- %s: orig at %ld(+%d) len=%ld, adding pad=%d\n",
             //    pEntry->getFileName(), (long) pEntry->getFileOffset(),
             //    bias, (long) pEntry->getUncompressedLen(), padding);
-            status = pZout->add(pZin, pEntry, padding, &pNewEntry);
         }
 
+        status = pZout->add(pZin, pEntry, padding, &pNewEntry);
         if (status != NO_ERROR)
             return 1;
         bias += padding;
@@ -105,7 +98,7 @@ static int copyAndAlign(ZipFile* pZin, ZipFile* pZout, int alignment, bool zopfl
  * output file exists and "force" wasn't specified.
  */
 static int process(const char* inFileName, const char* outFileName,
-    int alignment, bool force, bool zopfli)
+    int alignment, bool force)
 {
     ZipFile zin, zout;
 
@@ -136,7 +129,7 @@ static int process(const char* inFileName, const char* outFileName,
         return 1;
     }
 
-    int result = copyAndAlign(&zin, &zout, alignment, zopfli);
+    int result = copyAndAlign(&zin, &zout, alignment);
     if (result != 0) {
         printf("zipalign: failed rewriting '%s' to '%s'\n",
             inFileName, outFileName);
@@ -203,7 +196,6 @@ int main(int argc, char* const argv[])
     bool check = false;
     bool force = false;
     bool verbose = false;
-    bool zopfli = false;
     int result = 1;
     int alignment;
     char* endp;
@@ -229,9 +221,6 @@ int main(int argc, char* const argv[])
                 break;
             case 'v':
                 verbose = true;
-                break;
-            case 'z':
-                zopfli = true;
                 break;
             default:
                 fprintf(stderr, "ERROR: unknown flag -%c\n", *cp);
@@ -263,7 +252,7 @@ int main(int argc, char* const argv[])
         result = verify(argv[1], alignment, verbose);
     } else {
         /* create the new archive */
-        result = process(argv[1], argv[2], alignment, force, zopfli);
+        result = process(argv[1], argv[2], alignment, force);
 
         /* trust, but verify */
         if (result == 0)

@@ -16,15 +16,6 @@
 
 import os, sys
 
-# Usage: post_process_props.py file.prop [blacklist_key, ...]
-# Blacklisted keys are removed from the property file, if present
-
-# See PROP_NAME_MAX and PROP_VALUE_MAX system_properties.h.
-# The constants in system_properties.h includes the termination NUL,
-# so we decrease the values by 1 here.
-PROP_NAME_MAX = 32
-PROP_VALUE_MAX = 91
-
 # Put the modifications that you need to make into the /system/build.prop into this
 # function. The prop object has get(name) and put(name,value) methods.
 def mangle_build_prop(prop, overrides):
@@ -37,7 +28,7 @@ def mangle_build_prop(prop, overrides):
 
   pass
 
-# Put the modifications that you need to make into the /default.prop into this
+# Put the modifications that you need to make into the /system/build.prop into this
 # function. The prop object has get(name) and put(name,value) methods.
 def mangle_default_prop(prop):
   # If ro.debuggable is 1, then enable adb on USB by default
@@ -55,53 +46,9 @@ def mangle_default_prop(prop):
   if not prop.get("persist.sys.usb.config"):
     prop.put("persist.sys.usb.config", "none");
 
-def validate(prop):
-  """Validate the properties.
-
-  Returns:
-    True if nothing is wrong.
-  """
-  check_pass = True
-  buildprops = prop.to_dict()
-  dev_build = buildprops.get("ro.build.version.incremental",
-                             "").startswith("eng")
-  for key, value in buildprops.iteritems():
-    # Check build properties' length.
-    if len(key) > PROP_NAME_MAX:
-      check_pass = False
-      sys.stderr.write("error: %s cannot exceed %d bytes: " %
-                       (key, PROP_NAME_MAX))
-      sys.stderr.write("%s (%d)\n" % (key, len(key)))
-    if len(value) > PROP_VALUE_MAX:
-      # If dev build, show a warning message, otherwise fail the
-      # build with error message
-      if dev_build:
-        sys.stderr.write("warning: %s exceeds %d bytes: " %
-                         (key, PROP_VALUE_MAX))
-        sys.stderr.write("%s (%d)\n" % (value, len(value)))
-        sys.stderr.write("warning: This will cause the %s " % key)
-        sys.stderr.write("property return as empty at runtime\n")
-      else:
-        check_pass = False
-        sys.stderr.write("error: %s cannot exceed %d bytes: " %
-                         (key, PROP_VALUE_MAX))
-        sys.stderr.write("%s (%d)\n" % (value, len(value)))
-  return check_pass
-
 class PropFile:
-
   def __init__(self, lines):
-    self.lines = [s.strip() for s in lines]
-
-  def to_dict(self):
-    props = {}
-    for line in self.lines:
-      if not line or line.startswith("#"):
-        continue
-      if "=" in line:
-        key, value = line.split("=", 1)
-        props[key] = value
-    return props
+    self.lines = [s[:-1] for s in lines]
 
   def get(self, name):
     key = name + "="
@@ -118,10 +65,6 @@ class PropFile:
         return
     self.lines.append(key + value)
 
-  def delete(self, name):
-    key = name + "="
-    self.lines = [ line for line in self.lines if not line.startswith(key) ]
-
   def write(self, f):
     f.write("\n".join(self.lines))
     f.write("\n")
@@ -137,7 +80,6 @@ def main(argv):
   f.close()
 
   properties = PropFile(lines)
-
   if filename.endswith("/build.prop"):
     mangle_build_prop(properties, extraargs)
   elif filename.endswith("/default.prop"):
@@ -145,13 +87,6 @@ def main(argv):
   else:
     sys.stderr.write("bad command line: " + str(argv) + "\n")
     sys.exit(1)
-
-  if not validate(properties):
-    sys.exit(1)
-
-  # Drop any blacklisted keys
-  for key in argv[3:]:
-    properties.delete(key)
 
   f = open(filename, 'w+')
   properties.write(f)

@@ -12,15 +12,13 @@ LOCAL_SRC_FILES := \
 	ZipEntry.cpp \
 	ZipFile.cpp
 
-LOCAL_C_INCLUDES += external/zlib \
-	external/zopfli/src
+LOCAL_C_INCLUDES += external/zlib
 
 LOCAL_STATIC_LIBRARIES := \
 	libandroidfw \
 	libutils \
 	libcutils \
-	liblog \
-	libzopfli
+	liblog
 
 ifeq ($(HOST_OS),linux)
 LOCAL_LDLIBS += -lrt
