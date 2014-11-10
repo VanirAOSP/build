@@ -787,89 +787,75 @@ utilities: $(INTERNAL_UTILITY_FILES)
 
 # -----------------------------------------------------------------
 # Recovery image
-
 # If neither TARGET_NO_KERNEL nor TARGET_NO_RECOVERY are true
 ifeq (,$(filter true, $(TARGET_NO_KERNEL) $(TARGET_NO_RECOVERY)))
-
 INSTALLED_RECOVERYIMAGE_TARGET := $(PRODUCT_OUT)/recovery.img
-
-recovery_initrc := $(call include-path-for, recovery)/etc/init.rc
-recovery_sepolicy := $(call intermediates-dir-for,ETC,sepolicy.recovery)/sepolicy.recovery
+ifneq ($(TARGET_RECOVERY_INITRC),)
+recovery_initrc := $(TARGET_RECOVERY_INITRC) # Use target specific init.rc
+else
+ifeq ($(BOARD_USES_RECOVERY_CHARGEMODE),true)
+$(error BOARD_USES_RECOVERY_CHARGEMODE is deprecated. Please see http://bit.ly/opcSJZ on how to properly implement chargemode in recovery. Or just remove the BOARD_USES_RECOVERY_CHARGEMODE if you are lazy. I will hate you though. -Koush)
+else
+recovery_initrc := $(call project-path-for,recovery)/etc/init.rc
+endif
+endif
+ifneq ($(TARGET_PREBUILT_RECOVERY_KERNEL),)
+recovery_kernel := $(TARGET_PREBUILT_RECOVERY_KERNEL) # Use prebuilt recovery kernel
+else
 recovery_kernel := $(INSTALLED_KERNEL_TARGET) # same as a non-recovery system
+endif
+ifeq ($(TARGET_RECOVERY_SCREEN_WIDTH),)
+ifeq ($(TARGET_SCREEN_WIDTH),)
+TARGET_RECOVERY_SCREEN_WIDTH := 720
+else
+TARGET_RECOVERY_SCREEN_WIDTH := $(TARGET_SCREEN_WIDTH)
+endif
+endif
+recovery_uncompressed_ramdisk := $(PRODUCT_OUT)/ramdisk-recovery.cpio
 recovery_ramdisk := $(PRODUCT_OUT)/ramdisk-recovery.img
 recovery_build_prop := $(INSTALLED_BUILD_PROP_TARGET)
 recovery_binary := $(call intermediates-dir-for,EXECUTABLES,recovery)/recovery
-recovery_resources_common := $(call include-path-for, recovery)/res
-
-# Set recovery_density to the density bucket of the device.
-recovery_density := unknown
-ifneq (,$(PRODUCT_AAPT_PREF_CONFIG))
-# If PRODUCT_AAPT_PREF_CONFIG includes a dpi bucket, then use that value.
-recovery_density := $(filter %dpi,$(PRODUCT_AAPT_PREF_CONFIG))
-else
-# Otherwise, use the highest density that appears in PRODUCT_AAPT_CONFIG.
-# Order is important here; we'll take the first one that's found.
-recovery_densities := $(filter $(PRODUCT_AAPT_CONFIG_SP),xxxhdpi xxhdpi xhdpi hdpi tvdpi mdpi ldpi)
-ifneq (,$(recovery_densities))
-recovery_density := $(word 1,$(recovery_densities))
-endif
-endif
-
-ifneq (,$(wildcard $(recovery_resources_common)-$(recovery_density)))
-recovery_resources_common := $(recovery_resources_common)-$(recovery_density)
-else
-recovery_resources_common := $(recovery_resources_common)-xhdpi
-endif
-
-# Select the 18x32 font on high-density devices (xhdpi and up); and
-# the 12x22 font on other devices.  Note that the font selected here
-# can be overridden for a particular device by putting a font.png in
-# its private recovery resources.
-
-ifneq (,$(filter xxxhdpi xxhdpi xhdpi,$(recovery_density)))
-recovery_font := $(call include-path-for, recovery)/fonts/18x32.png
-else
-recovery_font := $(call include-path-for, recovery)/fonts/12x22.png
-endif
-
+recovery_resources_common := $(call project-path-for,recovery)/res
+recovery_resources_extra := $(call project-path-for,recovery)/res-$(TARGET_RECOVERY_SCREEN_WIDTH)
 recovery_resources_private := $(strip $(wildcard $(TARGET_DEVICE_DIR)/recovery/res))
-recovery_resource_deps := $(shell find $(recovery_resources_common) \
-  $(recovery_resources_private) -type f)
-ifdef TARGET_RECOVERY_FSTAB
-recovery_fstab := $(TARGET_RECOVERY_FSTAB)
+ifneq ($(TARGET_RECOVERY_DEVICE_DIRS),)
+recovery_root_private := $(strip \
+$(foreach d,$(TARGET_RECOVERY_DEVICE_DIRS), $(wildcard $(d)/recovery/root)))
+else
+recovery_root_private := $(strip $(wildcard $(TARGET_DEVICE_DIR)/recovery/root))
+endif
+recovery_resource_deps := $(shell find $(recovery_resources_common) $(recovery_resources_extra) \
+$(recovery_resources_private) $(recovery_root_private) -type f)
+ifneq ($(TARGET_RECOVERY_FSTAB),)
+recovery_fstab := $(strip $(wildcard $(TARGET_RECOVERY_FSTAB)))
 else
 recovery_fstab := $(strip $(wildcard $(TARGET_DEVICE_DIR)/recovery.fstab))
 endif
 # Named '.dat' so we don't attempt to use imgdiff for patching it.
 RECOVERY_RESOURCE_ZIP := $(TARGET_OUT)/etc/recovery-resource.dat
-
 ifeq ($(recovery_resources_private),)
-  $(info No private recovery resources for TARGET_DEVICE $(TARGET_DEVICE))
+$(info No private recovery resources for TARGET_DEVICE $(TARGET_DEVICE))
 endif
-
 ifeq ($(recovery_fstab),)
-  $(info No recovery.fstab for TARGET_DEVICE $(TARGET_DEVICE))
+$(info No recovery.fstab for TARGET_DEVICE $(TARGET_DEVICE))
 endif
-
 INTERNAL_RECOVERYIMAGE_ARGS := \
-	$(addprefix --second ,$(INSTALLED_2NDBOOTLOADER_TARGET)) \
-	--kernel $(recovery_kernel) \
-	--ramdisk $(recovery_ramdisk)
-
+$(addprefix --second ,$(INSTALLED_2NDBOOTLOADER_TARGET)) \
+--kernel $(recovery_kernel) \
+--ramdisk $(recovery_ramdisk)
 # Assumes this has already been stripped
 ifdef BOARD_KERNEL_CMDLINE
-  INTERNAL_RECOVERYIMAGE_ARGS += --cmdline "$(BOARD_KERNEL_CMDLINE)"
+INTERNAL_RECOVERYIMAGE_ARGS += --cmdline "$(BOARD_KERNEL_CMDLINE)"
 endif
 ifdef BOARD_KERNEL_BASE
-  INTERNAL_RECOVERYIMAGE_ARGS += --base $(BOARD_KERNEL_BASE)
+INTERNAL_RECOVERYIMAGE_ARGS += --base $(BOARD_KERNEL_BASE)
 endif
 BOARD_KERNEL_PAGESIZE := $(strip $(BOARD_KERNEL_PAGESIZE))
 ifdef BOARD_KERNEL_PAGESIZE
-  INTERNAL_RECOVERYIMAGE_ARGS += --pagesize $(BOARD_KERNEL_PAGESIZE)
+INTERNAL_RECOVERYIMAGE_ARGS += --pagesize $(BOARD_KERNEL_PAGESIZE)
 endif
-ifeq ($(strip $(BOARD_KERNEL_SEPARATED_DT)),true)
-  INTERNAL_RECOVERYIMAGE_ARGS += --dt $(INSTALLED_DTIMAGE_TARGET)
-  RECOVERYIMAGE_EXTRA_DEPS    := $(INSTALLED_DTIMAGE_TARGET)
+ifneq ($(BOARD_FORCE_RAMDISK_ADDRESS),)
+INTERNAL_RECOVERYIMAGE_ARGS += --ramdiskaddr $(BOARD_FORCE_RAMDISK_ADDRESS)
 endif
 
 # Keys authorized to sign OTA packages this build will accept.  The
