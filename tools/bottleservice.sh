@@ -132,7 +132,9 @@ champagne()
             fi
             echo " "
             echo " re-syncing!"
-            reposync -c -f -j32
+            if [[ $bottle_patience" != 0 ]]; then
+                reposync -c -f -j32
+            fi
             echo " "
             echo " re-sync complete"
         fi
