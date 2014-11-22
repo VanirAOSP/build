@@ -132,7 +132,11 @@ champagne()
             fi
             echo " "
             echo " re-syncing!"
-            reposync -c -f -j32
+            import os
+            do_sync='os.environ.get("bottle_patience")'
+            if [[ $do_sync != 0 ]]; then
+                reposync -c -f -j32
+            fi
             echo " "
             echo " re-sync complete"
         fi
