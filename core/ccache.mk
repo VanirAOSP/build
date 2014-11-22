@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #
 # Copyright (C) 2015 The Android Open Source Project
 #
@@ -55,3 +56,7 @@ ifneq ($(USE_CCACHE),)
     ccache =
   endif
 endif
+=======
+#a bit of a hack
+$(info $(shell build/tools/ccache_version_check.sh))
+>>>>>>> 7fa7369... Use bleeding-edge ccache -- always

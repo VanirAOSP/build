@@ -1820,18 +1820,6 @@ function makerecipe() {
 
 
 function mka() {
-<<<<<<< HEAD
-=======
-T=$(gettop)
-CWD=$(pwd)
-croot
-if [ ! "$T" ]; then
-    echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
-    return
-fi
-export TARGET_SIMULATOR=false
-export BUILD_TINY_ANDROID=
->>>>>>> d08ddaa... Kill legacy helper script crap from ages ago
 retval=0
     case `uname -s` in
         Darwin)
@@ -2142,4 +2130,4 @@ check_bash_version && {
 export ANDROID_BUILD_TOP=$(gettop)
 addcompletions
 
-export PATH=$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts
+export PATH=$ANDROID_BUILD_TOP/ccache:$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts
