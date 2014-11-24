@@ -1825,6 +1825,7 @@ endif
 	@# build them.
 	$(hide) mkdir -p $(zip_root)/META
 	$(hide) $(ACP) $(APKCERTS_FILE) $(zip_root)/META/apkcerts.txt
+	$(ANDROID_BUILD_TOP)/vendor/vanir/tools/earlysquisher $(zip_root)/SYSTEM
 	$(hide) if test -e $(tool_extensions)/releasetools.py; then $(ACP) $(tool_extensions)/releasetools.py $(zip_root)/META/; fi
 	$(hide) echo "$(PRODUCT_OTA_PUBLIC_KEYS)" > $(zip_root)/META/otakeys.txt
 	$(hide) $(ACP) $(SELINUX_FC) $(zip_root)/META/file_contexts.bin
