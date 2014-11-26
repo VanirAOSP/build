@@ -152,7 +152,11 @@ include $(BUILD_SYSTEM)/envsetup.mk
 
 # General entries for project pathmap.  Any entries listed here should
 # be device and hardware independent.
+ifneq ($(RECOVERY_VARIANT),)
+$(call project-set-path-variant,recovery,RECOVERY_VARIANT,bootable/recovery-$(RECOVERY_VARIANT))
+else
 $(call project-set-path-variant,recovery,RECOVERY_VARIANT,bootable/recovery)
+endif
 
 -include vendor/extra/BoardConfigExtra.mk
 # The build system exposes several variables for where to find the kernel
