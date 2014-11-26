@@ -614,12 +614,18 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   if HasVendorPartition(input_zip):
     system_progress -= 0.1
 
+#this part edited to stop trying to remount /data when installing the ROM
   if block_based:
     common.ZipWriteStr(output_zip, "system/bin/otasigcheck.sh",
                    ""+input_zip.read("SYSTEM/bin/otasigcheck.sh"))
+
+  script.AppendExtra("it is_mounted(\"/data\") then")
+  script.ValidateSignatures("data")
+  script.AppendExtra("else")
   script.Mount("/data")
   script.ValidateSignatures("data")
   script.Unmount("/data")
+  script.AppendExtra("endif;")
 
   if "selinux_fc" in OPTIONS.info_dict:
     WritePolicyConfig(OPTIONS.info_dict["selinux_fc"], output_zip)
@@ -655,8 +661,8 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
       common.ZipWriteStr(output_zip, "recovery/" + fn, data)
       system_items.Get("system/" + fn, dir=False)
 
-    common.MakeRecoveryPatch(OPTIONS.input_tmp, output_sink,
-                             recovery_img, boot_img)
+#   common.MakeRecoveryPatch(OPTIONS.input_tmp, output_sink,
+#                            recovery_img, boot_img)
 
     system_items.GetMetadata(input_zip)
     system_items.Get("system").SetPermissions(script)
