@@ -91,12 +91,24 @@ endif
 CLANG_CONFIG_EXTRA_HOST_C_INCLUDES := $(LLVM_PREBUILTS_HEADER_PATH)
 CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES := $(LLVM_PREBUILTS_HEADER_PATH) $(TARGET_OUT_HEADERS)/clang
 
+ifeq ($(BONE_STOCK),true)
+MAXIMUM_OVERDRIVE := false
+endif
+
+ifneq ($(MAXIMUM_OVERDRIVE),true)
+# GCC uses clang's address sanitizer to detect memory errors in the program through debugging tools like gdb. They do this
+# using an extra instrumentation module llvm pass during compilation and a runtime library that replaces the malloc function.
+#
+# Output code performance can be effected if a "hot" function that is known to speed up the code gets flagged during the extra
+# compiler pass but the primary benefit of turning it off is potentially speeding up your build time.
+
 # Address sanitizer clang config
 ADDRESS_SANITIZER_RUNTIME_LIBRARY := libclang_rt.asan_$(TARGET_ARCH)_android
 ADDRESS_SANITIZER_CONFIG_EXTRA_CFLAGS := -fsanitize=address -fno-omit-frame-pointer
 ADDRESS_SANITIZER_CONFIG_EXTRA_LDFLAGS := -Wl,-u,__asan_preinit
 ADDRESS_SANITIZER_CONFIG_EXTRA_SHARED_LIBRARIES := libdl $(ADDRESS_SANITIZER_RUNTIME_LIBRARY)
 ADDRESS_SANITIZER_CONFIG_EXTRA_STATIC_LIBRARIES := libasan
+endif
 
 # This allows us to use the superset of functionality that compiler-rt
 # provides to Clang (for supporting features like -ftrapv).

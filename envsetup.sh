@@ -22,6 +22,7 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - aospremote: Add git remote for matching AOSP repository
 - cafremote: Add git remote for matching CodeAurora repository.
 - mka:      Builds using SCHED_BATCH on all processors
+- mkdirty same as mka, without clang address sanitizer. Might compile faster... but increases likelihood of your phone needing to get tested at the free clinic.
 - reposync: Parallel repo sync using ionice and SCHED_BATCH
 - repopick: Utility to fetch changes from Gerrit.
 - installboot: Installs a boot.img to the connected device.
@@ -1707,7 +1708,6 @@ function makerecipe() {
   '
 }
 
-
 function mka() {
 T=$(gettop)
 CWD=$(pwd)
@@ -1747,6 +1747,12 @@ if [ ! $VANIR_DISABLE_BUILD_COMPLETION_NOTIFICATIONS ]; then
 fi
 cd "$CWD"
 return $retval
+}
+
+function mkdirty() {
+  # possibly faster compile, with possible issues that wouldn't otherwise exist... possibly
+  MAXIMUM_OVERDRIVE=true mka "$@"
+  return $?
 }
 
 smash() {

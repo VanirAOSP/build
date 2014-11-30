@@ -15,6 +15,7 @@ build command list:
 - mgrep:     Greps on all local .mk or "make" files.
 - godir:     Go to the directory containing a file.
 - mka:       Builds using SCHED_BATCH on all processors. targets work in any subdirectory.
+- mkdirty same as mka, without clang address sanitizer. Might compile faster... but increases likelihood of your phone needing to get tested at the free clinic.
 - mka bacon: Primary build command.  builds ota and runs squisher/optimizations using SCHED_BATCH on all processors (-j8).
 - mkaflash:  Same as mka in the top of the tree with the addition of flashing the rom, gapps, and addon zips.
 - mkapush:   Same as mka with the addition of adb pushing to the device.
@@ -74,7 +75,8 @@ lunch
 _lunch 
 m
 mgrep
-mka 
+mka
+mkadirty
 mkapush 
 mm 
 mmm 
