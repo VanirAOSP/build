@@ -97,6 +97,13 @@ else
   endif
 endif
 
+# VANIR_BINARY_OPTIONS is set in $(BUILD_SYSTEM)/vanir_config.mk and should
+# only be appended to target modules since host files don't need optimizations
+ifndef LOCAL_IS_HOST_MODULE
+LOCAL_CFLAGS += $(call cc-option,$(VANIR_BINARY_OPTIONS))
+LOCAL_CPPFLAGS += $(call cc-option,$(VANIR_BINARY_OPTIONS))
+endif
+
 # The following LOCAL_ variables will be modified in this file.
 # Because the same LOCAL_ variables may be used to define modules for both 1st arch and 2nd arch,
 # we can't modify them in place.
