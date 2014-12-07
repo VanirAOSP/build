@@ -224,6 +224,9 @@ ifeq ($(TARGET_CPU_ABI),)
 endif
 TARGET_CPU_ABI2 := $(strip $(TARGET_CPU_ABI2))
 
+# Include vanir variables
+include $(BUILD_SYSTEM)/vanir_config.mk
+
 # $(1): os/arch
 define select-android-config-h
 build/core/combo/include/arch/$(1)/AndroidConfig.h
