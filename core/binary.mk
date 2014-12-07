@@ -97,6 +97,18 @@ else
   endif
 endif
 
+# VANIR_BINARY_OPTIONS is set in $(BUILD_SYSTEM)/vanir_config.mk
+ifdef LOCAL_CFLAGS
+  LOCAL_CFLAGS += $(call cc-option,$(VANIR_BINARY_OPTIONS))
+else
+  LOCAL_CFLAGS := $(call cc-option,$(VANIR_BINARY_OPTIONS))
+endif
+ifdef LOCAL_CPPFLAGS
+  LOCAL_CPPFLAGS += $(call cc-option,$(VANIR_BINARY_OPTIONS))
+else
+  LOCAL_CPPFLAGS := $(call cc-option,$(VANIR_BINARY_OPTIONS))
+endif
+
 # The following LOCAL_ variables will be modified in this file.
 # Because the same LOCAL_ variables may be used to define modules for both 1st arch and 2nd arch,
 # we can't modify them in place.
