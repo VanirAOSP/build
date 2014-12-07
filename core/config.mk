@@ -576,6 +576,9 @@ endif
 # define clang/llvm tools and global flags
 include $(BUILD_SYSTEM)/clang/config.mk
 
+# Include vanir variables
+include $(BUILD_SYSTEM)/vanir_config.mk
+
 # ###############################################################
 # Collect a list of the SDK versions that we could compile against
 # For use with the LOCAL_SDK_VERSION variable for include $(BUILD_PACKAGE)
