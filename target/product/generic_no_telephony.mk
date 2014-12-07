@@ -48,8 +48,10 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     local_time.default
 
+ifeq ($(AUDIO_EFFECTS_OVERRIDE),)
 PRODUCT_COPY_FILES := \
         frameworks/av/media/libeffects/data/audio_effects.conf:system/etc/audio_effects.conf
+endif
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.carrier=unknown
