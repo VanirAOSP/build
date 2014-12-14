@@ -67,16 +67,20 @@ $(combo_2nd_arch_prefix)TARGET_STRIP := $($(combo_2nd_arch_prefix)TARGET_TOOLS_P
 
 $(combo_2nd_arch_prefix)TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
-$(combo_2nd_arch_prefix)TARGET_arm_CFLAGS :=    -O2 \
+$(combo_2nd_arch_prefix)TARGET_arm_CFLAGS :=    $(VANIR_ARM_OPT_LEVEL) \
                         -fomit-frame-pointer \
                         -fstrict-aliasing    \
-                        -funswitch-loops $(VANIR_ARM_FSTRICT_OPTIONS)
+                        -funswitch-loops \
+                        $(VANIR_ARM_FSTRICT_OPTIONS) \
+                        $(VANIR_TARGET_ARM_FLAGS)
 
 # Modules can choose to compile some source as thumb.
 $(combo_2nd_arch_prefix)TARGET_thumb_CFLAGS :=  -mthumb \
-                        -Os \
+                        $(VANIR_THUMB_OPT_LEVEL) \
                         -fomit-frame-pointer \
-                        -fno-strict-aliasing $(VANIR_THUMB_FSTRICT_OPTIONS)
+                        -fno-strict-aliasing \
+                        $(VANIR_FSTRICT_OPTIONS) \
+                        $(VANIR_TARGET_THUMB_FLAGS)
 
 # Set FORCE_ARM_DEBUGGING to "true" in your buildspec.mk
 # or in your environment to force a full arm build, even for
@@ -108,7 +112,8 @@ $(combo_2nd_arch_prefix)TARGET_GLOBAL_CFLAGS += \
 			-fno-canonical-system-headers \
 			$(arch_variant_cflags) \
 			-include $(android_config_h) \
-			-I $(dir $(android_config_h))
+			-I $(dir $(android_config_h)) \
+			$(VANIR_FSTRICT_OPTIONS)
 
 # The "-Wunused-but-set-variable" option often breaks projects that enable
 # "-Wall -Werror" due to a commom idiom "ALOGV(mesg)" where ALOGV is turned
@@ -145,7 +150,7 @@ $(combo_2nd_arch_prefix)TARGET_GLOBAL_CPPFLAGS += -fvisibility-inlines-hidden
 # More flags/options can be added here
 $(combo_2nd_arch_prefix)TARGET_RELEASE_CFLAGS := \
 			-DNDEBUG \
-			-g \
+			-g0 \
 			-Wstrict-aliasing=2 \
 			-fgcse-after-reload \
 			-frerun-cse-after-loop \
