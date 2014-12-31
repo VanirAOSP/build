@@ -26,7 +26,7 @@ CLANG_CONFIG_arm_UNKNOWN_CFLAGS := \
 
 ifeq ($(TARGET_CPU_VARIANT),krait)
   define subst-clang-incompatible-arm-flags
-    $(subst -mcpu=cortex-a15,-mcpu=krait2,\
+    $(subst -mcpu=cortex-a15,-mcpu=krait,\
     $(1))
   endef
 else
