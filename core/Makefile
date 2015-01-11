@@ -1676,6 +1676,18 @@ else
 	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher $(SQUISHER_ARGS)
 endif
 
+###################################################################
+#   setting a rule for accepting kernel as a variable with mka
+.PHONY: kernel
+kernel:
+	clear
+	@echo ""
+	@echo "Running kernel tool in $(TOPDIR)build/tools/makekernel.sh"
+	@echo "Building kernel for target device: $(TARGET_DEVICE)..."
+	@echo ""
+	$(hide) . $(TOPDIR)build/tools/makekernel.sh "$(TARGET_DEVICE$)" "$(KERNEL_TOOLCHAIN)" "$(TARGET_KERNEL_SOURCE)" "$(TARGET_KERNEL_CONFIG)"
+###################################################################
+
 endif    # recovery_fstab is defined
 endif    # TARGET_NO_KERNEL != true
 endif    # TARGET_DEVICE != generic*
