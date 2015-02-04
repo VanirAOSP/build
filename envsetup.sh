@@ -1817,7 +1817,7 @@ export BUILD_TINY_ANDROID=
 local MAKECMD=""
 case `uname -s` in
     Darwin)
-        if [ $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
+        if [ ! $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
             local threads=`sysctl hw.ncpu|cut -d" " -f2`
             local load=`expr $threads \* 2`
             VANIR_PARALLEL_JOBS="-j$load"
