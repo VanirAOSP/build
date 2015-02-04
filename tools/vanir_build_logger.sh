@@ -28,7 +28,7 @@ end_time=$(date +"%s")
 start_time=`cat ${ANDROID_BUILD_TOP}/.lastbuildstart`
 GIT_NAME=`git config --global user.name`
 HOSTNAME=`hostname`
-PRODUCT=`cat $BUILD_PROP | grep ro.product.name | sed 's/.*=//g'`
+PRODUCT=$TARGET_PRODUCT
 LUNCHTYPE=`cat $BUILD_PROP | grep ro.build.type | sed 's/.*=//g'`
 tdiff=$(($end_time-$start_time))
 BUILD_SECONDS=$((tdiff))
