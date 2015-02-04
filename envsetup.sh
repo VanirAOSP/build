@@ -1815,21 +1815,25 @@ fi
 export TARGET_SIMULATOR=false
 export BUILD_TINY_ANDROID=
 local MAKECMD=""
-case `uname -s` in
-    Darwin)
-        if [ $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
-            local threads=`sysctl hw.ncpu|cut -d" " -f2`
-            local load=`expr $threads \* 2`
-            MAKECMD="`command -pv make` -j$load"
-        fi
-        ;;
-    *)
-        if [ ! $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
-            local cores=`nproc --all`
-            MAKECMD="schedtool -B -n 1 -e ionice -n 1 `command -pv make` -j$cores"
-        fi
-        ;;
-esac
+    case `uname -s` in
+        Darwin)
+            if [ $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
+                local threads=`sysctl hw.ncpu|cut -d" " -f2`
+                local load=`expr $threads \* 2`
+                VANIR_PARALLEL_JOBS="-j$load"
+            fi
+            time make $VANIR_PARALLEL_JOBS "$@"
+            MAKECMD=$?
+            ;;
+        *)
+            if [ ! $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
+                local cores=`nproc --all`
+                VANIR_PARALLEL_JOBS="-j$cores"
+            fi
+            time schedtool -B -n 1 -e ionice -n 1 make $VANIR_PARALLEL_JOBS "$@"
+            MAKECMD=$?
+            ;;
+    esac
 export start_time=$(date +"%s")
 echo $start_time > ${ANDROID_BUILD_TOP}/.lastbuildstart
 $MAKECMD "$@"
