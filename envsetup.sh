@@ -1820,14 +1820,16 @@ case `uname -s` in
         if [ $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
             local threads=`sysctl hw.ncpu|cut -d" " -f2`
             local load=`expr $threads \* 2`
-            MAKECMD="`command -pv make` -j$load"
+            VANIR_PARALLEL_JOBS="-j$load"
         fi
+        MAKECMD="`command -pv make` $VANIR_PARALLEL_JOBS"
         ;;
     *)
         if [ ! $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
             local cores=`nproc --all`
-            MAKECMD="schedtool -B -n 1 -e ionice -n 1 `command -pv make` -j$cores"
+            VANIR_PARALLEL_JOBS="-j$cores"
         fi
+        MAKECMD="schedtool -B -n 1 -e ionice -n 1 `command -pv make` $VANIR_PARALLEL_JOBS"
         ;;
 esac
 export start_time=$(date +"%s")
