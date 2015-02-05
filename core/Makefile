@@ -1676,8 +1676,7 @@ otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
 
 bacon:
 	@echo bacon >> $(ANDROID_BUILD_TOP)/.lastbuild
-	@$(MAKE) bacon_internal || ( RET=$$? && rm -f $(ANDROID_BUILD_TOP)/.lastbuild && exit $(RET) )
-	@$(ANDROID_BUILD_TOP)/build/tools/vanir_build_logger.sh $(PRODUCT_OUT)
+	@$(MAKE) bacon_internal
 
 bacon_internal: otapackage
 ifneq ($(TARGET_CUSTOM_RELEASETOOL),)
@@ -1687,6 +1686,7 @@ else
 	@echo -e ${CL_YLW}"Running releasetool..."${CL_RST}
 	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher $(SQUISHER_ARGS)
 endif
+	$(ANDROID_BUILD_TOP)/build/tools/vanir_build_logger.sh $(PRODUCT_OUT)
 
 endif    # recovery_fstab is defined
 endif    # TARGET_NO_KERNEL != true
