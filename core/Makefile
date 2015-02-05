@@ -1849,9 +1849,14 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
 	   $(if $(OEM_OTA_CONFIG), -o $(OEM_OTA_CONFIG)) \
 	   $(BUILT_TARGET_FILES_PACKAGE) $@
 
-.PHONY: otapackage bacon
+.PHONY: otapackage bacon bacon_internal
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
-bacon: otapackage
+
+bacon:
+	@echo bacon >> $(ANDROID_BUILD_TOP)/.lastbuild
+	@$(MAKE) bacon_internal
+
+bacon_internal: otapackage
 ifneq ($(TARGET_CUSTOM_RELEASETOOL),)
 	@echo -e ${CL_YLW}"Running custom releasetool..."${CL_RST}
 	$(hide) $(TARGET_CUSTOM_RELEASETOOL)
@@ -1859,6 +1864,7 @@ else
 	@echo -e ${CL_YLW}"Running releasetool..."${CL_RST}
 	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher $(SQUISHER_ARGS)
 endif
+	$(ANDROID_BUILD_TOP)/build/tools/vanir_build_logger.sh $(PRODUCT_OUT)
 
 # -----------------------------------------------------------------
 # The factory package
