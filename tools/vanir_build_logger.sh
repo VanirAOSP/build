@@ -50,7 +50,7 @@ curl -XPOST \
     -d hostname=$HOSTNAME \
     -d product=$PRODUCT \
     -d lunchtype=$LUNCHTYPE \
-    -d precleantype=$(get_preclean_type) \
+    -d preclean_type=$(get_preclean_type) \
     -d build_seconds=$BUILD_SECONDS \
     --data-urlencode disk_info="${DISK_INFO}" \
     --data-urlencode mem_info="${MEM_INFO}" \
