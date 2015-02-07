@@ -56,7 +56,7 @@ curl -XPOST \
     --data-urlencode mem_info="${MEM_INFO}" \
     --data-urlencode cpu_info="${CPU_INFO}" \
     --data-urlencode ccache_status="${CCACHE_STATUS}" \
-    http://www.vanir.co/log_build.php 2> /dev/null
+    http://www.vanir.co/log_build.php 2> /dev/null && echo
 
 
 exit 0
