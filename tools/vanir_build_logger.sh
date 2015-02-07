@@ -21,7 +21,7 @@ check_build_validity()
     return 1
 }
 
-if ! check_build_validity; then exit 0; fi
+if [ $IM_A_SACK_OF_CRAP ] || ! check_build_validity; then exit 0; fi
 
 BUILD_PROP=$1/system/build.prop
 end_time=$(date +"%s")
