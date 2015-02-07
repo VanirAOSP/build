@@ -26,7 +26,7 @@ if [ $IM_A_SACK_OF_CRAP ] || ! check_build_validity; then exit 0; fi
 BUILD_PROP=$1/system/build.prop
 end_time=$(date +"%s")
 start_time=`cat ${ANDROID_BUILD_TOP}/.lastbuildstart`
-VERSION=0
+VERSION=1
 GIT_NAME=`git config --global user.name`
 HOSTNAME=`hostname`
 PRODUCT=$TARGET_PRODUCT
@@ -37,6 +37,11 @@ SUBMISSION_STAMP=`date +"%F %T"`
 DISK_INFO=`df -h`
 MEM_INFO=`cat /proc/meminfo`
 CPU_INFO=`cat /proc/cpuinfo`
+if [ $USE_CCACHE ]; then
+    CCACHE_STATUS="`${ANDROID_BUILD_TOP}/ccache/ccache -s`"
+else
+    CCACHE_STATUS="DISABLED"
+fi
 
 curl -XPOST \
     -d version=$VERSION \
@@ -50,6 +55,8 @@ curl -XPOST \
     --data-urlencode disk_info="${DISK_INFO}" \
     --data-urlencode mem_info="${MEM_INFO}" \
     --data-urlencode cpu_info="${CPU_INFO}" \
+    --data-urlencode ccache_status="${CCACHE_STATUS}" \
     http://www.vanir.co/log_build.php 2> /dev/null
+
 
 exit 0
