@@ -26,6 +26,7 @@ if ! check_build_validity; then exit 0; fi
 BUILD_PROP=$1/system/build.prop
 end_time=$(date +"%s")
 start_time=`cat ${ANDROID_BUILD_TOP}/.lastbuildstart`
+VERSION=0
 GIT_NAME=`git config --global user.name`
 HOSTNAME=`hostname`
 PRODUCT=$TARGET_PRODUCT
@@ -36,7 +37,19 @@ SUBMISSION_STAMP=`date +"%F %T"`
 DISK_INFO=`df -h`
 MEM_INFO=`cat /proc/meminfo`
 CPU_INFO=`cat /proc/cpuinfo`
-SQLSTUFF="mysql -u vanirbuilder --password=vanirwillpumpyouup -h mysql.vanir.co vanirbuildlog -e "
-$SQLSTUFF "CREATE TABLE IF NOT EXISTS Builds ( ID int NOT NULL AUTO_INCREMENT PRIMARY KEY, SUBMISSION_STAMP timestamp NOT NULL, HOSTNAME varchar(255), GIT_NAME varchar(255), PRECLEAN_TYPE varchar(255), PRODUCT varchar(255), LUNCHTYPE varchar(255), BUILD_SECONDS int NOT NULL, DISK_INFO varchar(2048), MEM_INFO varchar(2048), CPU_INFO varchar(2048) );"
-$SQLSTUFF "INSERT INTO Builds ( SUBMISSION_STAMP, HOSTNAME, GIT_NAME, PRECLEAN_TYPE, PRODUCT, LUNCHTYPE, BUILD_SECONDS, DISK_INFO, MEM_INFO, CPU_INFO ) VALUE ( '${SUBMISSION_STAMP}', '${HOSTNAME}', '${GIT_NAME}', '$(get_preclean_type)', '${PRODUCT}', '${LUNCHTYPE}', '${BUILD_SECONDS}', '${DISK_INFO}', '${MEM_INFO}', '${CPU_INFO}' );"
+
+curl -XPOST \
+    -d version=$VERSION \
+    -d stamp=$SUBMISSION_STAMP \
+    -d git_name=$GIT_NAME \
+    -d hostname=$HOSTNAME \
+    -d product=$PRODUCT \
+    -d lunchtype=$LUNCHTYPE \
+    -d precleantype=$(get_preclean_type) \
+    -d build_seconds=$BUILD_SECONDS \
+    --data-urlencode disk_info="${DISK_INFO}" \
+    --data-urlencode mem_info="${MEM_INFO}" \
+    --data-urlencode cpu_info="${CPU_INFO}" \
+    http://www.vanir.co/log_build.php 2> /dev/null
+
 exit 0
