@@ -45,7 +45,7 @@ fi
 
 curl -XPOST \
     -d version=$VERSION \
-    -d stamp=$SUBMISSION_STAMP \
+    --data-urlencode stamp="$SUBMISSION_STAMP" \
     -d git_name=$GIT_NAME \
     -d hostname=$HOSTNAME \
     -d product=$PRODUCT \
