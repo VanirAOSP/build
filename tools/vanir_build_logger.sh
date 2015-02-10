@@ -39,8 +39,10 @@ MEM_INFO=`cat /proc/meminfo`
 CPU_INFO=`cat /proc/cpuinfo`
 if [ $USE_CCACHE ]; then
     CCACHE_STATUS="`${ANDROID_BUILD_TOP}/ccache/ccache -s`"
+    CCACHE_SIZE="`${ANDROID_BUILD_TOP}/ccache/ccache -s | awk 'NR==12 { print $3, $4 }'`"
+    CCACHE_ENABLED="true"
 else
-    CCACHE_STATUS="DISABLED"
+    CCACHE_ENABLED="false"
 fi
 
 curl -XPOST \
@@ -52,6 +54,8 @@ curl -XPOST \
     -d lunchtype=$LUNCHTYPE \
     -d preclean_type=$(get_preclean_type) \
     -d build_seconds=$BUILD_SECONDS \
+    -d ccache_enabled="${CCACHE_ENABLED}" \
+    -d ccache_size="${CCACHE_SIZE}" \
     --data-urlencode disk_info="${DISK_INFO}" \
     --data-urlencode mem_info="${MEM_INFO}" \
     --data-urlencode cpu_info="${CPU_INFO}" \
