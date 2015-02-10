@@ -38,7 +38,9 @@ DISK_INFO=`df -h`
 MEM_INFO=`cat /proc/meminfo`
 CPU_INFO=`cat /proc/cpuinfo`
 if [ $USE_CCACHE ]; then
-    CCACHE_STATUS="`${ANDROID_BUILD_TOP}/ccache/ccache -s`"
+    CCACHE_STATUS="ENABLED"
+    CCACHE_SIZE="`${ANDROID_BUILD_TOP}/ccache/ccache -s | awk 'NR==12 { print $3, $4 }'`"
+    CCACHE_FULL="`${ANDROID_BUILD_TOP}/ccache/ccache -s`"
 else
     CCACHE_STATUS="DISABLED"
 fi
@@ -52,10 +54,12 @@ curl -XPOST \
     -d lunchtype=$LUNCHTYPE \
     -d preclean_type=$(get_preclean_type) \
     -d build_seconds=$BUILD_SECONDS \
+    -d ccache_status="${CCACHE_STATUS}" \
+    -d ccache_size="${CCACHE_SIZE}" \
     --data-urlencode disk_info="${DISK_INFO}" \
     --data-urlencode mem_info="${MEM_INFO}" \
     --data-urlencode cpu_info="${CPU_INFO}" \
-    --data-urlencode ccache_status="${CCACHE_STATUS}" \
+    --data-urlencode ccache_full="${CCACHE_FULL}" \
     http://www.vanir.co/log_build.php 2> /dev/null && echo
 
 
