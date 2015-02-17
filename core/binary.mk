@@ -97,8 +97,7 @@ else
   endif
 endif
 
-# USE_BINARY_FLAGS is set in $(BUILD_SYSTEM)/vanir_config.mk.
-# To be used used as a way to test global build flags persistently.
+# Set the optional flags listed in $(BUILD_SYSTEM)/vanir_config.mk.
 ifndef LOCAL_IS_HOST_MODULE
   ifdef ($(USE_BINARY_FLAGS),true)
     LOCAL_CFLAGS += $(call cc-option,$(VANIR_BINARY_CFLAG_OPTIONS))
@@ -113,6 +112,11 @@ ifndef LOCAL_IS_HOST_MODULE
       LOCAL_CONLYFLAGS += -fno-strict-aliasing
       LOCAL_CPPFLAGS += -fno-strict-aliasing
       LOCAL_CFLAGS += -fno-strict-aliasing
+    endif
+
+    # these libs have fstrict-aliasing set locally but contain violations lolz
+    ifeq ($(LOCAL_MODULE),$(filter libpdfium libpdfiumcore libOmxVdec libOmxVenc,$(LOCAL_MODULE)))
+      LOCAL_CFLAGS += -Wno-error=strict-aliasing
     endif
   endif
 
