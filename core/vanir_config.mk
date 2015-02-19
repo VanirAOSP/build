@@ -105,8 +105,7 @@ ifeq ($(USE_LTO),true)
 
   VANIR_LTO_FLAGS := \
     -flto \
-    -fuse-linker-plugin \
-    $(DEBUG_SYMBOL_FLAGS)
+    -fuse-linker-plugin
 endif
 
 # fstrict-aliasing. Thumb is defaulted off for AOSP. Use VANIR_SPECIAL_CASE_MODULES to
