@@ -50,13 +50,6 @@ VANIR_ARM_OPT_LEVEL         ?= -O2
 VANIR_THUMB_OPT_LEVEL       ?= -Os
 FSTRICT_ALIASING_WARNING_LEVEL ?= 2
 
-# Set some defaults in case they are missing
-ifeq ($(FSTRICT_ALIASING_WARNING_LEVEL),)
-  VANIR_ARM_OPT_LEVEL         ?= -O2
-  VANIR_THUMB_OPT_LEVEL       ?= -Os
-  FSTRICT_ALIASING_WARNING_LEVEL := 2
-endif
-
 # Respect BONE_STOCK: strictly enforce AOSP defaults.
 ifeq ($(BONE_STOCK),true)
   MAXIUMUM_OVERDRIVE      :=
@@ -107,7 +100,6 @@ ifeq ($(USE_LTO),true)
     dalvikvm64 \
     libart-gtest \
     libegl \
-    egl.cfg \
     libGLESv2 \
     libGLESv1_CM
 
