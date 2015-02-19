@@ -123,7 +123,7 @@ champagne()
                 cat .repo/local_manifests/bottleservice.xml | grep project | sed 's/.*\/>//g' | sed 's/<!--//g' | sed 's/-->//g' | while read line ; do
                   for x in $line; do
                     for choice in ${LUNCH_MENU_CHOICES[@]}; do
-                        if [[ $choice == *$x* ]] && [[ $choice == vanir_* ]]; then
+                        if [[ $choice == *$x* ]] && [[ $choice == vanir_*-userdebug ]]; then
                             lunch $choice && echo "RE-LUNCHED $choice"&& break
                         fi
                     done
