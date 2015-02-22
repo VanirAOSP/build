@@ -199,13 +199,6 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
 FSTRICT_FLAGS := \
         -Wstrict-aliasing=$(FSTRICT_ALIASING_WARNING_LEVEL) \
         -Werror=strict-aliasing
-
-VANIR_THUMB_FISTRICT_FLAGS := \
-        -fstrict-aliasing \
-        $(FSTRICT_FLAGS)
-else
-VANIR_THUMB_FSTRICT_FLAGS := \
-        -fno-strict-aliasing
 endif
 
 # Additional GCC-specific arm cflags
