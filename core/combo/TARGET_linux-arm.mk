@@ -71,7 +71,7 @@ $(combo_2nd_arch_prefix)TARGET_arm_CFLAGS :=    $(VANIR_ARM_OPT_LEVEL) \
                         -fomit-frame-pointer \
                         -fstrict-aliasing    \
                         -funswitch-loops \
-                        $(VANIR_ARM_FSTRICT_OPTIONS) \
+                        $(VANIR_FSTRICT_OPTIONS) \
                         $(VANIR_TARGET_ARM_FLAGS)
 
 # Modules can choose to compile some source as thumb.
