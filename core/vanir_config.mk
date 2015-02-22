@@ -196,10 +196,16 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
     libavutil \
     libswscale
 
-  FSTRICT_FLAGS := \
-          -fstrict-aliasing \
-          -Wstrict-aliasing=$(FSTRICT_ALIASING_WARNING_LEVEL) \
-          -Werror=strict-aliasing
+FSTRICT_FLAGS := \
+        -Wstrict-aliasing=$(FSTRICT_ALIASING_WARNING_LEVEL) \
+        -Werror=strict-aliasing
+
+VANIR_THUMB_FISTRICT_FLAGS := \
+        -fstrict-aliasing \
+        $(FSTRICT_FLAGS)
+else
+VANIR_THUMB_FSTRICT_FLAGS := \
+        -fno-strict-aliasing
 endif
 
 # Additional GCC-specific arm cflags

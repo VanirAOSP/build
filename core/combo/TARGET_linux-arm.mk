@@ -78,8 +78,7 @@ $(combo_2nd_arch_prefix)TARGET_arm_CFLAGS :=    $(VANIR_ARM_OPT_LEVEL) \
 $(combo_2nd_arch_prefix)TARGET_thumb_CFLAGS :=  -mthumb \
                         $(VANIR_THUMB_OPT_LEVEL) \
                         -fomit-frame-pointer \
-                        -fno-strict-aliasing \
-                        $(VANIR_FSTRICT_OPTIONS) \
+                        $(VANIR_THUMB_FSTRICT_FLAGS) \
                         $(VANIR_TARGET_THUMB_FLAGS)
 
 # Set FORCE_ARM_DEBUGGING to "true" in your buildspec.mk

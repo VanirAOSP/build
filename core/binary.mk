@@ -110,9 +110,9 @@ ifndef LOCAL_IS_HOST_MODULE
   # Workaround issues with fstrict-aliasing until properly fixed.
   ifeq ($(USE_FSTRICT_FLAGS),true)
     ifeq ($(LOCAL_MODULE),$(filter $(LOCAL_MODULE),$(VANIR_FNO_STRICT_ALIASING_MODULES)))
-      LOCAL_CONLYFLAGS += -fno-strict-aliasing
-      LOCAL_CPPFLAGS += -fno-strict-aliasing
-      LOCAL_CFLAGS += -fno-strict-aliasing
+      LOCAL_CONLYFLAGS += -Wno-error=strict-aliasing
+      LOCAL_CPPFLAGS += -Wno-error=strict-aliasing
+      LOCAL_CFLAGS += -Wno-error=strict-aliasing
     endif
   endif
 
