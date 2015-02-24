@@ -33,7 +33,7 @@
 # VANIR_ARM_OPT_LEVEL := -Ox for TARGET_arm_CFLAGS, preserved in binary.mk
 # VANIR_THUMB_OPT_LEVEL := -Ox for TARGET_thumb_CFLAGS, preserved in binary.mk
 # FSTRICT_ALIASING_WARNING_LEVEL := 0-3 for the level of intensity the compiler checks for violations.
-# USE_LTO := true builds the listed modules with the -flto flags
+# USE_LTO := true builds locally in modules with the -flto flags set in this config file
 
 # SET GLOBAL CONFIGURATION HERE:
 MAXIMUM_OVERDRIVE           ?= true
@@ -86,26 +86,10 @@ endif
 
 # Assign modules to build with link time optimizations using VANIR_LTO_MODULES.
 ifeq ($(USE_LTO),true)
-  VANIR_LTO_MODULES := \
-    core.art \
-    libart \
-    libart-compiler \
-    libartd \
-    libartd-compiler \
-    libart-disassembler \
-    libartd-disassembler \
-    libsigchain \
-    dalvikvm \
-    dalvikvm32 \
-    dalvikvm64 \
-    libart-gtest \
-    libegl \
-    libGLESv2 \
-    libGLESv1_CM
-
   VANIR_LTO_FLAGS := \
     -flto \
-    -fuse-linker-plugin
+    -fuse-ld=gold \
+    -flto-report
 endif
 
 # fstrict-aliasing. Thumb is defaulted off for AOSP. Use VANIR_SPECIAL_CASE_MODULES to

@@ -115,13 +115,6 @@ ifndef LOCAL_IS_HOST_MODULE
       LOCAL_CFLAGS += -Wno-error=strict-aliasing
     endif
   endif
-
-  ifeq ($(USE_LTO),true)
-    ifeq ($(LOCAL_MODULE),$(filter $(LOCAL_MODULE),$(VANIR_LTO_MODULES)))
-      LOCAL_CFLAGS += $(call cc-option,$(VANIR_LTO_FLAGS))
-      LOCAL_LDFLAGS += $(call cc-option,$(VANIR_LTO_FLAGS))
-    endif
-  endif
 endif
 
 # The following LOCAL_ variables will be modified in this file.
