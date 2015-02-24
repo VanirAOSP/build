@@ -38,7 +38,7 @@ DISK_INFO=`df -h`
 MEM_INFO=`cat /proc/meminfo`
 CPU_INFO=`cat /proc/cpuinfo`
 if [ $USE_CCACHE ]; then
-    CCACHE_STATUS="`${ANDROID_BUILD_TOP}/ccache/ccache -s`"
+    CCACHE_STATUS="`${ANDROID_BUILD_TOP}/ccache/ccache -s | sed "s/'//g" `"
     CCACHE_SIZE="`${ANDROID_BUILD_TOP}/ccache/ccache -s | grep -v 'max' | grep 'cache size' | awk '{ print $3, $4 }'`"
     CCACHE_ENABLED="true"
 else
