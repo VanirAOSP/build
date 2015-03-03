@@ -102,7 +102,6 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
     audio.primary.msm8960 \
     audio.primary.msm8974 \
     audio_policy.msm8610 \
-    AudioHardwareALSA \
     bluetooth.default \
     busybox \
     content_content_renderer_gyp \
@@ -120,11 +119,9 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
     libc_tzcode \
     libdiskconfig \
     libdownmix \
-    libfdlibm \
     libft2 \
     libfusetwrp \
     libguitwrp \
-    libjavacore \
     libjni_filtershow_filters \
     libjni_jpegstream \
     libjni_jpegutil \
@@ -149,7 +146,6 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
     libstlport_static \
     libtwrpmtp \
     libuclibcrpc \
-    libutils \
     libvariablespeed \
     libvisualizer \
     libwebviewchromium \
