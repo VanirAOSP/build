@@ -749,7 +749,10 @@ def Cleanup():
     if os.path.isdir(i):
       shutil.rmtree(i)
     else:
-      os.remove(i)
+      try:
+        os.remove(i)
+      except:
+        print "TempFile already removed or does not exist"
 
 
 class PasswordManager(object):
