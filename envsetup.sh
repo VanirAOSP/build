@@ -2038,8 +2038,6 @@ function makerecipe() {
   '
 }
 
-
-
 function mka() {
 T=$(gettop)
 CWD=$(pwd)
@@ -2197,7 +2195,7 @@ function dopush()
     adb remount &> /dev/null
 
     mkdir -p $OUT
-    $func $* | tee $OUT/.log
+    ($func $*|tee $OUT/.log;return ${PIPESTATUS[0]})
 
     # Install: <file>
     LOC="$(cat $OUT/.log | sed -r 's/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g' | grep '^Install: ' | cut -d ':' -f 2)"
@@ -2285,6 +2283,7 @@ EOF
 alias mmp='dopush mm'
 alias mmmp='dopush mmm'
 alias mkap='dopush mka'
+alias cmkap='dopush cmka'
 
 function repopick() {
     T=$(gettop)
@@ -2457,5 +2456,19 @@ fi
 if [ `typeset -F | grep _git | wc -l` -eq 0 ]; then
     source $(gettop)/build/git-completion.bash
 fi
+
+# Add completions
+check_bash_version && {
+    dirs="sdk/bash_completion vendor/vanir/bash_completion"
+    for dir in $dirs; do
+    if [ -d ${dir} ]; then
+        for f in `/bin/ls ${dir}/[a-z]*.bash 2> /dev/null`; do
+            echo "including $f"
+            . $f
+        done
+    fi
+    done
+}
+
 export ANDROID_BUILD_TOP=$(gettop)
 export PATH=$ANDROID_BUILD_TOP/ccache:$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts

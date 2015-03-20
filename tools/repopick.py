@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2013 The CyanogenMod Project
+# Copyright (C) 2013-14 The CyanogenMod Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,12 +31,14 @@ import textwrap
 
 try:
   # For python3
+  import urllib.error
   import urllib.request
 except ImportError:
   # For python2
   import imp
   import urllib2
   urllib = imp.new_module('urllib')
+  urllib.error = urllib2
   urllib.request = urllib2
 
 # Parse the command line
@@ -55,7 +57,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpForm
     The --abandon-first argument, when used in conjuction with the
     --start-branch option, will cause repopick to abandon the specified
     branch in all repos first before performing any cherry picks.'''))
-parser.add_argument('change_number', nargs='*', help='change number to cherry pick')
+parser.add_argument('change_number', nargs='*', help='change number to cherry pick.  Use {change number}/{patchset number} to get a specific revision.')
 parser.add_argument('-i', '--ignore-missing', action='store_true', help='do not error out if a patch applies to a missing directory')
 parser.add_argument('-s', '--start-branch', nargs=1, help='start the specified branch before cherry picking')
 parser.add_argument('-a', '--abandon-first', action='store_true', help='before cherry picking, abandon the branch specified in --start-branch')
@@ -65,6 +67,7 @@ parser.add_argument('-v', '--verbose', action='store_true', help='print extra in
 parser.add_argument('-f', '--force', action='store_true', help='force cherry pick even if commit has been merged')
 parser.add_argument('-p', '--pull', action='store_true', help='execute pull instead of cherry-pick')
 parser.add_argument('-t', '--topic', help='pick all commits from a specified topic')
+parser.add_argument('-Q', '--query', help='pick all commits using the specified query')
 args = parser.parse_args()
 if args.start_branch == None and args.abandon_first:
     parser.error('if --abandon-first is set, you must also give the branch name with --start-branch')
@@ -75,10 +78,13 @@ if args.auto_branch:
         args.start_branch = ['auto']
 if args.quiet and args.verbose:
     parser.error('--quiet and --verbose cannot be specified together')
-if len(args.change_number) > 0 and args.topic:
-    parser.error('cannot specify a topic and change number(s) together')
-if len(args.change_number) == 0 and not args.topic:
-    parser.error('must specify at least one commit id or a topic')
+if len(args.change_number) > 0:
+    if args.topic or args.query:
+        parser.error('cannot specify a topic (or query) and change number(s) together')
+if args.topic and args.query:
+    parser.error('cannot specify a topic and a query together')
+if len(args.change_number) == 0 and not args.topic and not args.query:
+    parser.error('must specify at least one commit id or a topic or a query')
 
 # Helper function to determine whether a path is an executable file
 def is_exe(fpath):
@@ -102,10 +108,10 @@ def which(program):
     return None
 
 # Simple wrapper for os.system() that:
-#   - exits on error
+#   - exits on error if !can_fail
 #   - prints out the command if --verbose
 #   - suppresses all output if --quiet
-def execute_cmd(cmd):
+def execute_cmd(cmd, can_fail=False):
     if args.verbose:
         print('Executing: %s' % cmd)
     if args.quiet:
@@ -114,7 +120,8 @@ def execute_cmd(cmd):
     if os.system(cmd):
         if not args.verbose:
             print('\nCommand that failed:\n%s' % cmd)
-        sys.exit(1)
+        if not can_fail:
+             sys.exit(1)
 
 # Verifies whether pathA is a subdirectory (or the same) as pathB
 def is_pathA_subdir_of_pathB(pathA, pathB):
@@ -185,11 +192,11 @@ while(True):
     ppaths = re.split('\s*:\s*', pline.decode())
     project_name_to_path[ppaths[1]] = ppaths[0]
 
-# Get all commits for a specified topic
-if args.topic:
-    url = 'http://review.cyanogenmod.org/changes/?q=topic:%s' % args.topic
+# Get all commits for a specified query
+def fetch_query(query):
+    url = 'http://review.cyanogenmod.org/changes/?q=%s' % query
     if args.verbose:
-        print('Fetching all commits from topic: %s\n' % args.topic)
+        print('Fetching all commits using query: %s\n' % query)
     f = urllib.request.urlopen(url)
     d = f.read().decode("utf-8")
     if args.verbose:
@@ -199,7 +206,7 @@ if args.topic:
     d = d.split(')]}\'\n')[1]
     matchObj = re.match(r'\[\s*\]', d)
     if matchObj:
-        sys.stderr.write('ERROR: Topic %s was not found on the server\n' % args.topic)
+        sys.stderr.write('ERROR: Query %s was not found on the server\n' % query)
         sys.exit(1)
     d = re.sub(r'\[(.*)\]', r'\1', d)
     if args.verbose:
@@ -212,6 +219,12 @@ if args.topic:
 
     # Reverse the array as we want to pick the lowest one first
     args.change_number = reversed(changelist)
+
+if args.topic:
+    fetch_query("topic:{0}".format(args.topic))
+
+if args.query:
+    fetch_query(args.query)
 
 # Check for range of commits and rebuild array
 changelist = []
@@ -227,19 +240,39 @@ for change in args.change_number:
 args.change_number = changelist
 
 # Iterate through the requested change numbers
-for change in args.change_number:
+for changeps in args.change_number:
+
+    if '/' in changeps:
+        change = changeps.split('/')[0]
+        patchset = changeps.split('/')[1]
+    else:
+        change = changeps
+        patchset = ''
+
     if not args.quiet:
-        print('Applying change number %s ...' % change)
+        if len(patchset) == 0:
+            print('Applying change number %s ...' % change)
+        else:
+            print('Applying change number {change}/{patchset} ...'.format(change=change, patchset=patchset))
+
+    if len(patchset) == 0:
+        query_revision = 'CURRENT_REVISION'
+    else:
+        query_revision = 'ALL_REVISIONS'
 
     # Fetch information about the change from Gerrit's REST API
     #
     # gerrit returns two lines, a magic string and then valid JSON:
     #   )]}'
     #   [ ... valid JSON ... ]
-    url = 'http://review.cyanogenmod.org/changes/?q=%s&o=CURRENT_REVISION&o=CURRENT_COMMIT&pp=0' % change
+    url = 'http://review.cyanogenmod.org/changes/?q={change}&o={query_revision}&o=CURRENT_COMMIT&pp=0'.format(change=change, query_revision=query_revision)
     if args.verbose:
         print('Fetching from: %s\n' % url)
-    f = urllib.request.urlopen(url)
+    try:
+        f = urllib.request.urlopen(url)
+    except urllib.error.URLError:
+        sys.stderr.write('ERROR: Server reported an error, or cannot be reached\n')
+        sys.exit(1)
     d = f.read().decode("utf-8")
     if args.verbose:
         print('Result from request:\n' + d)
@@ -267,10 +300,31 @@ for change in args.change_number:
     project_branch   = data['branch']
     change_number    = data['_number']
     status           = data['status']
+    patchsetfound    = False
+
+    if len(patchset) > 0:
+        try:
+            for revision in data['revisions']:
+                if (int(data['revisions'][revision]['_number']) == int(patchset)) and not patchsetfound:
+                    target_revision = data['revisions'][revision]
+                    if args.verbose:
+                       print('Using found patch set {patchset} ...'.format(patchset=patchset))
+                    patchsetfound = True
+                    break
+            if not patchsetfound:
+                print('ERROR: The patch set could not be found, using CURRENT_REVISION instead.')
+        except:
+            print('ERROR: The patch set could not be found, using CURRENT_REVISION instead.')
+            patchsetfound = False
+
+    if not patchsetfound:
+        target_revision = data['revisions'][data['current_revision']]
+
     current_revision = data['revisions'][data['current_revision']]
-    patch_number     = current_revision['_number']
-    fetch_url        = current_revision['fetch']['anonymous http']['url']
-    fetch_ref        = current_revision['fetch']['anonymous http']['ref']
+
+    patch_number     = target_revision['_number']
+    fetch_url        = target_revision['fetch']['anonymous http']['url']
+    fetch_ref        = target_revision['fetch']['anonymous http']['ref']
     author_name      = current_revision['commit']['author']['name']
     author_email     = current_revision['commit']['author']['email']
     author_date      = current_revision['commit']['author']['date'].replace(date_fluff, '')
@@ -339,7 +393,7 @@ for change in args.change_number:
       cmd = 'cd %s && git pull --no-edit github %s' % (project_path, fetch_ref)
     else:
       cmd = 'cd %s && git fetch github %s' % (project_path, fetch_ref)
-    execute_cmd(cmd)
+    execute_cmd(cmd, True)
     # Check if it worked
     FETCH_HEAD = '%s/.git/FETCH_HEAD' % project_path
     if os.stat(FETCH_HEAD).st_size == 0:
