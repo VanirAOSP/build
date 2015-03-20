@@ -746,10 +746,11 @@ def MakeTempFile(prefix=None, suffix=None):
 
 def Cleanup():
   for i in OPTIONS.tempfiles:
-    if os.path.isdir(i):
-      shutil.rmtree(i)
-    else:
-      os.remove(i)
+    if os.path.exists(i):
+      if os.path.isdir(i):
+        shutil.rmtree(i)
+      else:
+        os.remove(i)
 
 
 class PasswordManager(object):
