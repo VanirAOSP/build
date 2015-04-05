@@ -8,10 +8,6 @@ get_preclean_type()
 # only allow submissions that are a single bacon following a clean/clobber or novo
 check_build_validity()
 {
-    if [ "`which mysql`" = "" ]; then
-        echo "WANT TO SEE HOW YOUR RIG STACKS UP TO NUKE'S?? 'sudo apt-get install mysql-client'"
-        return 1
-    fi
     if [ ! -f ${ANDROID_BUILD_TOP}/.lastbuild ] || [ `cat ${ANDROID_BUILD_TOP}/.lastbuild | wc -l` -ne 2 ]; then
         return 1
     fi
