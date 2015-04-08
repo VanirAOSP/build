@@ -600,7 +600,7 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.Print("t ;##D.    L##, ..         G#E E#t DWi   ,KK: ")
   script.Print("  ,,,      .,,              fE ,;.            ")
   script.Print("                             ,                ")
-  script.Print("  Vanir - LoLLipop 5.0 ")
+  script.Print("  Vanir - LoLLipop 5.1 ")
   script.Print("    by Team Vanir")
   script.Print(" ")
 
@@ -731,9 +731,7 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.AppendExtra('set_metadata_recursive("/system/etc/cron", "uid", 0, "gid", 2000, "dmode", 0755, "fmode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");')
 
   script.Print(" ")
-  script.Print("CLEAN UP THE BLOOD!")
-  script.Print("YOU SHOULD PROBABLY GET TESTED!");
-  script.Print(" ")
+  script.Print("Hail Satan")
 
   script.UnmountAll()
 
