@@ -72,17 +72,12 @@ ifeq ($(NO_DEBUG_FRAME_POINTERS),true)
   DEBUG_FRAME_POINTER_FLAGS := -fomit-frame-pointer
 endif
 
-# GRAPHITE
-ifeq ($(USE_GRAPHITE),true)
-  GRAPHITE_FLAGS := \
-          -fgraphite             \
-          -floop-flatten         \
-          -floop-parallelize-all \
-          -ftree-loop-linear     \
-          -floop-interchange     \
-          -floop-strip-mine      \
-          -floop-block
 endif
+
+# PIPE
+ifeq ($(USE_PIPE),true)
+  PIPE_FLAGS := \
+    -pipe
 
 # Assign modules to build with link time optimizations using VANIR_LTO_MODULES.
 ifeq ($(USE_LTO),true)
@@ -206,18 +201,18 @@ endif
 # variables as exported to other makefiles ============================================================
 VANIR_FSTRICT_OPTIONS := $(FSTRICT_FLAGS)
 
-VANIR_GLOBAL_CFLAGS += $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
-VANIR_RELEASE_CFLAGS += $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
-VANIR_CLANG_TARGET_GLOBAL_CFLAGS += $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
-VANIR_GLOBAL_CPPFLAGS += $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
+VANIR_GLOBAL_CFLAGS += $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS) $(PIPE_FLAGS)
+VANIR_RELEASE_CFLAGS += $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS) $(PIPE_FLAGS)
+VANIR_CLANG_TARGET_GLOBAL_CFLAGS += $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)$(PIPE_FLAGS)
+VANIR_GLOBAL_CPPFLAGS += $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS) $(PIPE_FLAGS)
 
 # set experimental/unsupported flags here for persistance and try to override local options that
 # may be set after release flags.  This option should not be used to set flags globally that are
 # intended for release but to test outcomes.  For example: setting -O3 here will have a higher
 # likelyhood of overriding the stock and local flags.
 ifdef ($(USE_BINARY_FLAGS),true)
-VANIR_BINARY_CFLAG_OPTIONS := $(GRAPHITE_FLAGS)
-VANIR_BINARY_CPP_OPTIONS := $(GRAPHITE_FLAGS)
+VANIR_BINARY_CFLAG_OPTIONS :=
+VANIR_BINARY_CPP_OPTIONS :=
 VANIR_LINKER_OPTIONS :=
 VANIR_ASSEMBLER_OPTIONS :=
 endif
