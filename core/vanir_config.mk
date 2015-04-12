@@ -24,7 +24,6 @@
 # NO_DEBUG_FRAME_POINTERS := set true to add frame pointers
 # NO_DEBUG_SYMBOL_FLAGS := true removes debugging code insertions from assert.h macros and GDB
 # MAXIMUM_OVERDRIVE := true disables address sanitizer, in core/clang/config.mk
-# USE_GRAPHITE := true adds graphite cflags to turn on graphite
 # USE_FSTRICT_FLAGS := true builds with fstrict-aliasing (thumb and arm)
 # USE_BINARY_FLAGS := true adds experimental binary flags that can be set here or in device trees
 # USE_EXTRA_CLANG_FLAGS := true allows additional flags to be passed to the Clang compiler
@@ -70,18 +69,6 @@ ifeq ($(NO_DEBUG_SYMBOL_FLAGS),true)
 endif
 ifeq ($(NO_DEBUG_FRAME_POINTERS),true)
   DEBUG_FRAME_POINTER_FLAGS := -fomit-frame-pointer
-endif
-
-# GRAPHITE
-ifeq ($(USE_GRAPHITE),true)
-  GRAPHITE_FLAGS := \
-          -fgraphite             \
-          -floop-flatten         \
-          -floop-parallelize-all \
-          -ftree-loop-linear     \
-          -floop-interchange     \
-          -floop-strip-mine      \
-          -floop-block
 endif
 
 # Assign modules to build with link time optimizations using VANIR_LTO_MODULES.
@@ -216,8 +203,8 @@ VANIR_GLOBAL_CPPFLAGS += $(DEBUG_SYMBOL_FLAGS) $(DEBUG_FRAME_POINTER_FLAGS)
 # intended for release but to test outcomes.  For example: setting -O3 here will have a higher
 # likelyhood of overriding the stock and local flags.
 ifdef ($(USE_BINARY_FLAGS),true)
-VANIR_BINARY_CFLAG_OPTIONS := $(GRAPHITE_FLAGS)
-VANIR_BINARY_CPP_OPTIONS := $(GRAPHITE_FLAGS)
+VANIR_BINARY_CFLAG_OPTIONS := 
+VANIR_BINARY_CPP_OPTIONS := 
 VANIR_LINKER_OPTIONS :=
 VANIR_ASSEMBLER_OPTIONS :=
 endif
