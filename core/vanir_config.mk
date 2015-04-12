@@ -101,6 +101,7 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
   VANIR_FNO_STRICT_ALIASING_MODULES := \
     audio.primary.msm8960 \
     audio.primary.msm8974 \
+    audio.primary.msm8226 \
     audio_policy.msm8610 \
     bluetooth.default \
     busybox \
