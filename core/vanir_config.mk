@@ -88,6 +88,7 @@ endif
 ifeq ($(USE_LTO),true)
   VANIR_LTO_FLAGS := \
     -flto \
+    -flto-compression-level=3 \
     -fuse-ld=gold \
     -flto-report
 endif
