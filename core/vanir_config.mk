@@ -34,6 +34,7 @@
 # VANIR_THUMB_OPT_LEVEL := -Ox for TARGET_thumb_CFLAGS, preserved in binary.mk
 # FSTRICT_ALIASING_WARNING_LEVEL := 0-3 for the level of intensity the compiler checks for violations.
 # USE_LTO := true builds locally in modules with the -flto flags set in this config file
+# LTO_COMPRESSION_LEVEL := 0-9 0 being none 9 being the most available
 
 # SET GLOBAL CONFIGURATION HERE:
 MAXIMUM_OVERDRIVE           ?= true
@@ -49,6 +50,7 @@ ADDITIONAL_TARGET_THUMB_OPT ?=
 VANIR_ARM_OPT_LEVEL         ?= -O2
 VANIR_THUMB_OPT_LEVEL       ?= -Os
 FSTRICT_ALIASING_WARNING_LEVEL ?= 2
+LTO_COMPRESSION_LEVEL ?= 3
 
 # Respect BONE_STOCK: strictly enforce AOSP defaults.
 ifeq ($(BONE_STOCK),true)
@@ -88,8 +90,33 @@ endif
 ifeq ($(USE_LTO),true)
   VANIR_LTO_FLAGS := \
     -flto \
+    -flto-compression-level=$(LTO_COMPRESSION_LEVEL) \
     -fuse-ld=gold \
     -flto-report
+endif
+
+# the modules on this list will be compile with link time optimizations. 
+# anything not on the list will not be compiled with link time optimizations
+# feel free to add or remove things from this list as seen fit.
+ifeq ($(USE_LTO),true)
+  VANIR_LTO_MODULES := \
+    libandroidfw \
+    libandroid_runtime \
+    libaudioflinger \
+    libc \
+    ssh \
+    libstagefright \
+    libstagefright_soft_h264dec \
+    libstagefright_webm \
+    content_content_renderer_gyp \
+    libwebviewchromium \
+    libwebviewchromium_loader \
+    libwebviewchromium_plat_support \
+    third_party_angle_src_translator_lib_gyp \
+    third_party_WebKit_Source_core_webcore_generated_gyp \
+    third_party_WebKit_Source_core_webcore_remaining_gyp \
+    third_party_WebKit_Source_modules_modules_gyp \
+    third_party_WebKit_Source_platform_blink_platform_gyp
 endif
 
 # fstrict-aliasing. Thumb is defaulted off for AOSP. Use VANIR_SPECIAL_CASE_MODULES to
