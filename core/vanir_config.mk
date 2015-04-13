@@ -111,7 +111,6 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
     libandroid_runtime \
     libaudioflinger \
     libc \
-    libc_bionic \
     libc_dns \
     libc_gdtoa \
     libc_nomalloc \
