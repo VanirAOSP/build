@@ -4,7 +4,7 @@
 # are not specific to what is being built.
 
 # Only use ANDROID_BUILD_SHELL to wrap around bash.
-# DO NOT use other shells such as zsh.
+# DO NOT use other shells such as zsh
 ifdef ANDROID_BUILD_SHELL
 SHELL := $(ANDROID_BUILD_SHELL)
 else
@@ -113,7 +113,7 @@ SHOW_COMMANDS:= $(filter showcommands,$(MAKECMDGOALS))
 # ###############################################################
 
 # These can be changed to modify both host and device modules.
-COMMON_GLOBAL_CFLAGS:= -DANDROID -fmessage-length=0 -W -Wall -Wno-unused -Winit-self -Wpointer-arith
+COMMON_GLOBAL_CFLAGS:= -DANDROID -fmessage-length=0 -W -Wall -Wno-unused -Winit-self -Wpointer-arith -pipe
 COMMON_RELEASE_CFLAGS:= -DNDEBUG -UDEBUG
 
 COMMON_GLOBAL_CPPFLAGS:= $(COMMON_GLOBAL_CFLAGS) -Wsign-promo
