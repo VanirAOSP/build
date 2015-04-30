@@ -250,6 +250,10 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
     libavutil \
     libswscale
 
+# this shit is deplorable. die in a fire.
+  VANIR_FNO_STRICT_ALIASING_MODULES += \
+    libtee_client_api_driver
+
 FSTRICT_FLAGS := \
         -Wstrict-aliasing=$(FSTRICT_ALIASING_WARNING_LEVEL) \
         -Werror=strict-aliasing
