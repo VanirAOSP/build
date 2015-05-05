@@ -2441,6 +2441,7 @@ parse_git_branch() {
 if [ ! $GITPS1ENGAGED ]; then
 export GITPS1ENGAGED=1
 export PS1=`echo "$PS1" | sed 's/\[\$ \]*//g'`
+export NONE='\[\033[0m\]'
 istheregit=$(which git)
 if [ `echo $PS1 | grep parse_git_branch | wc -l` -eq 0 ]; then
   if [ -x "$istheregit" ]; then
