@@ -48,7 +48,7 @@ USE_EXTRA_CLANG_FLAGS       ?=
 ADDITIONAL_TARGET_ARM_OPT   ?=
 ADDITIONAL_TARGET_THUMB_OPT ?=
 VANIR_ARM_OPT_LEVEL         ?= -O2
-VANIR_THUMB_OPT_LEVEL       ?= -Os
+VANIR_THUMB_OPT_LEVEL       ?= -O2
 FSTRICT_ALIASING_WARNING_LEVEL ?= 2
 LTO_COMPRESSION_LEVEL ?= 3
 
@@ -68,7 +68,7 @@ endif
 
 # DEBUGGING OPTIONS
 ifeq ($(NO_DEBUG_SYMBOL_FLAGS),true)
-  DEBUG_SYMBOL_FLAGS := -g0 -DNDEBUG
+  DEBUG_SYMBOL_FLAGS := -DNDEBUG
 endif
 ifeq ($(NO_DEBUG_FRAME_POINTERS),true)
   DEBUG_FRAME_POINTER_FLAGS := -fomit-frame-pointer
@@ -275,9 +275,9 @@ endif
 # Additional clang-specific cflags
 ifeq ($(USE_EXTRA_CLANG_FLAGS),true)
     VANIR_CLANG_CONFIG_EXTRA_ASFLAGS :=
-    VANIR_CLANG_CONFIG_EXTRA_CFLAGS :=
-    VANIR_CLANG_CONFIG_EXTRA_CPPFLAGS :=
-    VANIR_CLANG_CONFIG_EXTRA_LDFLAGS :=
+    VANIR_CLANG_CONFIG_EXTRA_CFLAGS := -O2 -Qunused-arguments -Wno-unknown-warning-option
+    VANIR_CLANG_CONFIG_EXTRA_CPPFLAGS := -O2 -Qunused-arguments -Wno-unknown-warning-option
+    VANIR_CLANG_CONFIG_EXTRA_LDFLAGS := -Wl,--sort-common
 endif
 
 #======================================================================================================
