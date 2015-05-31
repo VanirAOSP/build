@@ -68,7 +68,7 @@ endif
 
 # DEBUGGING OPTIONS
 ifeq ($(NO_DEBUG_SYMBOL_FLAGS),true)
-  DEBUG_SYMBOL_FLAGS := -g0 -DNDEBUG
+  DEBUG_SYMBOL_FLAGS := -g -DNDEBUG
 endif
 ifeq ($(NO_DEBUG_FRAME_POINTERS),true)
   DEBUG_FRAME_POINTER_FLAGS := -fomit-frame-pointer
