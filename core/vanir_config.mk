@@ -43,6 +43,9 @@ NO_DEBUG_FRAME_POINTERS     ?= true
 USE_GRAPHITE                ?=
 USE_LTO                     ?= true
 USE_FSTRICT_FLAGS           ?= true
+ifeq ($(USE_LTO), true)
+  $(error OOPS)
+endif
 USE_BINARY_FLAGS            ?=
 USE_EXTRA_CLANG_FLAGS       ?=
 ADDITIONAL_TARGET_ARM_OPT   ?=
