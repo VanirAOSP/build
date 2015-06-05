@@ -2067,7 +2067,7 @@ esac
 export start_time=$(date +"%s")
 echo $start_time > ${ANDROID_BUILD_TOP}/.lastbuildstart
 mk_timer $MAKECMD "$@"
-echo
+retval=$?
 if [ $retval -eq 0 ] ; then
     echo -n -e "#### make completed successfully "
     [ ! $VANIR_DISABLE_BUILD_COMPLETION_NOTIFICATIONS ] && notify-send "VANIR" "$TARGET_PRODUCT build completed." -i $T/build/buildwin.png -t 10000
