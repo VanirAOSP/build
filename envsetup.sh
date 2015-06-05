@@ -2067,7 +2067,7 @@ esac
 export start_time=$(date +"%s")
 echo $start_time > ${ANDROID_BUILD_TOP}/.lastbuildstart
 mk_timer $MAKECMD "$@"
-echo
+retval=$?
 if [ $retval -eq 0 ] ; then
     echo -n -e "#### make completed successfully "
     [ ! $VANIR_DISABLE_BUILD_COMPLETION_NOTIFICATIONS ] && notify-send "VANIR" "$TARGET_PRODUCT build completed." -i $T/build/buildwin.png -t 10000
@@ -2075,15 +2075,6 @@ else
     echo -n -e "#### make failed to build some targets "
     [ ! $VANIR_DISABLE_BUILD_COMPLETION_NOTIFICATIONS ] && notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $T/build/buildfailed.png -t 10000
 fi
-if [ $hours -gt 0 ] ; then
-    printf "(%02g:%02g:%02g (hh:mm:ss))" $hours $mins $secs
-elif [ $mins -gt 0 ] ; then
-    printf "(%02g:%02g (mm:ss))" $mins $secs
-elif [ $secs -gt 0 ] ; then
-    printf "(%s seconds)" $secs
-fi
-echo -e " ####"
-echo
 cd "$CWD"
 return $retval
 }
