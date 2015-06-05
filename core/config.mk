@@ -647,4 +647,10 @@ $(eval include vendor/vanir/sepolicy/sepolicy.mk)
 
 include $(BUILD_SYSTEM)/kernel_config.mk # set meat and potatoes for dumpvar.mk
 
+# Include any vendor specific config.mk file
+-include $(TOPDIR)vendor/*/build/core/config.mk
+
+# Include any vendor specific apicheck.mk file
+-include $(TOPDIR)vendor/*/build/core/apicheck.mk
+
 include $(BUILD_SYSTEM)/dumpvar.mk

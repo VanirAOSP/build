@@ -33,12 +33,9 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 Look at the source to view more functions. The complete list is:
 EOF
     T=$(gettop)
-    local A
-    A=""
     for i in `cat $T/build/envsetup.sh | sed -n "/^[ \t]*function /s/function \([a-z_]*\).*/\1/p" | sort | uniq`; do
-      A="$A $i"
-    done
-    echo $A
+      echo "$i"
+    done | column
 }
 
 # run a command inside all projects tracked on the vanir remote in the manifest
@@ -575,6 +572,7 @@ alias bib=breakfast
 function lunch()
 {
     local answer
+    LUNCH_MENU_CHOICES=($(for l in ${LUNCH_MENU_CHOICES[@]}; do echo "$l"; done | sort))
 
     if [ "$1" ] ; then
         answer=$1
@@ -2068,13 +2066,7 @@ case `uname -s` in
 esac
 export start_time=$(date +"%s")
 echo $start_time > ${ANDROID_BUILD_TOP}/.lastbuildstart
-$MAKECMD "$@"
-local retval=$?
-local end_time=$(date +"%s")
-local tdiff=$(($end_time-$start_time))
-local hours=$(($tdiff / 3600 ))
-local mins=$((($tdiff % 3600) / 60))
-local secs=$(($tdiff % 60))
+mk_timer $MAKECMD "$@"
 echo
 if [ $retval -eq 0 ] ; then
     echo -n -e "#### make completed successfully "
@@ -2177,7 +2169,7 @@ function dopush()
         echo "Device Found."
     fi
 
-    if (adb shell cat /system/build.prop | grep -q "ro.cm.device=$CM_BUILD");
+    if (adb shell cat /system/build.prop | grep -q "ro.cm.device=$CM_BUILD") || [ "$FORCE_PUSH" == "true" ];
     then
     # retrieve IP and PORT info if we're using a TCP connection
     TCPIPPORT=$(adb devices | egrep '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+[^0-9]+' \
@@ -2369,11 +2361,10 @@ function get_make_command()
   echo command make
 }
 
-function make()
+function mk_timer()
 {
-    export start_time=$(date +"%s")
-    echo $start_time > ${ANDROID_BUILD_TOP}/.lastbuildstart
-    $(get_make_command) "$@"
+    local start_time=$(date +"%s")
+    $@
     local ret=$?
     local end_time=$(date +"%s")
     local tdiff=$(($end_time-$start_time))
@@ -2396,6 +2387,11 @@ function make()
     echo -e " ####"
     echo
     return $ret
+}
+
+function make()
+{
+    mk_timer $(get_make_command) "$@"
 }
 
 if [ "x$SHELL" != "x/bin/bash" ]; then
