@@ -605,19 +605,23 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.Print(" ")
 
   if block_based:
+    script.Mount("/system")
     common.ZipWriteStr(output_zip, "system/bin/automagic.sh",
                    ""+input_zip.read("SYSTEM/bin/automagic.sh"))
     common.ZipWriteStr(output_zip, "system/build.prop",
                      ""+input_zip.read("SYSTEM/build.prop"))
+    script.Unmount("/system")
   CopyInstallTools(output_zip)
   script.UnpackPackageDir("install", "/tmp/install")
   script.SetPermissionsRecursive("/tmp/install", 0, 0, 0755, 0644, None, None)
   script.SetPermissionsRecursive("/tmp/install/bin", 0, 0, 0755, 0755, None, None)
 
   if OPTIONS.backuptool:
-    script.Mount("/system")
+    if block_based:
+      script.Mount("/system")
     script.RunBackup("backup")
-    script.Unmount("/system")
+    if block_based:
+      script.Unmount("/system")
 
   system_progress = 0.75
 
