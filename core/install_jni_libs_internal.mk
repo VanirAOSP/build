@@ -68,7 +68,7 @@ my_symlink_target_dir := $(patsubst $(PRODUCT_OUT)%,%,\
 LOCAL_POST_INSTALL_CMD += \
   mkdir -p $(my_app_lib_path) \
   $(foreach lib, $(my_jni_filenames), ;ln -sf $(my_symlink_target_dir)/$(lib) $(my_app_lib_path)/$(lib))
-$(LOCAL_INSTALLED_MODULE): PRIVATE_POST_INSTALL_CMD := $(LOCAL_POST_INSTALL_CMD)
+$(LOCAL_INSTALLED_MODULE): PRIVATE_POST_INSTALL_CMD := @$(LOCAL_POST_INSTALL_CMD)
 
 # Clear jni_shared_libraries to not embed it into the apk.
 my_jni_shared_libraries :=
