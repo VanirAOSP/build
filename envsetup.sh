@@ -44,13 +44,13 @@ function forall_vanir()
 {
   cd $ANDROID_BUILD_TOP
   regex=$(repo forall -c '[ "$REPO_REMOTE" = "vanir" ] && echo -n \|^$REPO_PATH\$' | sed 's/^|//g')
-  repo forall -r $regex -c "$@"
+  repo forall -r $regex $FORALL_ARGS -c "$@"
 }
 function forall_cm()
 {
   cd $ANDROID_BUILD_TOP
   regex=$(repo forall -c '[ "$REPO_REMOTE" = "cm" ] && echo -n \|^$REPO_PATH\$' | sed 's/^|//g')
-  repo forall -r $regex -c "$@"
+  repo forall -r $regex $FORALL_ARGS -c "$@"
 }
 
 # Get the value of a build variable as an absolute path.
