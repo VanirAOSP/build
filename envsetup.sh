@@ -2067,6 +2067,12 @@ case `uname -s` in
 esac
 export start_time=$(date +"%s")
 echo $start_time > ${ANDROID_BUILD_TOP}/.lastbuildstart
+for x in $@; do
+   case $x in bacon|clean|clobber|novo)
+       echo $x >> ${ANDROID_BUILD_TOP}/.lastbuild
+       break;;
+   esac
+done
 mk_timer $MAKECMD "$@"
 retval=$?
 if [ $retval -eq 0 ] ; then
