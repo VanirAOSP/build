@@ -71,6 +71,17 @@ FORCE:
 
 include $(BUILD_SYSTEM)/ccache.mk
 
+# fail fatally for anyone using >= make 3.82, as 3.82 was a huge step back as far as build performance
+# make 4.0 for example takes 35 minutes to build the same target as make 3.81 can do in 13 minutes.
+# ALL OTHER THINGS being equal
+ifeq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
+$(warning You are using a version of GNU Make newer than 3.81.)
+$(warning Acquire make-3.81 source, build it and install it.)
+$(warning Nuke observed newer make (4.0)'s job server being garbage at scaling w.r.t. --jobs/-j, and it is alleged that newer make makes superfluous calls to stat.)
+$(warning On nuke's rig, with -j12, make 4.0 takes 35 minutes to build a target make 3.81 can build in 13 minutes \(n=5, identical host OS and environment, other than make version\).)
+$(error Take the time now to save yourself time overall. You'll thank us later.)
+endif
+
 # These goals don't need to collect and include Android.mks/CleanSpec.mks
 # in the source tree.
 dont_bother_goals := clean clobber dataclean installclean \
