@@ -80,6 +80,8 @@ $(warning Acquire make-3.81 source, build it and install it.)
 $(warning Nuke observed newer make (4.0)'s job server being garbage at scaling w.r.t. --jobs/-j, and it is alleged that newer make makes superfluous calls to stat.)
 $(warning On nuke's rig, with -j12, make 4.0 takes 35 minutes to build a target make 3.81 can build in 13 minutes \(n=5, identical host OS and environment, other than make version\).)
 $(error Take the time now to save yourself time overall. You'll thank us later.)
+$(error http://ftp.gnu.org/gnu/make/make-3.81.tar.gz and read the included INSTALL file.)
+
 endif
 
 # These goals don't need to collect and include Android.mks/CleanSpec.mks
