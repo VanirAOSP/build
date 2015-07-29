@@ -1,6 +1,6 @@
 ifeq ($(TARGET_KERNEL_CONFIG_SET),) # set defaults first time included, if not set already (presumably by make commandline args or environment)
     ifeq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN),)
-        TARGET_KERNEL_USE_AOSP_TOOLCHAIN := true
+        TARGET_KERNEL_USE_AOSP_TOOLCHAIN :=
     endif
     ifeq ($(TARGET_KERNEL_TOOLCHAIN_VERSION),)
         TARGET_KERNEL_TOOLCHAIN_VERSION :=
@@ -17,6 +17,13 @@ else # after target stuff set, set real values
         TARGET_KERNEL_USE_AOSP_TOOLCHAIN := true
     endif
 
+    # if the toolchain version is linaro-*, then set TARGET_KERNEL_TOOLCHAIN_VERSION to false IFF TARGET_KERNEL_USE_AOSP_TOOLCHAIN is not set to true
+    ifneq ($(findstring linaro-,$(TARGET_KERNEL_TOOLCHAIN_VERSION)),)
+        ifneq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN), true)
+            TARGET_KERNEL_USE_AOSP_TOOLCHAIN := false
+        endif
+    endif
+
     # IFF not using AOSP toolchain
     ifneq ($(TARGET_KERNEL_USE_AOSP_TOOLCHAIN),true)
         # and TARGET_KERNEL_TOOLCHAIN_VERSION is prefixed with linaro-
@@ -29,7 +36,7 @@ else # after target stuff set, set real values
                     ifeq ($(wildcard $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/linaro/$(T_K_C_T)-$(TARGET_CPU_VARIANT)),)
                         # no specific toolchain folder exists, use generic
                         TARGET_KERNEL_CPU_VARIANT := generic
-                        $(warn Could not find specific $(TARGET_KERNEL_TOOLCHAIN_VERSION) toolchain for $(TARGET_CPU_VARIANT))
+                        $(warning Could not find specific $(TARGET_KERNEL_TOOLCHAIN_VERSION) toolchain for $(TARGET_CPU_VARIANT))
                     else
                         TARGET_KERNEL_CPU_VARIANT := $(TARGET_CPU_VARIANT)
                     endif
