@@ -132,7 +132,7 @@ champagne()
             fi
             echo " "
             echo " re-syncing!" 1>&2
-            reposync -c -f -j32
+            reposync --force-sync -c -f -j32
             echo " "
             echo " re-sync complete" 1>&2
         fi
