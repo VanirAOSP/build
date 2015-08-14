@@ -90,6 +90,13 @@ $(info   OUT_DIR=$(OUT_DIR))
 $(info ================= TOOLCHAIN ==================)
 $(info   TARGET_KERNEL_TOOLCHAIN_VERSION=$(TARGET_KERNEL_TOOLCHAIN_VERSION))
 $(info   TARGET_KERNEL_USE_AOSP_TOOLCHAIN=$(TARGET_KERNEL_USE_AOSP_TOOLCHAIN))
+ifneq (,$(filter true, $(CYNGN_TARGET) $(EXTERNAL_CLEAN_TARGET)))
+$(info ================= Cyno Gyno ==================)
+ifeq ($(CYNGN_TARGET), true)
+$(info   CYNGN_TARGET=$(CYNGN_TARGET))
+endif
+$(info   CYNGN_FEATURES=$(CYNGN_FEATURES))
+endif
 $(info ==============================================)
 $(info ==============================================)
 endif
