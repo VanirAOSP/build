@@ -62,6 +62,6 @@ foreach (keys %old_symlinks) {
 # Add missing symlinks.
 foreach (keys %new_symlinks) {
     if (! exists $old_symlinks{$_}) {
-        symlink "../../bin/ccache", "$ccache_dir/$_";
+        symlink "../ccache", "$ccache_dir/$_";
     }
 }
