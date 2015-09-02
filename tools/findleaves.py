@@ -85,8 +85,10 @@ def main(argv):
     i += 1
   if len(argv)-i < 2: # need both <dirlist> and <filename>
     usage()
-  for always_prune_path in os.environ['ALWAYS_PRUNE'].split(' '):
-    prune.append(always_prune_path)
+  prune_paths=os.environ.get('ALWAYS_PRUNE')
+  if prune_paths is not None:
+    for always_prune_path in prune_paths:
+      prune.append(always_prune_path)
   dirlist = argv[i:-1]
   filename = argv[-1]
   for r in perform_find(mindepth, prune, dirlist, filename):
