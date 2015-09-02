@@ -538,7 +538,7 @@ ifneq ($(dont_bother),true)
 subdir_makefiles := \
 	$(shell build/tools/findleaves.py --prune=out --prune=.repo --prune=.git $(subdirs) Android.mk)
 
-$(foreach mk, $(subdir_makefiles), $(eval include $(mk)))
+include $(subdir_makefiles)
 
 endif # dont_bother
 
