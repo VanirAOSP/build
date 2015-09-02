@@ -24,7 +24,6 @@ import os
 import sys
 
 def perform_find(mindepth, prune, dirlist, filename):
-  result = []
   pruneleaves = set(map(lambda x: os.path.split(x)[1], prune))
   for rootdir in dirlist:
     rootdepth = rootdir.count("/")
@@ -49,9 +48,8 @@ def perform_find(mindepth, prune, dirlist, filename):
           continue
       # match
       if filename in files:
-        result.append(os.path.join(root, filename))
+        yield os.path.join(root, filename)
         del dirs[:]
-  return result
 
 def usage():
   sys.stderr.write("""Usage: %(progName)s [<options>] <dirlist> <filename>
@@ -89,9 +87,7 @@ def main(argv):
     usage()
   dirlist = argv[i:-1]
   filename = argv[-1]
-  results = list(set(perform_find(mindepth, prune, dirlist, filename)))
-  results.sort()
-  for r in results:
+  for r in perform_find(mindepth, prune, dirlist, filename):
     print r
 
 if __name__ == "__main__":
