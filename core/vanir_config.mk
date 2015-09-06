@@ -248,6 +248,11 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
   VANIR_FNO_STRICT_ALIASING_MODULES += \
     libtee_client_api_driver
 
+#thumb modules with violations
+  VANIR_FNO_STRICT_ALIASING_MODULES += \
+    libcrypto_static \
+    libjavacore
+
 FSTRICT_FLAGS := \
         -Wstrict-aliasing=$(FSTRICT_ALIASING_WARNING_LEVEL) \
         -Werror=strict-aliasing
