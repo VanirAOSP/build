@@ -185,12 +185,6 @@ ifeq ($(USE_FSTRICT_FLAGS),true)
     libandroidfw \
     libandroid_runtime \
     libaudioflinger \
-    libc \
-    libc_dns \
-    libc_gdtoa \
-    libc_nomalloc \
-    libc_openbsd \
-    libc_tzcode \
     libdiskconfig \
     libdownmix \
     libft2 \
