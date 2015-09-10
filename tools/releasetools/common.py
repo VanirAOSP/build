@@ -1177,8 +1177,18 @@ class BlockDifference:
       # a) If version < 3, operations like move and erase will make changes
       #    unconditionally and damage the partition.
       # b) If version >= 3, it won't even reach here.
-      script.AppendExtra(('abort("%s partition has unexpected contents");\n'
-                          'endif;') % (partition,))
+      if self.version < 3:
+        script.AppendExtra(('else\n'
+                            '  abort("%s partition has unexpected contents");\n'
+                            'endif;') % (self.partition))
+      else:
+        script.AppendExtra(('else\n'
+                            '  (range_sha1("%s", "%s") == "%s") ||\n'
+                            '  abort("%s partition has unexpected contents");\n'
+                            'endif;') %
+                           (self.device, self.tgt.care_map.to_string_raw(),
+                            self.tgt.TotalSha1(), self.partition))
+
 
   def _WriteUpdate(self, script, output_zip):
     partition = self.partition
