@@ -207,8 +207,9 @@ if __name__ == '__main__':
         if not pline:
             break
         ppaths = pline.split(' : ')
-
-        project_name_to_path[ppaths[1]] = ppaths[0]
+        
+        for prefix in ["", "CyanogenMod/android_", "CyanogenMod"]:
+            project_name_to_path["%s%s" % (prefix,ppaths[1])] = ppaths[0]
 
     # get data on requested changes
     reviews = []
