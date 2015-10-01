@@ -316,7 +316,7 @@ if __name__ == '__main__':
             method = 'ssh'
 
         # Try fetching from GitHub first if using default gerrit
-        if args.gerrit == default_gerrit:
+        if args.gerrit == default_gerrit and False:
             if args.verbose:
                 print('Trying to fetch the change from GitHub')
 
@@ -334,7 +334,7 @@ if __name__ == '__main__':
                 sys.exit(result)
             FETCH_HEAD = '{0}/.git/FETCH_HEAD'.format(project_path)
         # Check if it worked
-        if args.gerrit != default_gerrit or os.stat(FETCH_HEAD).st_size == 0:
+        if True or args.gerrit != default_gerrit or os.stat(FETCH_HEAD).st_size == 0:
             # If not using the default gerrit or github failed, fetch from gerrit.
             if args.verbose:
                 if args.gerrit == default_gerrit:
