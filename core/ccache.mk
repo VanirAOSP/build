@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #
 # Copyright (C) 2015 The Android Open Source Project
 #
@@ -15,7 +14,7 @@
 # limitations under the License.
 #
 
-ifneq ($(filter-out false,$(USE_CCACHE)),)
+ifneq ($(USE_CCACHE),)
   # The default check uses size and modification time, causing false misses
   # since the mtime depends when the repo was checked out
   export CCACHE_COMPILERCHECK := content
@@ -40,9 +39,19 @@ ifneq ($(filter-out false,$(USE_CCACHE)),)
   export CCACHE_CPP2 := true
 
   CCACHE_HOST_TAG := $(HOST_PREBUILT_TAG)
-  ccache := prebuilts/misc/$(CCACHE_HOST_TAG)/ccache/ccache
+  # If we are cross-compiling Windows binaries on Linux
+  # then use the linux ccache binary instead.
+  ifeq ($(HOST_OS)-$(BUILD_OS),windows-linux)
+    CCACHE_HOST_TAG := linux-$(HOST_PREBUILT_ARCH)
+  endif
+
+  ccache := $(shell which ccache)
+  ifeq ($(ccache),)
+    ccache := prebuilts/misc/$(CCACHE_HOST_TAG)/ccache/ccache
+  endif
   # Check that the executable is here.
   ccache := $(strip $(wildcard $(ccache)))
+
   ifdef ccache
     ifndef CC_WRAPPER
       CC_WRAPPER := $(ccache)
@@ -59,7 +68,4 @@ ifneq ($(filter-out false,$(USE_CCACHE)),)
     ACCSIZE_RESULT =
   endif
 endif
-=======
-#a bit of a hack
-$(info $(shell build/tools/ccache_version_check.sh))
->>>>>>> 7fa7369... Use bleeding-edge ccache -- always
+
