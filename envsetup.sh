@@ -46,11 +46,7 @@ EOF
     done | column
 }
 
-<<<<<<< HEAD
 # Run a command inside all projects tracked on the vanir remote in the manifest
-=======
-# run a command inside all projects tracked on the vanir remote in the manifest
->>>>>>> d393e1f... fix build part 1
 function forall_vanir()
 {
   cd $ANDROID_BUILD_TOP
