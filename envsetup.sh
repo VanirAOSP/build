@@ -45,7 +45,7 @@ EOF
     echo $A
 }
 
-run a command inside all projects tracked on the vanir remote in the manifest
+# run a command inside all projects tracked on the vanir remote in the manifest
 function forall_vanir()
 {
   cd $ANDROID_BUILD_TOP
@@ -1616,7 +1616,6 @@ function linaroinit()
     popd >& /dev/null
     return 0
 }
-export -f cmremote
 
 function aospremote()
 {
