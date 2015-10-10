@@ -46,7 +46,11 @@ EOF
     done | column
 }
 
+<<<<<<< HEAD
 # Run a command inside all projects tracked on the vanir remote in the manifest
+=======
+# run a command inside all projects tracked on the vanir remote in the manifest
+>>>>>>> d393e1f... fix build part 1
 function forall_vanir()
 {
   cd $ANDROID_BUILD_TOP
@@ -1880,12 +1884,12 @@ retval=0
             retval=$?
             ;;
     esac
-if [ $retval -eq 0 ]; then
-    bash -c 'j=0; while [ $j -lt 10 ]; do j=`expr $j + 1`; notify-send "VANIR" "'$TARGET_PRODUCT' build completed." -i '$(gettop)/build/buildwin.png' -t 2000; sleep 1; done' &
-else
-    bash -c 'j=0; while [ $j -lt 20 ]; do j=`expr $j + 1`; notify-send "VANIR" "'$TARGET_PRODUCT' build FAILED." -i '$(gettop)/build/buildfailed.png' -t 1000; sleep 1; done' &
-fi
-return $retval
+        if [ $retval -eq 0 ]; then
+            bash -c 'j=0; while [ $j -lt 10 ]; do j=`expr $j + 1`; notify-send "VANIR" "'$TARGET_PRODUCT' build completed." -i '$(gettop)/build/buildwin.png' -t 2000; sleep 1; done' &
+        else
+            bash -c 'j=0; while [ $j -lt 20 ]; do j=`expr $j + 1`; notify-send "VANIR" "'$TARGET_PRODUCT' build FAILED." -i '$(gettop)/build/buildfailed.png' -t 1000; sleep 1; done' &
+        fi
+    return $retval
 }
 
 
@@ -1907,7 +1911,7 @@ DIR=$OUT
 	echo $CL_RST" Destroyed."
 	echo ""
 	return;
-	else 
+	else
 	echo ""
 	echo $CL_YLW" Already" $CL_RED" SMASHED it !!!" $CL_RST
 	echo ""
