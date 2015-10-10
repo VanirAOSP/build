@@ -46,7 +46,7 @@ EOF
     done | column
 }
 
-run a command inside all projects tracked on the vanir remote in the manifest
+# Run a command inside all projects tracked on the vanir remote in the manifest
 function forall_vanir()
 {
   cd $ANDROID_BUILD_TOP
@@ -1886,6 +1886,7 @@ else
     bash -c 'j=0; while [ $j -lt 20 ]; do j=`expr $j + 1`; notify-send "VANIR" "'$TARGET_PRODUCT' build FAILED." -i '$(gettop)/build/buildfailed.png' -t 1000; sleep 1; done' &
 fi
 return $retval
+}
 
 
 smash() {
