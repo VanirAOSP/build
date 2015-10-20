@@ -2059,14 +2059,14 @@ case `uname -s` in
             local load=`expr $threads \* 2`
             VANIR_PARALLEL_JOBS="-j$load"
         fi
-        MAKECMD="`command -pv make` $VANIR_PARALLEL_JOBS"
+        MAKECMD="`command -pv make` -C $T $VANIR_PARALLEL_JOBS"
         ;;
     *)
         if [ ! $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
             local cores=`nproc --all`
             VANIR_PARALLEL_JOBS="-j$cores"
         fi
-        MAKECMD="schedtool -B -n 1 -e ionice -n 1 `command -pv make` $VANIR_PARALLEL_JOBS"
+        MAKECMD="schedtool -B -n 1 -e ionice -n 1 `command -pv make` -C $T $VANIR_PARALLEL_JOBS"
         ;;
 esac
 export start_time=$(date +"%s")
