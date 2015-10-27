@@ -2157,3 +2157,6 @@ check_bash_version && {
 }
 
 export ANDROID_BUILD_TOP=$(gettop)
+addcompletions
+
+export PATH=$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts
