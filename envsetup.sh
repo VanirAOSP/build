@@ -31,6 +31,7 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - repopick: Utility to fetch changes from Gerrit.
 - installboot: Installs a boot.img to the connected device.
 - installrecovery: Installs a recovery.img to the connected device.
+- smash:    clean out the out directory of your lunched target only.
 
 Environemnt options:
 - SANITIZE_HOST: Set to 'true' to use ASAN for all host modules. Note that
@@ -1886,31 +1887,30 @@ else
 fi
 return $retval
 
-function cmka() {
-    if [ ! -z "$1" ]; then
-        for i in "$@"; do
-            case $i in
-                bacon|otapackage|systemimage)
-                    mka installclean
-                    mka $i
-                    ;;
-                *)
-                    mka clean-$i
-                    mka $i
-                    ;;
-            esac
-        done
-    else
-        mka clean
-        mka
-    fi
-}
 
-function repolastsync() {
-    RLSPATH="$ANDROID_BUILD_TOP/.repo/.repo_fetchtimes.json"
-    RLSLOCAL=$(date -d "$(stat -c %z $RLSPATH)" +"%e %b %Y, %T %Z")
-    RLSUTC=$(date -d "$(stat -c %z $RLSPATH)" -u +"%e %b %Y, %T %Z")
-    echo "Last repo sync: $RLSLOCAL / $RLSUTC"
+smash() {
+#to do: add smash $anytarget, smashOTA, smash, smashVANIR
+DIR=$OUT
+#to do: fix the colors
+	if [ -d  "$DIR" ]; then
+	echo ""
+	echo $CL_RED" Removing" $CL_RST" $TARGET_PRODUCT out directory:"
+	echo " Location:"
+	echo " $OUT"
+	rm -R -f $OUT
+	echo "  ."
+	echo "  ."
+	echo "  ."
+	echo "  ."
+	echo "  ."
+	echo $CL_RST" Destroyed."
+	echo ""
+	return;
+	else 
+	echo ""
+	echo $CL_YLW" Already" $CL_RED" SMASHED it !!!" $CL_RST
+	echo ""
+	fi
 }
 
 function reposync() {
