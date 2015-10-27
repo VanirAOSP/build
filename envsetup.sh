@@ -1759,7 +1759,7 @@ function godir () {
     else
         pathname=${lines[0]}
     fi
-    \cd $T/$pathname
+    cd $T/$pathname
 }
 
 function cmremote()
@@ -2207,7 +2207,10 @@ function mka() {
     if [ "$T" ]; then
         case `uname -s` in
             Darwin)
-                make -C $T -j `sysctl hw.ncpu|cut -d" " -f2` "$@"
+                local threads=`sysctl hw.ncpu|cut -d" " -f2`
+                local load=`expr $threads \* 2`
+                make -j -l $load "$@"
+                retval=$?
                 ;;
             *)
                 mk_timer schedtool -B -n 1 -e ionice -n 1 make -C $T -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
