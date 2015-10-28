@@ -1672,7 +1672,7 @@ function godir () {
     else
         pathname=${lines[0]}
     fi
-    cd $T/$pathname
+    \cd $T/$pathname
 }
 
 function aospremote()
@@ -2124,6 +2124,5 @@ check_bash_version && {
 }
 
 export ANDROID_BUILD_TOP=$(gettop)
-addcompletions
 
 export PATH=$ANDROID_BUILD_TOP/ccache:$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts
