@@ -104,14 +104,14 @@ function destroy_build_var_cache()
 function forall_vanir()
 {
   cd $ANDROID_BUILD_TOP
-  pathlist=""
-  set -f
-  for x in `cat $ANDROID_BUILD_TOP/.repo/manifest.xml | sed 's/<!--.*-->//g' | grep "<project" | sed 's/.*project //g' | grep 'remote="vanir"' | sed 's/[ ]*\/*>//g' | sed 's/groups=["a-zA-Z0-9,\-]*//g' | sed 's/.*path=\"//g' | sed 's/".*//g'`; do
-    pathlist="$pathlist $x"
-  done
-  set +f
-  [ ! "$pathlist" ] && echo "FAIL" && return 1
-  repo forall -r $pathlist -c "$@"
+  regex=$(repo forall -c '[ "$REPO_REMOTE" = "vanir" ] && echo -n \|^$REPO_PATH\$' | sed 's/^|//g')
+  repo forall -r $regex $FORALL_ARGS -c "$@"
+}
+function forall_cm()
+{
+  cd $ANDROID_BUILD_TOP
+  regex=$(repo forall -c '[ "$REPO_REMOTE" = "cm" ] && echo -n \|^$REPO_PATH\$' | sed 's/^|//g')
+  repo forall -r $regex $FORALL_ARGS -c "$@"
 }
 
 # Get the value of a build variable as an absolute path.
@@ -563,12 +563,6 @@ function add_lunch_combo()
 }
 
 # add the default one here
-add_lunch_combo aosp_arm-eng
-add_lunch_combo aosp_arm64-eng
-add_lunch_combo aosp_mips-eng
-add_lunch_combo aosp_mips64-eng
-add_lunch_combo aosp_x86-eng
-add_lunch_combo aosp_x86_64-eng
 
 function print_lunch_menu()
 {
@@ -701,17 +695,6 @@ function lunch()
     build_build_var_cache
     if [ $? -ne 0 ]
     then
-        # if we can't find a product, try to grab it off the CM github
-        T=$(gettop)
-        pushd $T > /dev/null
-        build/tools/roomservice.py $product
-        popd > /dev/null
-        check_product $product
-    else
-        build/tools/roomservice.py $product true
-    fi
-    if [ $? -ne 0 ]
-    then
         echo
         echo "** Don't have a product spec for: '$product'"
         echo "** Do you have the right repo manifest?"
@@ -733,6 +716,17 @@ function lunch()
     fixup_common_out_dir
 
     set_stuff_for_environment
+    T=$(gettop)
+    if [ $T ]; then
+        pushd . >& /dev/null
+        cd $T
+        local TARGET_PREBUILT_KERNEL=`get_build_var TARGET_PREBUILT_KERNEL`
+        if [ ! $TARGET_PREBUILT_KERNEL ]; then
+            source build/tools/bottleservice.sh
+            champagne $product || return 1
+        fi
+        popd >& /dev/null
+    fi
     printconfig
     destroy_build_var_cache
 }
@@ -1936,306 +1930,6 @@ function makerecipe() {
   '
 }
 
-function cmgerrit() {
-
-    if [ "$(__detect_shell)" = "zsh" ]; then
-        # zsh does not define FUNCNAME, derive from funcstack
-        local FUNCNAME=$funcstack[1]
-    fi
-
-    if [ $# -eq 0 ]; then
-        $FUNCNAME help
-        return 1
-    fi
-    local user=`git config --get review.review.cyanogenmod.org.username`
-    local review=`git config --get remote.github.review`
-    local project=`git config --get remote.github.projectname`
-    local command=$1
-    shift
-    case $command in
-        help)
-            if [ $# -eq 0 ]; then
-                cat <<EOF
-Usage:
-    $FUNCNAME COMMAND [OPTIONS] [CHANGE-ID[/PATCH-SET]][{@|^|~|:}ARG] [-- ARGS]
-
-Commands:
-    fetch   Just fetch the change as FETCH_HEAD
-    help    Show this help, or for a specific command
-    pull    Pull a change into current branch
-    push    Push HEAD or a local branch to Gerrit for a specific branch
-
-Any other Git commands that support refname would work as:
-    git fetch URL CHANGE && git COMMAND OPTIONS FETCH_HEAD{@|^|~|:}ARG -- ARGS
-
-See '$FUNCNAME help COMMAND' for more information on a specific command.
-
-Example:
-    $FUNCNAME checkout -b topic 1234/5
-works as:
-    git fetch http://DOMAIN/p/PROJECT refs/changes/34/1234/5 \\
-      && git checkout -b topic FETCH_HEAD
-will checkout a new branch 'topic' base on patch-set 5 of change 1234.
-Patch-set 1 will be fetched if omitted.
-EOF
-                return
-            fi
-            case $1 in
-                __cmg_*) echo "For internal use only." ;;
-                changes|for)
-                    if [ "$FUNCNAME" = "cmgerrit" ]; then
-                        echo "'$FUNCNAME $1' is deprecated."
-                    fi
-                    ;;
-                help) $FUNCNAME help ;;
-                fetch|pull) cat <<EOF
-usage: $FUNCNAME $1 [OPTIONS] CHANGE-ID[/PATCH-SET]
-
-works as:
-    git $1 OPTIONS http://DOMAIN/p/PROJECT \\
-      refs/changes/HASH/CHANGE-ID/{PATCH-SET|1}
-
-Example:
-    $FUNCNAME $1 1234
-will $1 patch-set 1 of change 1234
-EOF
-                    ;;
-                push) cat <<EOF
-usage: $FUNCNAME push [OPTIONS] [LOCAL_BRANCH:]REMOTE_BRANCH
-
-works as:
-    git push OPTIONS ssh://USER@DOMAIN:29418/PROJECT \\
-      {LOCAL_BRANCH|HEAD}:refs/for/REMOTE_BRANCH
-
-Example:
-    $FUNCNAME push fix6789:gingerbread
-will push local branch 'fix6789' to Gerrit for branch 'gingerbread'.
-HEAD will be pushed from local if omitted.
-EOF
-                    ;;
-                *)
-                    $FUNCNAME __cmg_err_not_supported $1 && return
-                    cat <<EOF
-usage: $FUNCNAME $1 [OPTIONS] CHANGE-ID[/PATCH-SET][{@|^|~|:}ARG] [-- ARGS]
-
-works as:
-    git fetch http://DOMAIN/p/PROJECT \\
-      refs/changes/HASH/CHANGE-ID/{PATCH-SET|1} \\
-      && git $1 OPTIONS FETCH_HEAD{@|^|~|:}ARG -- ARGS
-EOF
-                    ;;
-            esac
-            ;;
-        __cmg_get_ref)
-            $FUNCNAME __cmg_err_no_arg $command $# && return 1
-            local change_id patchset_id hash
-            case $1 in
-                */*)
-                    change_id=${1%%/*}
-                    patchset_id=${1#*/}
-                    ;;
-                *)
-                    change_id=$1
-                    patchset_id=1
-                    ;;
-            esac
-            hash=$(($change_id % 100))
-            case $hash in
-                [0-9]) hash="0$hash" ;;
-            esac
-            echo "refs/changes/$hash/$change_id/$patchset_id"
-            ;;
-        fetch|pull)
-            $FUNCNAME __cmg_err_no_arg $command $# help && return 1
-            $FUNCNAME __cmg_err_not_repo && return 1
-            local change=$1
-            shift
-            git $command $@ http://$review/p/$project \
-                $($FUNCNAME __cmg_get_ref $change) || return 1
-            ;;
-        push)
-            $FUNCNAME __cmg_err_no_arg $command $# help && return 1
-            $FUNCNAME __cmg_err_not_repo && return 1
-            if [ -z "$user" ]; then
-                echo >&2 "Gerrit username not found."
-                return 1
-            fi
-            local local_branch remote_branch
-            case $1 in
-                *:*)
-                    local_branch=${1%:*}
-                    remote_branch=${1##*:}
-                    ;;
-                *)
-                    local_branch=HEAD
-                    remote_branch=$1
-                    ;;
-            esac
-            shift
-            git push $@ ssh://$user@$review:29418/$project \
-                $local_branch:refs/for/$remote_branch || return 1
-            ;;
-        changes|for)
-            if [ "$FUNCNAME" = "cmgerrit" ]; then
-                echo >&2 "'$FUNCNAME $command' is deprecated."
-            fi
-            ;;
-        __cmg_err_no_arg)
-            if [ $# -lt 2 ]; then
-                echo >&2 "'$FUNCNAME $command' missing argument."
-            elif [ $2 -eq 0 ]; then
-                if [ -n "$3" ]; then
-                    $FUNCNAME help $1
-                else
-                    echo >&2 "'$FUNCNAME $1' missing argument."
-                fi
-            else
-                return 1
-            fi
-            ;;
-        __cmg_err_not_repo)
-            if [ -z "$review" -o -z "$project" ]; then
-                echo >&2 "Not currently in any reviewable repository."
-            else
-                return 1
-            fi
-            ;;
-        __cmg_err_not_supported)
-            $FUNCNAME __cmg_err_no_arg $command $# && return
-            case $1 in
-                #TODO: filter more git commands that don't use refname
-                init|add|rm|mv|status|clone|remote|bisect|config|stash)
-                    echo >&2 "'$FUNCNAME $1' is not supported."
-                    ;;
-                *) return 1 ;;
-            esac
-            ;;
-    #TODO: other special cases?
-        *)
-            $FUNCNAME __cmg_err_not_supported $command && return 1
-            $FUNCNAME __cmg_err_no_arg $command $# help && return 1
-            $FUNCNAME __cmg_err_not_repo && return 1
-            local args="$@"
-            local change pre_args refs_arg post_args
-            case "$args" in
-                *--\ *)
-                    pre_args=${args%%-- *}
-                    post_args="-- ${args#*-- }"
-                    ;;
-                *) pre_args="$args" ;;
-            esac
-            args=($pre_args)
-            pre_args=
-            if [ ${#args[@]} -gt 0 ]; then
-                change=${args[${#args[@]}-1]}
-            fi
-            if [ ${#args[@]} -gt 1 ]; then
-                pre_args=${args[0]}
-                for ((i=1; i<${#args[@]}-1; i++)); do
-                    pre_args="$pre_args ${args[$i]}"
-                done
-            fi
-            while ((1)); do
-                case $change in
-                    ""|--)
-                        $FUNCNAME help $command
-                        return 1
-                        ;;
-                    *@*)
-                        if [ -z "$refs_arg" ]; then
-                            refs_arg="@${change#*@}"
-                            change=${change%%@*}
-                        fi
-                        ;;
-                    *~*)
-                        if [ -z "$refs_arg" ]; then
-                            refs_arg="~${change#*~}"
-                            change=${change%%~*}
-                        fi
-                        ;;
-                    *^*)
-                        if [ -z "$refs_arg" ]; then
-                            refs_arg="^${change#*^}"
-                            change=${change%%^*}
-                        fi
-                        ;;
-                    *:*)
-                        if [ -z "$refs_arg" ]; then
-                            refs_arg=":${change#*:}"
-                            change=${change%%:*}
-                        fi
-                        ;;
-                    *) break ;;
-                esac
-            done
-            $FUNCNAME fetch $change \
-                && git $command $pre_args FETCH_HEAD$refs_arg $post_args \
-                || return 1
-            ;;
-    esac
-}
-
-function cmrebase() {
-    local repo=$1
-    local refs=$2
-    local pwd="$(pwd)"
-    local dir="$(gettop)/$repo"
-
-    if [ -z $repo ] || [ -z $refs ]; then
-        echo "CyanogenMod Gerrit Rebase Usage: "
-        echo "      cmrebase <path to project> <patch IDs on Gerrit>"
-        echo "      The patch IDs appear on the Gerrit commands that are offered."
-        echo "      They consist on a series of numbers and slashes, after the text"
-        echo "      refs/changes. For example, the ID in the following command is 26/8126/2"
-        echo ""
-        echo "      git[...]ges_apps_Camera refs/changes/26/8126/2 && git cherry-pick FETCH_HEAD"
-        echo ""
-        return
-    fi
-
-    if [ ! -d $dir ]; then
-        echo "Directory $dir doesn't exist in tree."
-        return
-    fi
-    cd $dir
-    repo=$(cat .git/config  | grep git://github.com | awk '{ print $NF }' | sed s#git://github.com/##g)
-    echo "Starting branch..."
-    repo start tmprebase .
-    echo "Bringing it up to date..."
-    repo sync .
-    echo "Fetching change..."
-    git fetch "http://review.cyanogenmod.org/p/$repo" "refs/changes/$refs" && git cherry-pick FETCH_HEAD
-    if [ "$?" != "0" ]; then
-        echo "Error cherry-picking. Not uploading!"
-        return
-    fi
-    echo "Uploading..."
-    repo upload .
-    echo "Cleaning up..."
-    repo abandon tmprebase .
-    cd $pwd
-}
-
-function mka() {
-    local T=$(gettop)
-    if [ "$T" ]; then
-        case `uname -s` in
-            Darwin)
-                local threads=`sysctl hw.ncpu|cut -d" " -f2`
-                local load=`expr $threads \* 2`
-                make -j -l $load "$@"
-                retval=$?
-                ;;
-            *)
-                mk_timer schedtool -B -n 1 -e ionice -n 1 make -C $T -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
-                ;;
-        esac
-
-    else
-        echo "Couldn't locate the top of the tree.  Try setting TOP."
-    fi
-}
-
 function mms() {
     local T=$(gettop)
     if [ -z "$T" ]
@@ -2266,6 +1960,47 @@ function repolastsync() {
     echo "Last repo sync: $RLSLOCAL / $RLSUTC"
 }
 
+function mka() {
+T=$(gettop)
+CWD=$(pwd)
+croot
+if [ ! "$T" ]; then
+    echo "Couldn't locate the top of the tree.  CD into it, or try setting TOP." >&2
+    return
+fi
+export TARGET_SIMULATOR=false
+export BUILD_TINY_ANDROID=
+local MAKECMD=""
+case `uname -s` in
+    Darwin)
+        if [ ! $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
+            local threads=`sysctl hw.ncpu|cut -d" " -f2`
+            local load=`expr $threads \* 2`
+            VANIR_PARALLEL_JOBS="-j$load"
+        fi
+        MAKECMD="`command -pv make` $VANIR_PARALLEL_JOBS"
+        ;;
+    *)
+        if [ ! $(echo $VANIR_PARALLEL_JOBS | wc -w) -gt 0 ]; then
+            local cores=`nproc --all`
+            VANIR_PARALLEL_JOBS="-j$cores"
+        fi
+        MAKECMD="schedtool -B -n 1 -e ionice -n 1 `command -pv make` $VANIR_PARALLEL_JOBS"
+        ;;
+esac
+export start_time=$(date +"%s")
+echo $start_time > ${ANDROID_BUILD_TOP}/.lastbuildstart
+mk_timer $MAKECMD "$@"
+retval=$?
+if [ $retval -eq 0 ] ; then
+    [ ! $VANIR_DISABLE_BUILD_COMPLETION_NOTIFICATIONS ] && notify-send "VANIR" "$TARGET_PRODUCT build completed." -i $T/build/buildwin.png -t 10000
+else
+    [ ! $VANIR_DISABLE_BUILD_COMPLETION_NOTIFICATIONS ] && notify-send "VANIR" "$TARGET_PRODUCT build FAILED." -i $T/build/buildfailed.png -t 10000
+fi
+cd "$CWD"
+return $retval
+}
+
 smash() {
 #to do: add smash $anytarget, smashOTA, smash, smashVANIR
 DIR=$OUT
@@ -2289,6 +2024,33 @@ DIR=$OUT
 	echo $CL_YLW" Already" $CL_RED" SMASHED it !!!" $CL_RST
 	echo ""
 	fi
+}
+
+function cmka() {
+    if [ ! -z "$1" ]; then
+        for i in "$@"; do
+            case $i in
+                bacon|otapackage|systemimage)
+                    mka installclean
+                    mka $i
+                    ;;
+                *)
+                    mka clean-$i
+                    mka $i
+                    ;;
+            esac
+        done
+    else
+        mka clean
+        mka
+    fi
+}
+
+function repolastsync() {
+    RLSPATH="$ANDROID_BUILD_TOP/.repo/.repo_fetchtimes.json"
+    RLSLOCAL=$(date -d "$(stat -c %z $RLSPATH)" +"%e %b %Y, %T %Z")
+    RLSUTC=$(date -d "$(stat -c %z $RLSPATH)" -u +"%e %b %Y, %T %Z")
+    echo "Last repo sync: $RLSLOCAL / $RLSUTC"
 }
 
 function reposync() {
@@ -2645,9 +2407,48 @@ do
 done
 unset f
 
+if [ $STFU_REPO ]; then
+    pushd . >& /dev/null
+    cd $(gettop)/.repo/repo
+    [ `git remote -v | grep github | wc -l` -eq 0 ] && git remote add github https://github.com/nuclearmistake/repo
+    git fetch github >& /dev/null
+    git checkout github/master >& /dev/null
+    popd >& /dev/null
+fi
+
+#rst (repo start helper), rup (repo upload helper)
+source $(gettop)/build/nukehawtness
+
+parse_git_dirty() {
+ [ $(git status --porcelain 2> /dev/null | wc -l) -ne 0 ] && echo " \*"
+}
+parse_git_branch() {
+ [ "$(parse_git_dirty)" = "" ] && echo -en "\033[1;32m" || echo -en "\033[1;31m"
+ git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/ (\1$(parse_git_dirty))/"
+}
+if [ ! $GITPS1ENGAGED ]; then
+export GITPS1ENGAGED=1
+export PS1=`echo "$PS1" | sed 's/\[\$ \]*//g'`
+export NONE='\[\033[0m\]'
+istheregit=$(which git)
+if [ `echo $PS1 | grep parse_git_branch | wc -l` -eq 0 ]; then
+  if [ -x "$istheregit" ]; then
+      export PS1="${NONE}$PS1\$(parse_git_branch)${NONE}"
+  else
+      export PS1="$PS1$ "
+  fi
+  export PS1=`echo "$PS1" | sed 's/$[ ]*$//g'`"\n${NONE}\$ "
+fi
+fi
+
+#allow tab completion of git commands and branch names
+if [ `typeset -F | grep _git | wc -l` -eq 0 ]; then
+    source $(gettop)/build/git-completion.bash
+fi
+
 # Add completions
 check_bash_version && {
-    dirs="sdk/bash_completion vendor/cm/bash_completion"
+    dirs="sdk/bash_completion vendor/vanir/bash_completion"
     for dir in $dirs; do
     if [ -d ${dir} ]; then
         for f in `/bin/ls ${dir}/[a-z]*.bash 2> /dev/null`; do
@@ -2659,5 +2460,4 @@ check_bash_version && {
 }
 
 export ANDROID_BUILD_TOP=$(gettop)
-
-export PATH=$ANDROID_BUILD_TOP/ccache:$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts
+export PATH=$ANDROID_BUILD_TOP/ccache:$ANDROID_BUILD_TOP/.ccachesymlinks:$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts
