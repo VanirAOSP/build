@@ -3,6 +3,24 @@
 # current configuration and platform, which
 # are not specific to what is being built.
 
+# These may be used to trace makefile issues without interfering with
+# envsetup.sh.  Usage:
+#   $(call ainfo,some info message)
+#   $(call aerror,some error message)
+ifdef CALLED_FROM_SETUP
+define ainfo
+endef
+define aerror
+endef
+else
+define ainfo
+$(info $(1))
+endef
+define aerror
+$(error $(1))
+endef
+endif
+
 # Only use ANDROID_BUILD_SHELL to wrap around bash.
 # DO NOT use other shells such as zsh.
 ifdef ANDROID_BUILD_SHELL
@@ -411,6 +429,7 @@ MKBOOTIMG := $(HOST_OUT_EXECUTABLES)/mkbootimg$(HOST_EXECUTABLE_SUFFIX)
 else
 MKBOOTIMG := $(BOARD_CUSTOM_MKBOOTIMG)
 endif
+MKYAFFS2 := $(HOST_OUT_EXECUTABLES)/mkyaffs2image$(HOST_EXECUTABLE_SUFFIX)
 APICHECK := $(HOST_OUT_EXECUTABLES)/apicheck$(HOST_EXECUTABLE_SUFFIX)
 MKIMAGE :=  $(HOST_OUT_EXECUTABLES)/mkimage$(HOST_EXECUTABLE_SUFFIX)
 FS_GET_STATS := $(HOST_OUT_EXECUTABLES)/fs_get_stats$(HOST_EXECUTABLE_SUFFIX)
