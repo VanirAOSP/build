@@ -162,6 +162,14 @@ class EdifyGenerator(object):
            ");")
     self.script.append(self._WordWrap(cmd))
 
+  def RunAutomagic(self):
+    self.script.append('package_extract_file("system/bin/automagic.sh", "/tmp/automagic.sh");')
+    if not self.info.get("use_set_metadata", False):
+      self.script.append('set_perm(0, 0, 0755, "/tmp/automagic.sh");')
+    else:
+      self.script.append('set_metadata("/tmp/automagic.sh", "uid", 0, "gid", 0, "mode", 0755);')
+    self.script.append('run_program("/tmp/automagic.sh");')
+
   def RunBackup(self, command):
     self.script.append(('run_program("/tmp/install/bin/backuptool.sh", "%s");' % command))
 
@@ -236,16 +244,18 @@ class EdifyGenerator(object):
       mount_flags = mount_dict.get(p.fs_type, "")
       if p.context is not None:
         mount_flags = p.context + ("," + mount_flags if mount_flags else "")
-      self.script.append('mount("%s", "%s", "%s", "%s", "%s");' % (
-          p.fs_type, common.PARTITION_TYPES[p.fs_type], p.device,
+      self.script.append('if !is_mounted("%s") then mount("%s", "%s", "%s", "%s", "%s") endif;' %
+         (p.mount_point, p.fs_type, common.PARTITION_TYPES[p.fs_type], p.device,
           p.mount_point, mount_flags))
+    if not mount_point in self.mounts:
       self.mounts.add(p.mount_point)
 
   def Unmount(self, mount_point):
     """Unmount the partiiton with the given mount_point."""
     if mount_point in self.mounts:
       self.mounts.remove(mount_point)
-      self.script.append('unmount("%s");' % (mount_point,))
+    self.script.append('if is_mounted("%s") then unmount("%s") endif;' %
+         (mount_point, mount_point))
 
   def UnpackPackageDir(self, src, dst):
     """Unpack a given directory from the OTA package into the given
@@ -277,7 +287,6 @@ class EdifyGenerator(object):
   def FormatPartition(self, partition):
     """Format the given partition, specified by its mount point (eg,
     "/system")."""
-
     fstab = self.fstab
     if fstab:
       p = fstab[partition]
@@ -413,10 +422,6 @@ class EdifyGenerator(object):
   def AppendExtra(self, extra):
     """Append text verbatim to the output script."""
     self.script.append(extra)
-
-  def Unmount(self, mount_point):
-    self.script.append('unmount("%s");' % mount_point)
-    self.mounts.remove(mount_point)
 
   def UnmountAll(self):
     for p in sorted(self.mounts):

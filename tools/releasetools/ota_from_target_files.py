@@ -605,8 +605,44 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.Print("Target: %s" % CalculateFingerprint(
       oem_props, oem_dict, OPTIONS.info_dict))
 
-  script.AppendExtra("ifelse(is_mounted(\"/system\"), unmount(\"/system\"));")
+  script.Unmount("/system");
   device_specific.FullOTA_InstallBegin()
+
+  #says: VANIR
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
+  script.Print(" ")
+  script.Print("                L.                            ")
+  script.Print("                EW:        ,ft t   j.         ")
+  script.Print("             .. E##;       t#E Ej  EW,        ")
+  script.Print("t      .DD. ;W, E###t      t#E E#, E##j       ")
+  script.Print("EK:   ,WK. j##, E#fE#f     t#E E#t E###D.     ")
+  script.Print("E#t  i#D  G###, E#t D#G    t#E E#t E#jG#W;    ")
+  script.Print("E#t j#f :E####, E#t  f#E.  t#E E#t E#t t##f   ")
+  script.Print("E#tL#i ;W#DG##, E#t   t#K: t#E E#t E#t  :K#E: ")
+  script.Print("E#WW, j###DW##, E#t    ;#W,t#E E#t E#KDDDD###i")
+  script.Print("E#K: G##i,,G##, E#t     :K#D#E E#t E#f,t#Wi,,,")
+  script.Print("ED.:K#K:   L##, E#t      .E##E E#t E#t  ;#W:  ")
+  script.Print("t ;##D.    L##, ..         G#E E#t DWi   ,KK: ")
+  script.Print("  ,,,      .,,              fE ,;.            ")
+  script.Print("                             ,                ")
+  script.Print("  Vanir - Marshallow 6.0 ")
+  script.Print("    \"Jet-Puffed\"")
+  script.Print("    by Team Vanir")
+  script.Print(" ")
+
+  script.Unmount("/system")
+
+  if OPTIONS.backuptool:
+    if block_based:
+      common.ZipWriteStr(output_zip, "system/bin/automagic.sh",
+                     ""+input_zip.read("SYSTEM/bin/automagic.sh"))
+      common.ZipWriteStr(output_zip, "system/build.prop",
+                     ""+input_zip.read("SYSTEM/build.prop"))
 
   CopyInstallTools(output_zip)
   script.UnpackPackageDir("install", "/tmp/install")
@@ -700,13 +736,23 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   device_specific.FullOTA_PostValidate()
 
+  script.Mount("/system", recovery_mount_options)
+
+  vanirinitlinks = []
+  vanirinitlinks.append(("/init.vanir.rc", "/init.cm.rc"))
+  vanirinitlinks.append(("/init.vanir.rc", "/system/etc/init.local.rc"))
+  script.MakeSymlinks(vanirinitlinks)
+
   if OPTIONS.backuptool:
+    script.Print("Resurrecting gapps from pre-flash backup")
     script.ShowProgress(0.02, 10)
-    if block_based:
-      script.Mount("/system")
     script.RunBackup("restore")
-    if block_based:
-      script.Unmount("/system")
+
+  script.AppendExtra('set_metadata_recursive("/system/etc/init.d", "uid", 0, "gid", 2000, "dmode", 0755, "fmode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");')
+  script.AppendExtra('set_metadata_recursive("/system/etc/boot.d", "uid", 0, "gid", 2000, "dmode", 0755, "fmode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");')
+  script.AppendExtra('set_metadata_recursive("/system/etc/cron", "uid", 0, "gid", 2000, "dmode", 0755, "fmode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");')
+
+  script.Unmount("/system")
 
   script.ShowProgress(0.05, 5)
   script.WriteRawImage("/boot", "boot.img")
