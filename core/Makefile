@@ -1843,6 +1843,7 @@ endif
 name := $(name)-ota-$(FILE_NAME_TAG)
 
 INTERNAL_OTA_PACKAGE_TARGET := $(PRODUCT_OUT)/$(name).zip
+export OTA_PACKAGE_PATH :=$(INTERNAL_OTA_PACKAGE_TARGET)
 
 ifeq ($($(strip DHO_VENDOR)),)
   DHO_VENDOR := vanir
