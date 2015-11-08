@@ -631,7 +631,7 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.Print("  ,,,      .,,              fE ,;.            ")
   script.Print("                             ,                ")
   script.Print("  Vanir - Marshallow 6.0 ")
-  script.Print("    \"Jet-Puffed\"")
+  script.Print("    'Jet-Puffed'")
   script.Print("    by Team Vanir")
   script.Print(" ")
 
