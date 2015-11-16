@@ -1124,7 +1124,8 @@ findbugs: $(INTERNAL_FINDBUGS_HTML_TARGET) $(INTERNAL_FINDBUGS_XML_TARGET)
 .PHONY: clean
 clean:
 	@rm -rf $(OUT_DIR)/*
-	@echo "Entire build directory removed."
+	@echo -e ${CL_GRN}"Entire build directory removed."${CL_RST}
+	@echo "clobber" > $(ANDROID_BUILD_TOP)/.lastbuild
 
 .PHONY: clobber
 clobber: clean
@@ -1134,6 +1135,7 @@ clobber: clean
 novo:
 	@rm -rf $(OUT_DIR)/target/*
 	@echo -e ${CL_GRN}"Target directory removed."${CL_RST}
+	@echo "novo" > $(ANDROID_BUILD_TOP)/.lastbuild
 
 # This is designed for building in memory.  Clean products, but keep common files - DHO
 .PHONY: burst
