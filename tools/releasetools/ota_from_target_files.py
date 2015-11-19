@@ -744,11 +744,6 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   script.Mount("/system", recovery_mount_options)
 
-  vanirinitlinks = []
-  vanirinitlinks.append(("/init.vanir.rc", "/init.cm.rc"))
-  vanirinitlinks.append(("/init.vanir.rc", "/system/etc/init.local.rc"))
-  script.MakeSymlinks(vanirinitlinks)
-
   if OPTIONS.backuptool:
     script.Print("Resurrecting gapps from pre-flash backup")
     script.ShowProgress(0.02, 10)
