@@ -24,5 +24,3 @@ else
     popd 2>&1 >/dev/null
     echo "ccache updated to version `ccache/ccache -V`" 1>&2
 fi
-mkdir -p `pwd`/.ccachesymlinks
-$(dirname $0)/update-ccache-symlinks `pwd`/.ccachesymlinks
