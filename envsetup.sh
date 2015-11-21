@@ -2462,4 +2462,4 @@ check_bash_version && {
 # Ensure that latest ccache is compiled for host
 build/tools/ccache_version_check.s
 export ANDROID_BUILD_TOP=$(gettop)
-export PATH=$ANDROID_BUILD_TOP/ccache:$ANDROID_BUILD_TOP/.ccachesymlinks:$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts
+export PATH=$ANDROID_BUILD_TOP/ccache:$PATH:$ANDROID_BUILD_TOP/vendor/vanir/scripts
