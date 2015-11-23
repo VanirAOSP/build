@@ -72,8 +72,6 @@ droid_targets:
 .PHONY: FORCE
 FORCE:
 
-include $(BUILD_SYSTEM)/ccache.mk
-
 # These goals don't need to collect and include Android.mks/CleanSpec.mks
 # in the source tree.
 dont_bother_goals := clean clobber dataclean installclean \
