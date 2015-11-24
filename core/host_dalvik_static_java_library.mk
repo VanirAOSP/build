@@ -50,8 +50,8 @@ $(full_classes_jack): \
 endif
 $(full_classes_jack): $(java_sources) $(java_resource_sources) $(full_jack_deps) \
         $(jar_manifest_file) $(layers_file) $(LOCAL_MODULE_MAKEFILE_DEP) \
-        $(LOCAL_ADDITIONAL_DEPENDENCIES) $(LOCAL_JARJAR_RULES) \
-        @echo -e ${CL_GRN}"Building with Jack:"${CL_RST}" $@"
+        $(LOCAL_ADDITIONAL_DEPENDENCIES) $(LOCAL_JARJAR_RULES) \)
+        @echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
 	$(java-to-jack)
 
 USE_CORE_LIB_BOOTCLASSPATH :=

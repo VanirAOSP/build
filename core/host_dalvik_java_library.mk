@@ -131,7 +131,7 @@ jack_all_deps := $(java_sources) $(java_resource_sources) $(full_jack_deps) \
         $(LOCAL_ADDITIONAL_DEPENDENCIES) $(JACK)
 $(built_dex): PRIVATE_CLASSES_JACK := $(full_classes_jack)
 $(built_dex): $(jack_all_deps) | setup-jack-server
-	@echo -e ${CL_GRN}"Building with Jack:"${CL_RST}" $@"
+	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
 	$(jack-java-to-dex)
 
 $(jack_check_timestamp): $(jack_all_deps) | setup-jack-server

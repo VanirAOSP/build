@@ -703,13 +703,8 @@ $(jack_check_timestamp): $(jack_all_deps) | setup-jack-server
 	$(jack-check-java)
 
 ifeq ($(LOCAL_IS_STATIC_JAVA_LIBRARY),true)
-<<<<<<< HEAD
 $(full_classes_jack): $(jack_all_deps) | setup-jack-server
-	@echo Building with Jack: $@
-=======
-$(full_classes_jack): $(jack_all_deps)
-	@echo -e ${CL_GRN}"Building with Jack:"${CL_RST}" $@"
->>>>>>> 4db8d18... Colorize uncolored statements
+	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
 	$(java-to-jack)
 
 # Update timestamps of .toc files for static java libraries so
@@ -720,7 +715,6 @@ $(built_dex).toc: $(full_classes_jack)
 else #LOCAL_IS_STATIC_JAVA_LIBRARY
 $(built_dex_intermediate): PRIVATE_CLASSES_JACK := $(full_classes_jack)
 
-<<<<<<< HEAD
 ifeq ($(LOCAL_EMMA_INSTRUMENT),true)
 $(built_dex_intermediate): PRIVATE_JACK_COVERAGE_OPTIONS := \
     -D jack.coverage=true \
@@ -733,11 +727,7 @@ $(built_dex_intermediate): PRIVATE_JACK_COVERAGE_OPTIONS :=
 endif
 
 $(built_dex_intermediate): $(jack_all_deps) | setup-jack-server
-	@echo Building with Jack: $@
-=======
-$(built_dex_intermediate): $(jack_all_deps)
-	@echo -e ${CL_GRN}"Building with Jack:"${CL_RST}" $@"
->>>>>>> 4db8d18... Colorize uncolored statements
+	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
 	$(jack-java-to-dex)
 
 # $(full_classes_jack) is just by-product of $(built_dex_intermediate).
@@ -752,13 +742,8 @@ endif #LOCAL_IS_STATIC_JAVA_LIBRARY
 
 $(noshrob_classes_jack): PRIVATE_JACK_INTERMEDIATES_DIR := $(intermediates.COMMON)/jack-noshrob-rsc
 $(noshrob_classes_jack): PRIVATE_JACK_PROGUARD_FLAGS :=
-<<<<<<< HEAD
 $(noshrob_classes_jack): $(jack_all_deps) | setup-jack-server
-	@echo Building with Jack: $@
-=======
-$(noshrob_classes_jack): $(jack_all_deps)
-	@echo -e ${CL_GRN}"Building with Jack:"${CL_RST}" $@"
->>>>>>> 4db8d18... Colorize uncolored statements
+	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
 	$(java-to-jack)
 endif  # full_classes_jar is defined
 endif # LOCAL_JACK_ENABLED
