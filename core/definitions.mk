@@ -1892,8 +1892,9 @@ $(if $(PRIVATE_JAR_MANIFEST), $(hide) echo unsupported options JAR_MANIFEST in $
 endef
 
 define transform-jar-to-jack
+	$(hide) echo -e ${CL_GRN}"Jilling"${CL_RST}": $< "${CL_YLW}" to "${CL_RST}" $@"
 	$(hide) mkdir -p $(dir $@)
-	$(JILL) $(PRIVATE_JILL_FLAGS) --output $@.tmpjill.jack $<
+	$(hide) $(JILL) $(PRIVATE_JILL_FLAGS) --output $@.tmpjill.jack $<
 	$(hide) mkdir -p $@.tmpjill.res
 	$(hide) $(call unzip-jar-files,$<,$@.tmpjill.res)
 	$(hide) find $@.tmpjill.res -iname "*.class" -delete
