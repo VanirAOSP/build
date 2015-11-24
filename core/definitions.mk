@@ -1082,7 +1082,7 @@ endef
 
 define transform-aidl-to-java
 @mkdir -p $(dir $@)
-@echo "Aidl: $(PRIVATE_MODULE) <= $<"
+@echo -e ${CL_GRN}"Aidl:"${CL_RST}" $(PRIVATE_MODULE) <= $<"
 $(hide) $(AIDL) -d$(patsubst %.java,%.P,$@) $(PRIVATE_AIDL_FLAGS) $< $@
 endef
 #$(AIDL) $(PRIVATE_AIDL_FLAGS) $< - | indent -nut -br -npcs -l1000 > $@
