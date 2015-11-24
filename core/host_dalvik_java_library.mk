@@ -89,16 +89,16 @@ $(full_classes_compiled_jar): \
 ifneq ($(strip $(LOCAL_JARJAR_RULES)),)
 $(full_classes_jarjar_jar): PRIVATE_JARJAR_RULES := $(LOCAL_JARJAR_RULES)
 $(full_classes_jarjar_jar): $(full_classes_compiled_jar) $(LOCAL_JARJAR_RULES) | $(JARJAR)
-	@echo JarJar: $@
+	@echo -e ${CL_GRN}"JarJar:"${CL_RST}" $@"
 	$(hide) java -jar $(JARJAR) process $(PRIVATE_JARJAR_RULES) $< $@
 else
 $(full_classes_jarjar_jar): $(full_classes_compiled_jar) | $(ACP)
-	@echo Copying: $@
+	@echo -e ${CL_GRN}"Copying"${CL_RST}": $@
 	$(hide) $(ACP) -fp $< $@
 endif
 
 $(full_classes_jar): $(full_classes_jarjar_jar) | $(ACP)
-	@echo Copying: $@
+	@echo -e ${CL_GRN}"Copying:"${CL_RST}" $@"
 	$(hide) $(ACP) -fp $< $@
 
 ifndef LOCAL_JACK_ENABLED
@@ -107,7 +107,7 @@ $(LOCAL_BUILT_MODULE): PRIVATE_DEX_FILE := $(built_dex)
 $(LOCAL_BUILT_MODULE): PRIVATE_SOURCE_ARCHIVE := $(full_classes_jarjar_jar)
 $(LOCAL_BUILT_MODULE): PRIVATE_DONT_DELETE_JAR_DIRS := $(LOCAL_DONT_DELETE_JAR_DIRS)
 $(LOCAL_BUILT_MODULE): $(built_dex) $(java_resource_sources)
-	@echo "Host Jar: $(PRIVATE_MODULE) ($@)"
+	@echo -e ${CL_GRN}"Host Jar:"${CL_RST}" $(PRIVATE_MODULE) ($@)"
 	$(call initialize-package-file,$(PRIVATE_SOURCE_ARCHIVE),$@)
 	$(add-dex-to-package)
 
@@ -131,7 +131,7 @@ jack_all_deps := $(java_sources) $(java_resource_sources) $(full_jack_deps) \
         $(LOCAL_ADDITIONAL_DEPENDENCIES) $(JACK)
 $(built_dex): PRIVATE_CLASSES_JACK := $(full_classes_jack)
 $(built_dex): $(jack_all_deps) | setup-jack-server
-	@echo Building with Jack: $@
+	@echo -e ${CL_GRN}"Building with Jack:"${CL_RST}" $@"
 	$(jack-java-to-dex)
 
 $(jack_check_timestamp): $(jack_all_deps) | setup-jack-server
@@ -146,7 +146,7 @@ $(full_classes_jack): $(built_dex)
 
 $(LOCAL_BUILT_MODULE): PRIVATE_DEX_FILE := $(built_dex)
 $(LOCAL_BUILT_MODULE): $(built_dex) $(java_resource_sources)
-	@echo "Host Jar: $(PRIVATE_MODULE) ($@)"
+	@echo -e ${CL_GRN}"Host Jar:"${CL_RST}" $(PRIVATE_MODULE) ($@)"
 	$(create-empty-package)
 	$(add-dex-to-package)
 	$(add-carried-jack-resources)

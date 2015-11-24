@@ -597,7 +597,7 @@ $(full_classes_proguard_jar) : $(full_classes_jar) $(extra_input_jar) $(my_suppo
 
 else  # LOCAL_PROGUARD_ENABLED not defined
 $(full_classes_proguard_jar) : $(full_classes_jar)
-	@echo Copying: $@
+	@echo -e ${CL_GRN}"Copying:"${CL_RST}" $@"
 	$(hide) $(ACP) -fp $< $@
 
 endif # LOCAL_PROGUARD_ENABLED defined
@@ -632,7 +632,7 @@ $(findbugs_xml): PRIVATE_AUXCLASSPATH := $(addprefix -auxclasspath ,$(strip \
     $(call normalize-path-list,$(filter %.jar,$(full_java_libs)))))
 $(findbugs_xml): PRIVATE_FINDBUGS_FLAGS := $(LOCAL_FINDBUGS_FLAGS)
 $(findbugs_xml) : $(full_classes_jar) $(filter %.xml, $(LOCAL_FINDBUGS_FLAGS))
-	@echo Findbugs: $@
+	@echo -e ${CL_GRN}"Findbugs:"${CL_RST}" $@"
 	$(hide) $(FINDBUGS) -textui -effort:min -xml:withMessages \
 		$(PRIVATE_AUXCLASSPATH) $(PRIVATE_FINDBUGS_FLAGS) \
 		$< \
@@ -645,7 +645,7 @@ $(findbugs_html) : PRIVATE_XML_FILE := $(findbugs_xml)
 $(LOCAL_MODULE)-findbugs : $(findbugs_html)
 $(findbugs_html) : $(findbugs_xml)
 	@mkdir -p $(dir $@)
-	@echo ConvertXmlToText: $@
+	@echo -e ${CL_GRN}"ConvertXmlToText:"${CL_RST}" $@"
 	$(hide) $(FINDBUGS_DIR)/convertXmlToText -html:fancy.xsl $(PRIVATE_XML_FILE) \
 	> $@
 
@@ -703,8 +703,13 @@ $(jack_check_timestamp): $(jack_all_deps) | setup-jack-server
 	$(jack-check-java)
 
 ifeq ($(LOCAL_IS_STATIC_JAVA_LIBRARY),true)
+<<<<<<< HEAD
 $(full_classes_jack): $(jack_all_deps) | setup-jack-server
 	@echo Building with Jack: $@
+=======
+$(full_classes_jack): $(jack_all_deps)
+	@echo -e ${CL_GRN}"Building with Jack:"${CL_RST}" $@"
+>>>>>>> 4db8d18... Colorize uncolored statements
 	$(java-to-jack)
 
 # Update timestamps of .toc files for static java libraries so
@@ -715,6 +720,7 @@ $(built_dex).toc: $(full_classes_jack)
 else #LOCAL_IS_STATIC_JAVA_LIBRARY
 $(built_dex_intermediate): PRIVATE_CLASSES_JACK := $(full_classes_jack)
 
+<<<<<<< HEAD
 ifeq ($(LOCAL_EMMA_INSTRUMENT),true)
 $(built_dex_intermediate): PRIVATE_JACK_COVERAGE_OPTIONS := \
     -D jack.coverage=true \
@@ -728,6 +734,10 @@ endif
 
 $(built_dex_intermediate): $(jack_all_deps) | setup-jack-server
 	@echo Building with Jack: $@
+=======
+$(built_dex_intermediate): $(jack_all_deps)
+	@echo -e ${CL_GRN}"Building with Jack:"${CL_RST}" $@"
+>>>>>>> 4db8d18... Colorize uncolored statements
 	$(jack-java-to-dex)
 
 # $(full_classes_jack) is just by-product of $(built_dex_intermediate).
@@ -742,8 +752,13 @@ endif #LOCAL_IS_STATIC_JAVA_LIBRARY
 
 $(noshrob_classes_jack): PRIVATE_JACK_INTERMEDIATES_DIR := $(intermediates.COMMON)/jack-noshrob-rsc
 $(noshrob_classes_jack): PRIVATE_JACK_PROGUARD_FLAGS :=
+<<<<<<< HEAD
 $(noshrob_classes_jack): $(jack_all_deps) | setup-jack-server
 	@echo Building with Jack: $@
+=======
+$(noshrob_classes_jack): $(jack_all_deps)
+	@echo -e ${CL_GRN}"Building with Jack:"${CL_RST}" $@"
+>>>>>>> 4db8d18... Colorize uncolored statements
 	$(java-to-jack)
 endif  # full_classes_jar is defined
 endif # LOCAL_JACK_ENABLED
