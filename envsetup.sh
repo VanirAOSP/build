@@ -165,7 +165,14 @@ function check_product()
     else
        CM_BUILD=
     fi
+    if (echo -n $1 | grep -q -e "^vanir_"); then
+       VANIR_BUILD=$(echo -n $1 | sed -e 's/^vanir_//g')
+       export BUILD_NUMBER=$((date +%s%N ; echo $VANIR_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
+    else
+       VANIR_BUILD=
+    fi
     export CM_BUILD
+    export VANIR_BUILD
 
         TARGET_PRODUCT=$1 \
         TARGET_BUILD_VARIANT= \
