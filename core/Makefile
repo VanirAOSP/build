@@ -92,6 +92,10 @@ ADDITIONAL_DEFAULT_PROPERTIES := $(call uniq-pairs-by-first-component, \
 
 intermediate_system_build_prop := $(call intermediates-dir-for,ETC,system_build_prop)/build.prop
 
+ifeq ($(PRODUCT_BOOTIMAGE_BUILD_PROP_FINGERPRINT),)
+  PRODUCT_BOOTIMAGE_BUILD_PROP_FINGERPRINT := $(BUILD_FINGERPRINT)
+endif
+
 $(INSTALLED_DEFAULT_PROP_TARGET): $(intermediate_system_build_prop)
 	@echo Target buildinfo: $@
 	@mkdir -p $(dir $@)
@@ -105,7 +109,7 @@ $(INSTALLED_DEFAULT_PROP_TARGET): $(intermediate_system_build_prop)
 	        echo "#" >> $@;
 	$(hide) echo ro.bootimage.build.date=`date`>>$@
 	$(hide) echo ro.bootimage.build.date.utc=`date +%s`>>$@
-	$(hide) echo ro.bootimage.build.fingerprint="$(BUILD_FINGERPRINT)">>$@
+	$(hide) echo ro.bootimage.build.fingerprint="$(PRODUCT_BOOTIMAGE_BUILD_PROP_FINGERPRINT)">>$@
 	$(hide) build/tools/post_process_props.py $@
 
 # -----------------------------------------------------------------
