@@ -749,10 +749,6 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
     script.ShowProgress(0.02, 10)
     script.RunBackup("restore")
 
-  script.AppendExtra('set_metadata_recursive("/system/etc/init.d", "uid", 0, "gid", 2000, "dmode", 0755, "fmode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");')
-  script.AppendExtra('set_metadata_recursive("/system/etc/boot.d", "uid", 0, "gid", 2000, "dmode", 0755, "fmode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");')
-  script.AppendExtra('set_metadata_recursive("/system/etc/cron", "uid", 0, "gid", 2000, "dmode", 0755, "fmode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");')
-
   script.Unmount("/system")
 
   script.ShowProgress(0.05, 5)
