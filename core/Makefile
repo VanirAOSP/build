@@ -2046,14 +2046,14 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE)
 	   $(if $(OEM_OTA_CONFIG), -o $(OEM_OTA_CONFIG)) \
 	   $(BUILT_TARGET_FILES_PACKAGE) $@
 
-.PHONY: otapackage bacon bacon_internal
+.PHONY: otapackage bacon baconator
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
 
-bacon:
-	@echo bacon >> $(ANDROID_BUILD_TOP)/.lastbuild
-	@$(MAKE) bacon_internal
 
-bacon_internal: otapackage
+baconator:
+	@echo bacon >> $(ANDROID_BUILD_TOP)/.lastbuild
+
+bacon: baconator otapackage
 ifneq ($(TARGET_CUSTOM_RELEASETOOL),)
 	@echo -e ${CL_YLW}"Running custom releasetool..."${CL_RST}
 	@echo "Running releasetool"
