@@ -58,6 +58,7 @@ champagne()
     [ $remoterevision ] && getkernelline=$getkernelline' revision="'$remoterevision'"'
     haskernelline=`cat .repo/local_manifests/bottleservice.xml | egrep "$getkernelline" | wc -l`
     hasdevice=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->" | wc -l`
+    invalidateddevices=
     if [ $precompiled ] && [ $hasdevice -gt 0 ] || [ $hasdevice -gt 0 ] && [ $haskernelline -eq 0 ]; then
        #device comment is in the file, but its kernel is the wrong one
        line=`cat .repo/local_manifests/bottleservice.xml | egrep "<!-- $device -->"`
@@ -70,6 +71,7 @@ champagne()
            fi
        done
        if [ `echo $remainingdevs | wc -c` -gt 1 ]; then
+           invalidateddevices="$remainingdevs"
            needschecking=1
            comments=""
            for x in $remainingdevs; do
@@ -120,14 +122,17 @@ champagne()
                 echo "*** Double-checking validity of all bottleserviced devices' kernel projects by automagically re-lunching them" 1>&2
                 echo ""
                 export IN_THE_MIDDLE_OF_CASCADING_RESYNC=1
-                cat .repo/local_manifests/bottleservice.xml | grep project | sed 's/.*\/>//g' | sed 's/<!--//g' | sed 's/-->//g' | while read line ; do
-                  for x in $line; do
+                if [ ! $invalidateddevices ]; then
+                  invalidatteddevices="$(cat .repo/local_manifests/bottleservice.xml | grep project | sed 's/.*\/>//g' | sed 's/<!--//g' | sed 's/-->//g' | while read line ; do
+                    echo -n "$line "
+                  done)"
+                fi
+                for x in $invalidateddevices; do
                     for choice in ${LUNCH_MENU_CHOICES[@]}; do
                         if [[ $choice == *$x* ]] && [[ $choice == vanir_* ]]; then
                             lunch $choice && echo "RE-LUNCHED $choice"&& break
                         fi
                     done
-                  done
                 done
             fi
             echo " "
