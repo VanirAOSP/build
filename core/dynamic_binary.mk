@@ -57,14 +57,6 @@ ifeq ($(LOCAL_MODULE_CLASS),EXECUTABLES)
   my_pack_module_relocations := false
 endif
 
-# Likewise for recovery and utility executables
-ifeq ($(LOCAL_MODULE_CLASS),RECOVERY_EXECUTABLES)
-  my_pack_module_relocations := false
-endif
-ifeq ($(LOCAL_MODULE_CLASS),UTILITY_EXECUTABLES)
-  my_pack_module_relocations := false
-endif
-
 # TODO (dimitry): Relocation packer is not yet available for darwin
 ifneq ($(HOST_OS),linux)
   my_pack_module_relocations := false
@@ -91,7 +83,7 @@ endif
 symbolic_input := $(relocation_packer_output)
 symbolic_output := $(my_unstripped_path)/$(my_installed_module_stem)
 $(symbolic_output) : $(symbolic_input) | $(ACP)
-	@echo -e ${CL_GRN}"target Symbolic:"${CL_RST}" $(PRIVATE_MODULE) ($@)"
+	@echo "target Symbolic: $(PRIVATE_MODULE) ($@)"
 	$(copy-file-to-target)
 
 
@@ -140,11 +132,11 @@ else
 # use cp(1) instead.
 ifneq ($(LOCAL_ACP_UNAVAILABLE),true)
 $(strip_output): $(strip_input) | $(ACP)
-	@echo -e ${CL_GRN}"target Unstripped:"${CL_RST}" $(PRIVATE_MODULE) ($@)"
+	@echo "target Unstripped: $(PRIVATE_MODULE) ($@)"
 	$(copy-file-to-target)
 else
 $(strip_output): $(strip_input)
-	@echo -e ${CL_GRN}"target Unstripped:"${CL_RST}" $(PRIVATE_MODULE) ($@)"
+	@echo "target Unstripped: $(PRIVATE_MODULE) ($@)"
 	$(copy-file-to-target-with-cp)
 endif
 endif # my_strip_module

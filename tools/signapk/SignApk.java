@@ -167,29 +167,18 @@ class SignApk {
     }
 
     /**
-     * If a console doesn't exist, reads the password from stdin
-     * If a console exists, reads the password from console and returns it as a string.
+     * Reads the password from console and returns it as a string.
      *
      * @param keyFile The file containing the private key.  Used to prompt the user.
      */
     private static String readPassword(File keyFile) {
         Console console;
         char[] pwd;
-        if ((console = System.console()) == null) {
-            System.out.print("Enter password for " + keyFile + " (password will not be hidden): ");
-            System.out.flush();
-            BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
-            try {
-                return stdin.readLine();
-            } catch (IOException ex) {
-                return null;
-            }
+        if((console = System.console()) != null &&
+           (pwd = console.readPassword("[%s]", "Enter password for " + keyFile)) != null){
+            return String.valueOf(pwd);
         } else {
-            if ((pwd = console.readPassword("[%s]", "Enter password for " + keyFile)) != null) {
-                return String.valueOf(pwd);
-            } else {
-                return null;
-            }
+            return null;
         }
     }
 

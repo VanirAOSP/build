@@ -55,7 +55,6 @@ PRODUCT_PACKAGES += \
     ip6tables \
     iptables \
     gatekeeperd \
-    javax.btobex \
     keystore \
     keystore.default \
     libOpenMAXAL \

@@ -80,8 +80,7 @@ dont_bother_goals := clean clobber dataclean installclean \
     vendorimage-nodeps \
     ramdisk-nodeps \
     bootimage-nodeps \
-    recoveryimage-nodeps \
-    burst novo surgical biopsy
+    recoveryimage-nodeps
 
 ifneq ($(filter $(dont_bother_goals), $(MAKECMDGOALS)),)
 dont_bother := true
@@ -103,17 +102,10 @@ include $(BUILD_SYSTEM)/config.mk
 # be generated correctly
 include $(BUILD_SYSTEM)/cleanbuild.mk
 
-# Bring in Qualcomm helper macros
-include $(BUILD_SYSTEM)/qcom_utils.mk
-
-# Bring in Mediatek helper macros too
-include $(BUILD_SYSTEM)/mtk_utils.mk
-
 # Include the google-specific config
 -include vendor/google/build/config.mk
 
 VERSION_CHECK_SEQUENCE_NUMBER := 5
-
 -include $(OUT_DIR)/versions_checked.mk
 ifneq ($(VERSION_CHECK_SEQUENCE_NUMBER),$(VERSIONS_CHECKED))
 
@@ -303,7 +295,7 @@ endif
 
 # Add build properties for ART. These define system properties used by installd
 # to pass flags to dex2oat.
-ADDITIONAL_BUILD_PROPERTIES += persist.sys.dalvik.vm.lib.2=libart.so
+ADDITIONAL_BUILD_PROPERTIES += persist.sys.dalvik.vm.lib.2=libart
 ADDITIONAL_BUILD_PROPERTIES += dalvik.vm.isa.$(TARGET_ARCH).variant=$(DEX2OAT_TARGET_CPU_VARIANT)
 ifneq ($(DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES),)
   ADDITIONAL_BUILD_PROPERTIES += dalvik.vm.isa.$(TARGET_ARCH).features=$(DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES)
@@ -476,12 +468,7 @@ endif
 ifneq ($(ONE_SHOT_MAKEFILE),)
 # We've probably been invoked by the "mm" shell function
 # with a subdirectory's makefile.
-
-# No Makefiles to include if we are performing a mms/short-circuit build. Only
-# the targets mentioned by main.mk and tasks/* are built (kernel, boot.img etc)
-ifneq ($(ONE_SHOT_MAKEFILE),__none__)
 include $(ONE_SHOT_MAKEFILE)
-endif
 # Change CUSTOM_MODULES to include only modules that were
 # defined by this makefile; this will install all of those
 # modules as a side-effect.  Do this after including ONE_SHOT_MAKEFILE
@@ -512,7 +499,7 @@ ifneq ($(dont_bother),true)
 subdir_makefiles := \
 	$(shell build/tools/findleaves.py $(FIND_LEAVES_EXCLUDES) $(subdirs) Android.mk)
 
-$(foreach mk, $(subdir_makefiles), $(eval include $(mk)))
+$(foreach mk, $(subdir_makefiles), $(info including $(mk) ...)$(eval include $(mk)))
 
 endif # dont_bother
 
@@ -1033,7 +1020,7 @@ $(foreach module,$(sample_MODULES),$(eval $(call \
 sample_ADDITIONAL_INSTALLED := \
         $(filter-out $(modules_to_install) $(modules_to_check) $(ALL_PREBUILT),$(sample_MODULES))
 samplecode: $(sample_APKS_COLLECTION)
-	@echo -e ${CL_GRN}"Collect sample code apks:"${CL_RST}" $^"
+	@echo "Collect sample code apks: $^"
 	# remove apks that are not intended to be installed.
 	rm -f $(sample_ADDITIONAL_INSTALLED)
 endif  # samplecode in $(MAKECMDGOALS)
@@ -1044,51 +1031,17 @@ findbugs: $(INTERNAL_FINDBUGS_HTML_TARGET) $(INTERNAL_FINDBUGS_XML_TARGET)
 .PHONY: clean
 clean:
 	@rm -rf $(OUT_DIR)/*
-	@echo -e ${CL_GRN}"Entire build directory removed."${CL_RST}
-	@echo "clobber" > $(ANDROID_BUILD_TOP)/.lastbuild
+	@echo "Entire build directory removed."
 
 .PHONY: clobber
 clobber: clean
-
-# This should be almost as good as a clobber but keeping many of the time intensive files - DHO
-.PHONY: novo
-novo:
-	@rm -rf $(OUT_DIR)/target/*
-	@echo -e ${CL_GRN}"Target directory removed."${CL_RST}
-	@echo "novo" > $(ANDROID_BUILD_TOP)/.lastbuild
-
-# This is designed for building in memory.  Clean products, but keep common files - DHO
-.PHONY: burst
-burst:
-	@rm -rf $(OUT_DIR)/target/product/*
-	@echo -e ${CL_GRN}"Product directory removed."${CL_RST}
-
-# This is designed for building in memory + keeping smaller build folders + common files - DHO
-.PHONY: surgical
-surgical:
-	@rm -rf $(OUT_DIR)/target/product/*/obj/
-	@rm -rf $(OUT_DIR)/target/product/*/symbols/
-	@rm -rf $(OUT_DIR)/target/product/*/vanir_*-ota-eng.$(USER).zip
-	@rm -rf $(OUT_DIR)/target/product/*/system.img
-	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
-	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
-
-# This is designed for building on SSD but to whittle away at the bulk file size - DHO
-.PHONY: biopsy
-biopsy:
-	@rm -rf $(OUT_DIR)/target/product/*/vanir_*-ota-eng.dho.zip
-	@rm -rf $(OUT_DIR)/target/product/*/system.img
-	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
-	@rm -rf $(OUT_DIR)/target/product/*/system/app/*
-	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
-
 
 # The rules for dataclean and installclean are defined in cleanbuild.mk.
 
 #xxx scrape this from ALL_MODULE_NAME_TAGS
 .PHONY: modules
 modules:
-	@echo -e ${CL_GRN}"Available sub-modules:"${CL_RST}
+	@echo "Available sub-modules:"
 	@echo "$(call module-names-for-tag-list,$(ALL_MODULE_TAGS))" | \
 	      tr -s ' ' '\n' | sort -u | $(COLUMN)
 

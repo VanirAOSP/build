@@ -98,8 +98,6 @@ PRODUCT_BOOT_JARS := \
 
 # The order of PRODUCT_SYSTEM_SERVER_JARS matters.
 PRODUCT_SYSTEM_SERVER_JARS := \
-    org.cyanogenmod.platform \
-    org.cyanogenmod.hardware \
     services \
     ethernet-service \
     wifi-service
@@ -109,7 +107,7 @@ PRODUCT_PACKAGES += \
     e2fsck \
     make_ext4fs \
     fsck.f2fs \
-    mkfs.f2fs \
+    make_f2fs \
 
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     ro.zygote=zygote32

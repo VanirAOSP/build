@@ -379,7 +379,7 @@ class BlockImageDiff(object):
             src_str.append("%s:%s" % (sh, sr.to_string_raw()))
             stashes[sh] -= 1
             if stashes[sh] == 0:
-              free_string.append("free %s\n" % sh)
+              free_string.append("free %s\n" % (sh))
               stashes.pop(sh)
           heapq.heappush(free_stash_ids, sid)
 
@@ -483,7 +483,7 @@ class BlockImageDiff(object):
       if free_string:
         out.append("".join(free_string))
 
-      if self.version >= 2 and common.OPTIONS.cache_size is not None:
+      if self.version >= 2:
         # Sanity check: abort if we're going to need more stash space than
         # the allowed size (cache_size * threshold). There are two purposes
         # of having a threshold here. a) Part of the cache may have been
@@ -524,16 +524,10 @@ class BlockImageDiff(object):
 
     if self.version >= 2:
       max_stashed_size = max_stashed_blocks * self.tgt.blocksize
-      OPTIONS = common.OPTIONS
-      if OPTIONS.cache_size is not None:
-        max_allowed = OPTIONS.cache_size * OPTIONS.stash_threshold
-        print("max stashed blocks: %d  (%d bytes), "
-              "limit: %d bytes (%.2f%%)\n" % (
-              max_stashed_blocks, max_stashed_size, max_allowed,
-              max_stashed_size * 100.0 / max_allowed))
-      else:
-        print("max stashed blocks: %d  (%d bytes), limit: <unknown>\n" % (
-              max_stashed_blocks, max_stashed_size))
+      max_allowed = common.OPTIONS.cache_size * common.OPTIONS.stash_threshold
+      print("max stashed blocks: %d  (%d bytes), limit: %d bytes (%.2f%%)\n" % (
+          max_stashed_blocks, max_stashed_size, max_allowed,
+          max_stashed_size * 100.0 / max_allowed))
 
   def ReviseStashSize(self):
     print("Revising stash size...")

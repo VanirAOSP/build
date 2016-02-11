@@ -358,7 +358,7 @@ ifdef full_classes_jar
 #   PRIVATE_ vars to be preserved.
 $(full_classes_stubs_jar): PRIVATE_SOURCE_FILE := $(full_classes_jar)
 $(full_classes_stubs_jar) : $(full_classes_jar) | $(ACP)
-	@echo -e ${CL_GRN}"Copying"${CL_RST}" $(PRIVATE_SOURCE_FILE)"
+	@echo Copying $(PRIVATE_SOURCE_FILE)
 	$(hide) $(ACP) -fp $(PRIVATE_SOURCE_FILE) $@
 ALL_MODULES.$(LOCAL_MODULE).STUBS := $(full_classes_stubs_jar)
 
@@ -399,11 +399,11 @@ $(full_classes_compiled_jar): PRIVATE_JAVAC_DEBUG_FLAGS := -g
 ifneq ($(strip $(LOCAL_JARJAR_RULES)),)
 $(full_classes_jarjar_jar): PRIVATE_JARJAR_RULES := $(LOCAL_JARJAR_RULES)
 $(full_classes_jarjar_jar): $(full_classes_compiled_jar) $(LOCAL_JARJAR_RULES) | $(JARJAR)
-	@echo -e ${CL_GRN}"JarJar:"${CL_RST}" $@"
+	@echo JarJar: $@
 	$(hide) java -jar $(JARJAR) process $(PRIVATE_JARJAR_RULES) $< $@
 else
 $(full_classes_jarjar_jar): $(full_classes_compiled_jar) | $(ACP)
-	@echo -e ${CL_GRN}"Copying:"${CL_RST}" $@"
+	@echo Copying: $@
 	$(hide) $(ACP) -fp $< $@
 endif
 
@@ -426,13 +426,13 @@ $(full_classes_emma_jar): $(full_classes_jarjar_jar) | $(EMMA_JAR)
 
 else
 $(full_classes_emma_jar): $(full_classes_jarjar_jar) | $(ACP)
-	@echo -e ${CL_GRN}"Copying:"${CL_RST}" $@"
+	@echo Copying: $@
 	$(copy-file-to-target)
 endif
 
 # Keep a copy of the jar just before proguard processing.
 $(full_classes_jar): $(full_classes_emma_jar) | $(ACP)
-	@echo -e ${CL_GRN}"Copying:"${CL_RST}" $@"
+	@echo Copying: $@
 	$(hide) $(ACP) -fp $< $@
 
 # Run proguard if necessary, otherwise just copy the file.
@@ -537,7 +537,7 @@ $(full_classes_proguard_jar) : $(full_classes_jar) $(extra_input_jar) $(my_suppo
 
 else  # LOCAL_PROGUARD_ENABLED not defined
 $(full_classes_proguard_jar) : $(full_classes_jar)
-	@echo -e ${CL_GRN}"Copying:"${CL_RST}" $@"
+	@echo Copying: $@
 	$(hide) $(ACP) -fp $< $@
 
 endif # LOCAL_PROGUARD_ENABLED defined
@@ -561,7 +561,7 @@ $(built_dex_intermediate): $(full_classes_proguard_jar) $(DX)
 endif # LOCAL_JACK_ENABLED is disabled
 
 $(built_dex): $(built_dex_intermediate) | $(ACP)
-	@echo -e ${CL_GRN}"Copying:"${CL_RST}" $@"
+	@echo Copying: $@
 	$(hide) mkdir -p $(dir $@)
 	$(hide) rm -f $(dir $@)/classes*.dex
 	$(hide) $(ACP) -fp $(dir $<)/classes*.dex $(dir $@)
@@ -574,7 +574,7 @@ $(findbugs_xml) : PRIVATE_AUXCLASSPATH := $(addprefix -auxclasspath ,$(strip \
 								$(call normalize-path-list,$(filter %.jar,\
 										$(full_java_libs)))))
 $(findbugs_xml) : $(full_classes_jar)
-	@echo -e ${CL_GRN}"Findbugs:"${CL_RST}" $@"
+	@echo Findbugs: $@
 	$(hide) $(FINDBUGS) -textui -effort:min -xml:withMessages \
 		$(PRIVATE_AUXCLASSPATH) \
 		$< \
@@ -587,7 +587,7 @@ $(findbugs_html) : PRIVATE_XML_FILE := $(findbugs_xml)
 $(LOCAL_MODULE)-findbugs : $(findbugs_html)
 $(findbugs_html) : $(findbugs_xml)
 	@mkdir -p $(dir $@)
-	@echo -e ${CL_GRN}"ConvertXmlToText:"${CL_RST}" $@"
+	@echo ConvertXmlToText: $@
 	$(hide) $(FINDBUGS_DIR)/convertXmlToText -html:fancy.xsl $(PRIVATE_XML_FILE) \
 	> $@
 
@@ -633,14 +633,14 @@ jack_all_deps := $(java_sources) $(java_resource_sources) $(full_jack_lib_deps) 
 
 ifeq ($(LOCAL_IS_STATIC_JAVA_LIBRARY),true)
 $(full_classes_jack): $(jack_all_deps)
-	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
+	@echo Building with Jack: $@
 	$(java-to-jack)
 
 else #LOCAL_IS_STATIC_JAVA_LIBRARY
 $(built_dex_intermediate): PRIVATE_CLASSES_JACK := $(full_classes_jack)
 
 $(built_dex_intermediate): $(jack_all_deps)
-	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
+	@echo Building with Jack: $@
 	$(jack-java-to-dex)
 
 # $(full_classes_jack) is just by-product of $(built_dex_intermediate).
@@ -659,7 +659,7 @@ $(noshrob_classes_jack): PRIVATE_JACK_INCREMENTAL_DIR :=
 endif
 $(noshrob_classes_jack): PRIVATE_JACK_PROGUARD_FLAGS :=
 $(noshrob_classes_jack): $(jack_all_deps)
-	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
+	@echo Building with Jack: $@
 	$(java-to-jack)
 endif  # full_classes_jar is defined
 endif # LOCAL_JACK_ENABLED

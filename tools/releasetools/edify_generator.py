@@ -117,51 +117,19 @@ class EdifyGenerator(object):
 
   def AssertDevice(self, device):
     """Assert that the device identifier is the given string."""
-    cmd = ('assert(' +
-           ' || '.join(['getprop("ro.product.device") == "%s" || getprop("ro.build.product") == "%s"'
-                         % (i, i) for i in device.split(",")]) +
-           ' || abort("This package is for device: %s; ' +
-           'this device is " + getprop("ro.product.device") + ".");' +
-           ');') % device
+    cmd = ('getprop("ro.product.device") == "%s" || '
+           'abort("This package is for \\"%s\\" devices; '
+           'this is a \\"" + getprop("ro.product.device") + "\\".");') % (
+               device, device)
     self.script.append(cmd)
 
   def AssertSomeBootloader(self, *bootloaders):
-    """Assert that the bootloader version is one of *bootloaders."""
+    """Asert that the bootloader version is one of *bootloaders."""
     cmd = ("assert(" +
-           " || ".join(['getprop("ro.bootloader") == "%s"' % (b,)
+           " ||\0".join(['getprop("ro.bootloader") == "%s"' % (b,)
                          for b in bootloaders]) +
-           ' || abort("This package supports bootloader(s): ' +
-           ", ".join(["%s" % (b,) for b in bootloaders]) +
-           '; this device has bootloader " + getprop("ro.bootloader") + ".");' +
            ");")
     self.script.append(self.WordWrap(cmd))
-
-  def AssertSomeBaseband(self, *basebands):
-    """Assert that the baseband version is one of *basebands."""
-    cmd = ("assert(" +
-           " || ".join(['getprop("ro.baseband") == "%s"' % (b,)
-                         for b in basebands]) +
-           ' || abort("This package supports baseband(s): ' +
-           ", ".join(["%s" % (b,) for b in basebands]) +
-           '; this device has baseband " + getprop("ro.baseband") + ".");' +
-           ");")
-    self.script.append(self.WordWrap(cmd))
-
-  def RunAutomagic(self):
-    self.script.append('package_extract_file("system/bin/automagic.sh", "/tmp/automagic.sh");')
-    if not self.info.get("use_set_metadata", False):
-      self.script.append('set_perm(0, 0, 0755, "/tmp/automagic.sh");')
-    else:
-      self.script.append('set_metadata("/tmp/automagic.sh", "uid", 0, "gid", 0, "mode", 0755);')
-    self.script.append('run_program("/tmp/automagic.sh");')
-
-  def RunBackup(self, command):
-    self.script.append(('run_program("/tmp/install/bin/backuptool.sh", "%s");' % command))
-
-  def ValidateSignatures(self, command):
-    self.script.append('package_extract_file("META-INF/org/cyanogenmod/releasekey", "/tmp/releasekey");')
-    # Exit code 124 == abort. run_program returns raw, so left-shift 8bit
-    self.script.append('run_program("/tmp/install/bin/otasigcheck.sh") != "31744" || abort("Can\'t install this package on top of incompatible data. Please try another package or run a factory reset");')
 
   def ShowProgress(self, frac, dur):
     """Update the progress bar, advancing it over 'frac' over the next
@@ -216,18 +184,10 @@ class EdifyGenerator(object):
       mount_flags = mount_dict.get(p.fs_type, "")
       if p.context is not None:
         mount_flags = p.context + ("," + mount_flags if mount_flags else "")
-      self.script.append('if !is_mounted("%s") then mount("%s", "%s", "%s", "%s", "%s") endif;' %
-         (p.mount_point, p.fs_type, common.PARTITION_TYPES[p.fs_type], p.device,
+      self.script.append('mount("%s", "%s", "%s", "%s", "%s");' % (
+          p.fs_type, common.PARTITION_TYPES[p.fs_type], p.device,
           p.mount_point, mount_flags))
-    if not mount_point in self.mounts:
       self.mounts.add(p.mount_point)
-
-  def Unmount(self, mount_point):
-    """Unmount the partiiton with the given mount_point."""
-    if mount_point in self.mounts:
-      self.mounts.remove(mount_point)
-    self.script.append('if is_mounted("%s") then unmount("%s") endif;' %
-         (mount_point, mount_point))
 
   def UnpackPackageDir(self, src, dst):
     """Unpack a given directory from the OTA package into the given
@@ -259,6 +219,7 @@ class EdifyGenerator(object):
   def FormatPartition(self, partition):
     """Format the given partition, specified by its mount point (eg,
     "/system")."""
+
     fstab = self.fstab
     if fstab:
       p = fstab[partition]
@@ -349,10 +310,10 @@ class EdifyGenerator(object):
     if not self.info.get("use_set_metadata", False):
       self.script.append('set_perm(%d, %d, 0%o, "%s");' % (uid, gid, mode, fn))
     else:
-      cmd = 'set_metadata("%s", "uid", %d, "gid", %d, "mode", 0%o' \
-          % (fn, uid, gid, mode)
-      if capabilities is not None:
-        cmd += ', "capabilities", %s' % ( capabilities )
+      if capabilities is None:
+        capabilities = "0x0"
+      cmd = 'set_metadata("%s", "uid", %d, "gid", %d, "mode", 0%o, ' \
+          '"capabilities", %s' % (fn, uid, gid, mode, capabilities)
       if selabel is not None:
         cmd += ', "selabel", "%s"' % selabel
       cmd += ');'
@@ -365,11 +326,11 @@ class EdifyGenerator(object):
       self.script.append('set_perm_recursive(%d, %d, 0%o, 0%o, "%s");'
                          % (uid, gid, dmode, fmode, fn))
     else:
+      if capabilities is None:
+        capabilities = "0x0"
       cmd = 'set_metadata_recursive("%s", "uid", %d, "gid", %d, ' \
-          '"dmode", 0%o, "fmode", 0%o' \
-          % (fn, uid, gid, dmode, fmode)
-      if capabilities is not None:
-        cmd += ', "capabilities", "%s"' % ( capabilities )
+          '"dmode", 0%o, "fmode", 0%o, "capabilities", %s' \
+          % (fn, uid, gid, dmode, fmode, capabilities)
       if selabel is not None:
         cmd += ', "selabel", "%s"' % selabel
       cmd += ');'
@@ -381,7 +342,7 @@ class EdifyGenerator(object):
     for d, l in symlink_list:
       by_dest.setdefault(d, []).append(l)
 
-    for dest, links in sorted(by_dest.items()):
+    for dest, links in sorted(by_dest.iteritems()):
       cmd = ('symlink("%s", ' % (dest,) +
              ",\0".join(['"' + i + '"' for i in sorted(links)]) + ");")
       self.script.append(self.WordWrap(cmd))
@@ -389,6 +350,10 @@ class EdifyGenerator(object):
   def AppendExtra(self, extra):
     """Append text verbatim to the output script."""
     self.script.append(extra)
+
+  def Unmount(self, mount_point):
+    self.script.append('unmount("%s");' % mount_point)
+    self.mounts.remove(mount_point)
 
   def UnmountAll(self):
     for p in sorted(self.mounts):
