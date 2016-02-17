@@ -672,7 +672,8 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
     system_progress -= 0.1
 
   script.Mount("/data")
-  script.ValidateSignatures("data")
+  if not OPTIONS.wipe_user_data:
+    script.ValidateSignatures("data")
   script.RunAutomagic()
   script.Unmount("/data")
 
