@@ -608,39 +608,14 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.Unmount("/system");
   device_specific.FullOTA_InstallBegin()
 
-  #says: VANIR
-  script.Print(" ")
-  script.Print(" ")
-  script.Print(" ")
-  script.Print(" ")
-  script.Print(" ")
-  script.Print(" ")
-  script.Print(" ")
-  script.Print("                L.                            ")
-  script.Print("                EW:        ,ft t   j.         ")
-  script.Print("             .. E##;       t#E Ej  EW,        ")
-  script.Print("t      .DD. ;W, E###t      t#E E#, E##j       ")
-  script.Print("EK:   ,WK. j##, E#fE#f     t#E E#t E###D.     ")
-  script.Print("E#t  i#D  G###, E#t D#G    t#E E#t E#jG#W;    ")
-  script.Print("E#t j#f :E####, E#t  f#E.  t#E E#t E#t t##f   ")
-  script.Print("E#tL#i ;W#DG##, E#t   t#K: t#E E#t E#t  :K#E: ")
-  script.Print("E#WW, j###DW##, E#t    ;#W,t#E E#t E#KDDDD###i")
-  script.Print("E#K: G##i,,G##, E#t     :K#D#E E#t E#f,t#Wi,,,")
-  script.Print("ED.:K#K:   L##, E#t      .E##E E#t E#t  ;#W:  ")
-  script.Print("t ;##D.    L##, ..         G#E E#t DWi   ,KK: ")
-  script.Print("  ,,,      .,,              fE ,;.            ")
-  script.Print("                             ,                ")
-  script.Print("  Vanir - Nougat 7.0 ")
-  script.Print("    'Pefectly Creamy'")
-  script.Print("    by Team Vanir")
-  script.Print(" ")
-
   script.Unmount("/system")
 
   CopyInstallTools(output_zip)
   script.UnpackPackageDir("install", "/tmp/install")
   script.SetPermissionsRecursive("/tmp/install", 0, 0, 0755, 0644, None, None)
   script.SetPermissionsRecursive("/tmp/install/bin", 0, 0, 0755, 0755, None, None)
+
+  script.RunInstallScript("updatertext.sh", "header");
 
   if OPTIONS.backuptool:
     script.Mount("/system")
@@ -775,6 +750,9 @@ reboot_now("%(bcb_dev)s", "");
 endif;
 endif;
 """ % bcb_dev)
+
+  script.RunInstallScript("updatertext.sh", "footer");
+
   script.AddToZip(input_zip, output_zip, input_path=OPTIONS.updater_binary)
   WriteMetadata(metadata, output_zip)
 
