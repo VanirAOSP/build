@@ -162,16 +162,12 @@ class EdifyGenerator(object):
            ");")
     self.script.append(self._WordWrap(cmd))
 
-  def RunAutomagic(self):
-    self.script.append('package_extract_file("system/bin/automagic.sh", "/tmp/automagic.sh");')
-    if not self.info.get("use_set_metadata", False):
-      self.script.append('set_perm(0, 0, 0755, "/tmp/automagic.sh");')
-    else:
-      self.script.append('set_metadata("/tmp/automagic.sh", "uid", 0, "gid", 0, "mode", 0755);')
-    self.script.append('run_program("/tmp/automagic.sh");')
+  def RunInstallScript(self, scriptname, *args):
+    cmd = ('run_program("/tmp/install/bin/%s"%s);' % (scriptname, ("" if not args else (', '+(', '.join(['"%s"' % (a,) for a in args]))))))
+    self.script.append(self.WordWrap(cmd))
 
   def RunBackup(self, command):
-    self.script.append(('run_program("/tmp/install/bin/backuptool.sh", "%s");' % command))
+    self.RunInstallScript("backuptool.sh", command)
 
   def ValidateSignatures(self, command):
     self.script.append('package_extract_file("META-INF/org/cyanogenmod/releasekey", "/tmp/releasekey");')
