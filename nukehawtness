@@ -64,3 +64,7 @@ else
     repo upload `resolve $*`
 fi
 }
+
+if ssh -V | grep -q OpenSSH_7.1 2>&1 >/dev/null; then
+    export GIT_SSH_COMMAND='ssh -o KexAlgorithms=+diffie-hellman-group1-sha1'
+fi
