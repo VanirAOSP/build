@@ -64,3 +64,5 @@ else
     repo upload `resolve $*`
 fi
 }
+
+export GIT_SSH_COMMAND='ssh -o KexAlgorithms=diffie-hellman-group1-sha1'
