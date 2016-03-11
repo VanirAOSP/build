@@ -1506,9 +1506,12 @@ fi
         m = re.match(r"^service flash_recovery /system/(\S+)\s*$", line)
         if m:
           sh_location = m.group(1)
-          print("putting script in", sh_location)
+          found = True
           break
-  except (OSError, IOError) as e:
-    print("failed to read init.rc: %s" % e)
+
+    if found:
+      break
+
+  print("putting script in %s" % sh_location)
 
   output_sink(sh_location, sh)
