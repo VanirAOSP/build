@@ -169,7 +169,12 @@ function check_product()
        VANIR_BUILD=$(echo -n $1 | sed -e 's/^vanir_//g')
        export BUILD_NUMBER=$((date +%s%N ; echo $VANIR_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
     else
+       if (echo -n $1 | grep -q -e "^commotio_"); then
+       VANIR_BUILD=$(echo -n $1 | sed -e 's/^commotio_//g')
+       export BUILD_NUMBER=$((date +%s%N ; echo $VANIR_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
+    else
        VANIR_BUILD=
+       fi
     fi
     export CM_BUILD
     export VANIR_BUILD
