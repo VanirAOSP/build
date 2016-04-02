@@ -1062,6 +1062,7 @@ novo:
 burst:
 	@rm -rf $(OUT_DIR)/target/product/*
 	@echo -e ${CL_GRN}"Product directory removed."${CL_RST}
+	@echo "burst" > $(ANDROID_BUILD_TOP)/.lastbuild
 
 # This is designed for building in memory + keeping smaller build folders + common files - DHO
 .PHONY: surgical
