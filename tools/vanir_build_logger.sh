@@ -11,7 +11,7 @@ check_build_validity()
     if [ ! -f ${ANDROID_BUILD_TOP}/.lastbuild ] || [ `cat ${ANDROID_BUILD_TOP}/.lastbuild | wc -l` -ne 2 ]; then
         return 1
     fi
-    if get_preclean_type | grep -q clobber || get_preclean_type | grep -q clean || get_preclean_type | grep -q novo; then
+    if get_preclean_type | grep -Eq 'clobber|novo|burst'; then
         return 0
     fi
     return 1
