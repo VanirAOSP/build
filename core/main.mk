@@ -81,7 +81,7 @@ dont_bother_goals := clean clobber dataclean installclean \
     ramdisk-nodeps \
     bootimage-nodeps \
     recoveryimage-nodeps \
-    burst novo surgical biopsy
+    burst novo surgical biopsy dirty
 
 ifneq ($(filter $(dont_bother_goals), $(MAKECMDGOALS)),)
 dont_bother := true
@@ -1085,6 +1085,15 @@ biopsy:
 	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
 	@rm -rf $(OUT_DIR)/target/product/*/system/app/*
 	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
+
+# This is designed for building on SSD but to whittle away at the bulk file size - DHO
+.PHONY: dirty
+dirty:
+	@rm -rf $(OUT_DIR)/target/product/*/*.txt
+	@rm -rf $(OUT_DIR)/target/product/*/system/build.prop
+	@rm -rf $(OUT_DIR)/target/product/*/*.zip
+	@rm -rf $(OUT_DIR)/target/product/*/*.md5sum
+	@echo -e ${CL_GRN}"props and zips are gone"${CL_RST}
 
 
 # The rules for dataclean and installclean are defined in cleanbuild.mk.
