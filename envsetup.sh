@@ -676,7 +676,7 @@ function lunch()
         pushd . >& /dev/null
         cd $T
         local TARGET_PREBUILT_KERNEL=`get_build_var TARGET_PREBUILT_KERNEL`
-        if [ ! $TARGET_PREBUILT_KERNEL ]; then
+        if [ ! $TARGET_PREBUILT_KERNEL ] || [ "$TARGET_PREBUILT_KERNEL" = "false" ]; then
             source build/tools/bottleservice.sh
             champagne $product || return 1
         fi

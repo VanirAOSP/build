@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 # nuclearmistake 2013
 champagne()
