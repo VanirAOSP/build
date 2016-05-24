@@ -266,7 +266,7 @@ function setpaths()
     if [ -n "$ANDROID_CCACHE_DIR" ]; then
         export CCACHE_DIR=$ANDROID_CCACHE_DIR
     fi
-    export PATH=$T/external/depot_tools:$PATH
+
     # needed for building linux on MacOS
     # TODO: fix the path
     #export HOST_EXTRACFLAGS="-I "$T/system/kernel_headers/host_include
