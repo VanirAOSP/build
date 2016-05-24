@@ -160,6 +160,9 @@ ifneq ($(EXPERIMENTAL_USE_JAVA8),)
 required_version := "1.8.x"
 required_javac_version := "1.8"
 java_version := $(shell echo '$(java_version_str)' | grep 'openjdk .*[ "]1\.8[\. "$$]')
+ifeq ($(strip $(java version)),)
+java_version := $(shell echo '$(java_version_str)' | grep 'java version .*[ "]1\.8[\. "$$]')
+endif
 javac_version := $(shell echo '$(javac_version_str)' | grep '[ "]1\.8[\. "$$]')
 else # default
 required_version := "1.7.x"
@@ -200,7 +203,7 @@ $(info ************************************************************)
 $(info You asked for an OpenJDK 7 build but your version is)
 $(info $(java_version_str).)
 $(info ************************************************************)
-$(error stop)
+$(warning Expect wierdness!)
 endif # java version is not OpenJdk
 else # if requires_openjdk
 ifneq ($(shell echo '$(java_version_str)' | grep -i openjdk),)
@@ -211,7 +214,7 @@ $(info You use OpenJDK but only Sun/Oracle JDK is supported.)
 $(info Please follow the machine setup instructions at)
 $(info $(space)$(space)$(space)$(space)https://source.android.com/source/download.html)
 $(info ************************************************************)
-$(error stop)
+$(warning Expect wierdness!)
 endif # java version is not Sun Oracle JDK
 endif # if requires_openjdk
 
