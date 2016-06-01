@@ -164,13 +164,16 @@ ifeq ($(strip $(java version)),)
 java_version := $(shell echo '$(java_version_str)' | grep 'java version .*[ "]1\.8[\. "$$]')
 endif
 javac_version := $(shell echo '$(javac_version_str)' | grep '[ "]1\.8[\. "$$]')
-else # default
+endif # if EXPERIMENTAL_USE_JAVA8
+ifeq ($(strip $(java_version)),)
+$(warning EXPERIMENTAL_USE_JAVA8 is set, but $(shell which java) is not 1.8)
+endif
+ifeq ($(strip $(java_version)),) # default OR EXPERIMENTAL_USE_JAVA8 set but not on path
 required_version := "1.7.x"
 required_javac_version := "1.7"
 java_version := $(shell echo '$(java_version_str)' | grep '^java .*[ "]1\.7[\. "$$]')
 javac_version := $(shell echo '$(javac_version_str)' | grep '[ "]1\.7[\. "$$]')
-endif # if EXPERIMENTAL_USE_JAVA8
-
+endif
 ifeq ($(strip $(java_version)),)
 $(info ************************************************************)
 $(info You are attempting to build with the incorrect version)
