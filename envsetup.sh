@@ -1397,7 +1397,7 @@ function cgrep()
 
 function resgrep()
 {
-    for dir in `find . -name .repo -prune -o -name .git -prune -o -name out -prune -o -name res -type d`; do find $dir -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@"; done;
+    find . -name .repo -prune -o -name .git -prune -o -name out -prune -o -name res -type d -print0 | xargs -0 -n 1 -iXXX $SHELL -c "find \"XXX\" -type f -name '*\.xml' -print0 | xargs -0 grep --color -n \"$@\""
 }
 
 function mangrep()
