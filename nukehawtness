@@ -12,59 +12,74 @@ smartstart()
 
 resolve()
 {
-    output=""
-    for x in $*; do
-      while [ `repo list | egrep -c "$x :"` -eq 0 ] && [ ! "$x" = "" ] ; do
-        x=`dirname $x`
-      done
-      output="$output `repo list | egrep "$x :" | cut -d ':' -f 2`"
+  output=""
+  for x in $*; do
+    while [ `repo list | egrep -c "$x :"` -eq 0 ] && [ ! "$x" = "" ] ; do
+      x=`dirname $x`
     done
-    echo $output
+    output="$output `repo list | egrep "$x :" | cut -d ':' -f 2`"
+  done
+  echo $output
 }
 
 ### SEXY REPO START HELPER (assumes you are starting a branch on the project you're in if you ommit that argument)
 rst()
 {
 if [ $# -eq 1 ]; then
-    currpath=`pwd`
-    pushd . &> /dev/null 
+    pushd . >& /dev/null;
+    while [ 1 ]; do
+        if [ -d .git ] || [ -d .repo ] || [ `pwd` = / ]; then
+            break;
+        fi;
+        cd ..;
+    done;
+    [ `pwd` = / ] && return 1;
+    currpath=`pwd`;
     while [ 1 ]; do
         if [ -d .repo ] || [ `pwd` = / ]; then break; fi
         cd ..
     done
     [ `pwd` = / ] && return 1
     saferepopath=`pwd | sed 's/\//\\\\\//g'`
-    popd &> /dev/null
+    popd >& /dev/null
     currpath=`echo $currpath | sed "s/$saferepopath//g" | sed 's/^\///g'`
     smartstart $1 `resolve $currpath`
 else
     branchname=$1
     shift
-    repo $branchname `resolve $*`
-    cd $1
+    smartstart $branchname `resolve $*`
 fi
 }
 
 ### SEXY REPO UPLOAD HELPER!
 rup()
 {
-if [ $# -eq 0 ]; then
-    currpath=`pwd`
-    pushd . &> /dev/null 
+  if [ $# -eq 0 ]; then
+    pushd . >& /dev/null;
     while [ 1 ]; do
-        if [ -d .repo ] || [ `pwd` = / ]; then break; fi
-        cd ..
-    done
-    [ `pwd` = / ] && return 1
-    saferepopath=`pwd | sed 's/\//\\\\\//g'`
-    currpath=`echo $currpath | sed "s/$saferepopath//g" | sed 's/^\///g'`
-    repo upload `resolve $currpath`
-    popd &> /dev/null
-else
-    repo upload `resolve $*`
-fi
+        if [ -d .git ] || [ -d .repo ] || [ `pwd` = / ]; then
+            break;
+        fi;
+        cd ..;
+    done;
+    [ `pwd` = / ] && return 1;
+    origpath=`pwd`;
+    while [ 1 ]; do
+        if [ -d .repo ] || [ `pwd` = / ]; then
+            break;
+        fi;
+        cd ..;
+    done;
+    [ `pwd` = / ] && return 1;
+    saferepopath=`pwd | sed 's/\//\\\\\//g'`;
+    currpath=`echo $origpath | sed "s/$saferepopath//g" | sed 's/^\///g'`;
+    repo upload --cbr --no-verify `resolve $currpath`;
+    popd >& /dev/null;
+  else
+    repo upload --no-verify `resolve $*`;
+  fi
 }
 
 if ssh -V 2>&1 | grep -q OpenSSH_7.1 2>&1 >/dev/null; then
-    export GIT_SSH_COMMAND='ssh -o KexAlgorithms=+diffie-hellman-group1-sha1'
+  export GIT_SSH_COMMAND='ssh -o KexAlgorithms=+diffie-hellman-group1-sha1'
 fi
