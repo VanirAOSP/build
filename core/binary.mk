@@ -39,6 +39,93 @@ ifneq (,$(findstring $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include,$(LOCAL_
   endif
 endif
 
+# STRICT #
+ifeq ($(STRICT),true)
+ifeq (1,$(words $(filter $(LOCAL_DISABLE_STRICT),$(LOCAL_MODULE))))
+ifdef LOCAL_CONLYFLAGS
+LOCAL_CONLYFLAGS += \
+	$(DISABLE_STRICT)
+else
+LOCAL_CONLYFLAGS := \
+	$(DISABLE_STRICT)
+endif
+ifdef LOCAL_CPPFLAGS
+LOCAL_CPPFLAGS += \
+	$(DISABLE_STRICT)
+else
+LOCAL_CPPFLAGS := \
+	$(DISABLE_STRICT)
+endif
+endif
+ifneq (1,$(words $(filter $(LOCAL_DISABLE_STRICT),$(LOCAL_MODULE))))
+ifdef LOCAL_CONLYFLAGS
+LOCAL_CONLYFLAGS += \
+	$(STRICT_ALIASING_FLAGS)
+else
+LOCAL_CONLYFLAGS := \
+	$(STRICT_ALIASING_FLAGS)
+endif
+ifdef LOCAL_CPPFLAGS
+LOCAL_CPPFLAGS += \
+	$(STRICT_ALIASING_FLAGS)
+else
+LOCAL_CPPFLAGS := \
+	$(STRICT_ALIASING_FLAGS)
+endif
+ifndef LOCAL_CLANG
+LOCAL_CONLYFLAGS += \
+	$(STRICT_GCC_LEVEL)
+LOCAL_CPPFLAGS += \
+	$(STRICT_GCC_LEVEL)
+else
+LOCAL_CONLYFLAGS += \
+	$(STRICT_CLANG_LEVEL)
+LOCAL_CPPFLAGS += \
+	$(STRICT_CLANG_LEVEL)
+endif
+endif
+else
+ifeq (1,$(words $(filter $(LOCAL_FORCE_DISABLE_STRICT),$(LOCAL_MODULE))))
+ifdef LOCAL_CONLYFLAGS
+LOCAL_CONLYFLAGS += \
+	$(DISABLE_STRICT)
+else
+LOCAL_CONLYFLAGS := \
+	$(DISABLE_STRICT)
+endif
+ifdef LOCAL_CPPFLAGS
+LOCAL_CPPFLAGS += \
+	$(DISABLE_STRICT)
+else
+LOCAL_CPPFLAGS := \
+	$(DISABLE_STRICT)
+endif
+endif
+endif
+##################
+# PIPE #
+ifeq ($(PIPE),true)
+ifndef LOCAL_IS_HOST_MODULE
+ifneq (1,$(words $(filter $(LOCAL_DISABLE_PIPE), $(LOCAL_MODULE))))
+ifdef LOCAL_CONLYFLAGS
+LOCAL_CONLYFLAGS += \
+        $(PIPE_FLAGS)
+else
+LOCAL_CONLYFLAGS := \
+        $(PIPE_FLAGS)
+endif
+ifdef LOCAL_CPPFLAGS
+LOCAL_CPPFLAGS += \
+        $(PIPE_FLAGS)
+else
+LOCAL_CPPFLAGS := \
+        $(PIPE_FLAGS)
+endif
+endif
+endif
+endif
+#########################
+
 # The following LOCAL_ variables will be modified in this file.
 # Because the same LOCAL_ variables may be used to define modules for both 1st arch and 2nd arch,
 # we can't modify them in place.
