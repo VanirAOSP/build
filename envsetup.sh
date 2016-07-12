@@ -1514,6 +1514,12 @@ case `uname -s` in
                 -exec grep --color -n "$@" {} +
         }
 
+        function segrep()
+        {
+            find . -name .repo -prune -o -name .git -prune -o -path ./out -prune -o -regextype posix-egrep -iregex '(.*\/file_contexts|.*\property_contexts|.*\*.te)' -type f -print0 | xargs -0 grep --color -n "$@"
+        }
+
+
         function treegrep()
         {
             find . -name .repo -prune -o -name .git -prune -o -regextype posix-egrep -iregex '.*\.(c|h|cpp|S|java|xml)' -type f \
