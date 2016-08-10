@@ -190,6 +190,7 @@ $(call project-set-path-variant,recovery,RECOVERY_VARIANT,bootable/recovery)
 
 -include vendor/extra/BoardConfigExtra.mk
 -include vendor/cm/config/BoardConfigCM.mk
+-include vendor/vanir/config/BoardConfigVanir.mk
 
 # The build system exposes several variables for where to find the kernel
 # headers:
