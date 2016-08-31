@@ -3,6 +3,7 @@
 print_build_config_vars := \
   PLATFORM_VERSION_CODENAME \
   PLATFORM_VERSION \
+  CM_VERSION \
   TARGET_PRODUCT \
   TARGET_BUILD_VARIANT \
   TARGET_BUILD_TYPE \
@@ -23,6 +24,14 @@ print_build_config_vars := \
   HOST_BUILD_TYPE \
   BUILD_ID \
   OUT_DIR
+
+ifneq (,$(filter true, $(CYNGN_TARGET) $(EXTERNAL_CLEAN_TARGET)))
+ifeq ($(CYNGN_TARGET),true)
+print_build_config_vars += \
+  CYNGN_TARGET \
+  CYNGN_FEATURES
+endif
+endif
 
 ifeq ($(TARGET_BUILD_PDK),true)
 print_build_config_vars += \

@@ -443,6 +443,8 @@ cm_plat_res_package_export := \
     $(call intermediates-dir-for,APPS,org.cyanogenmod.platform-res,,COMMON)/package-export.apk
 endif # LOCAL_IGNORE_SUBDIR
 
+endif
+
 # We can't depend directly on the export.apk file; it won't get its
 # PRIVATE_ vars set up correctly if we do.  Instead, depend on the
 # corresponding R.stamp file, which lists the export.apk as a dependency.
@@ -453,6 +455,8 @@ ifneq ($(LOCAL_IGNORE_SUBDIR), true)
 cm_plat_res_package_export_deps := \
     $(dir $(cm_plat_res_package_export))src/R.stamp
 endif # LOCAL_IGNORE_SUBDIR
+
+endif
 
 endif # LOCAL_SDK_RES_VERSION
 all_library_res_package_exports := \
@@ -471,6 +475,8 @@ all_library_res_package_exports += \
 all_library_res_package_export_deps += \
     $(cm_plat_res_package_export_deps)
 endif # LOCAL_IGNORE_SUBDIR
+
+endif
 
 $(resource_export_package) $(R_file_stamp) $(LOCAL_BUILT_MODULE): $(all_library_res_package_export_deps)
 $(LOCAL_INTERMEDIATE_TARGETS): \

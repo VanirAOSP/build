@@ -42,6 +42,11 @@ ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
         endif
     endif
 
+    # Enable extra offloading for post-805 targets
+    ifneq ($(filter msm8992 msm8994,$(TARGET_BOARD_PLATFORM)),)
+        qcom_flags += -DHAS_EXTRA_FLAC_METADATA
+    endif
+
     TARGET_GLOBAL_CFLAGS += $(qcom_flags)
     TARGET_GLOBAL_CPPFLAGS += $(qcom_flags)
     CLANG_TARGET_GLOBAL_CFLAGS += $(qcom_flags)
@@ -113,7 +118,7 @@ else
 
 $(call project-set-path,qcom-audio,hardware/qcom/audio/default)
 $(call project-set-path,qcom-display,hardware/qcom/display/$(TARGET_BOARD_PLATFORM))
-$(call project-set-path,qcom-media,hardware/qcom/media/default)
+$(call project-set-path,qcom-media,hardware/qcom/media/$(TARGET_BOARD_PLATFORM))
 
 $(call project-set-path,qcom-camera,hardware/qcom/camera)
 $(call project-set-path,qcom-gps,hardware/qcom/gps)

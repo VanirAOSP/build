@@ -123,8 +123,8 @@ endif
 $(shell mkdir -p $(OUT_DIR) && \
     echo -n $(BUILD_NUMBER) > $(OUT_DIR)/build_number.txt && \
     echo -n $(BUILD_DATETIME) > $(OUT_DIR)/build_date.txt)
-BUILD_NUMBER_FROM_FILE := $$(cat $(OUT_DIR)/build_number.txt)
-BUILD_DATETIME_FROM_FILE := $$(cat $(OUT_DIR)/build_date.txt)
+BUILD_NUMBER_FROM_FILE := $(cat $(OUT_DIR)/build_number.txt)
+BUILD_DATETIME_FROM_FILE := $(cat $(OUT_DIR)/build_date.txt)
 ifeq ($(HOST_OS),darwin)
 DATE_FROM_FILE := date -r $(BUILD_DATETIME_FROM_FILE)
 else
@@ -1111,7 +1111,7 @@ $(foreach module,$(sample_MODULES),$(eval $(call \
 sample_ADDITIONAL_INSTALLED := \
         $(filter-out $(modules_to_install) $(modules_to_check) $(ALL_PREBUILT),$(sample_MODULES))
 samplecode: $(sample_APKS_COLLECTION)
-	@echo "Collect sample code apks: $^"
+	@echo "Collect sample code apks:"" $^"
 	# remove apks that are not intended to be installed.
 	rm -f $(sample_ADDITIONAL_INSTALLED)
 endif  # samplecode in $(MAKECMDGOALS)

@@ -4,7 +4,7 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - lunch:     lunch <product_name>-<build_variant>
 - tapas:     tapas [<App1> <App2> ...] [arm|x86|mips|armv5|arm64|x86_64|mips64] [eng|userdebug|user]
 - croot:     Changes directory to the top of the tree.
-- cout:    Changes directory to out.
+- cout:      Changes directory to out.
 - m:         Makes from the top of the tree.
 - mm:        Builds all of the modules in the current directory, but not their dependencies.
 - mmm:       Builds all of the modules in the supplied directories, but not their dependencies.
@@ -14,8 +14,11 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - mmap:    Builds all of the modules in the current directory, and its dependencies, then pushes the package to the device.
 - mmmp:    Builds all of the modules in the supplied directories and pushes them to the device.
 - mmma:      Builds all of the modules in the supplied directories, and their dependencies.
-- mms:     Short circuit builder. Quickly re-build the kernel, rootfs, boot and system images
-           without deep dependencies. Requires the full build to have run before.
+- mmap:      Builds all of the modules in the current directory, and its dependencies, then pushes the package to the device.
+- mmp:       Builds all of the modules in the current directory and pushes them to the device.
+- mmmp:      Builds all of the modules in the supplied directories and pushes them to the device.
+- mms:       Short circuit builder. Quickly re-build the kernel, rootfs, boot and system images
+             without deep dependencies. Requires the full build to have run before.
 - provision: Flash device with all required partitions. Options will be passed on to fastboot.
 - cgrep:     Greps on all local C/C++ files.
 - ggrep:     Greps on all local Gradle files.
@@ -26,19 +29,20 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - sepgrep:   Greps on all local sepolicy files.
 - sgrep:     Greps on all local source files.
 - godir:     Go to the directory containing a file.
-- cmremote: Add git remote for CM Gerrit Review
-- cmgerrit: A Git wrapper that fetches/pushes patch from/to CM Gerrit Review
-- cmrebase: Rebase a Gerrit change and push it again
+- cmremote:  Add git remote for CM Gerrit Review
+- cmgerrit:  A Git wrapper that fetches/pushes patch from/to CM Gerrit Review
 - aospremote: Add git remote for matching AOSP repository
 - cafremote: Add git remote for matching CodeAurora repository.
-- mka:      Builds using SCHED_BATCH on all processors
-- mkap:     Builds the module(s) using mka and pushes them to the device.
+- cmrebase:  Rebase a Gerrit change and push it again
+- mka:       Builds using SCHED_BATCH on all processors
+- mkap:      Builds the module(s) using mka and pushes them to the device.
+- cmka:      Cleans and builds using mka.
 - repolastsync: Prints date and time of last repo sync.
-- reposync: Parallel repo sync using ionice and SCHED_BATCH
-- repopick: Utility to fetch changes from Gerrit.
+- reposync:  Parallel repo sync using ionice and SCHED_BATCH
+- repopick:  Utility to fetch changes from Gerrit.
 - installboot: Installs a boot.img to the connected device.
 - installrecovery: Installs a recovery.img to the connected device.
-- smash:    clean out the out directory of your lunched target only.
+- repodiff:  Diff 2 different branches or tags within the same repo
 
 Environemnt options:
 - SANITIZE_HOST: Set to 'true' to use ASAN for all host modules. Note that
@@ -61,7 +65,7 @@ function build_build_var_cache()
     cached_vars=`cat $T/build/envsetup.sh | tr '()' '  ' | awk '{for(i=1;i<=NF;i++) if($i~/get_build_var/) print $(i+1)}' | sort -u | tr '\n' ' '`
     cached_abs_vars=`cat $T/build/envsetup.sh | tr '()' '  ' | awk '{for(i=1;i<=NF;i++) if($i~/get_abs_build_var/) print $(i+1)}' | sort -u | tr '\n' ' '`
     # Call the build system to dump the "<val>=<value>" pairs as a shell script.
-    build_dicts_script=`\cd $T; CALLED_FROM_SETUP=true BUILD_SYSTEM=build/core \
+    build_dicts_script=`\cd $T; export CALLED_FROM_SETUP=true; export BUILD_SYSTEM=build/core; \
                         command make --no-print-directory -f build/core/config.mk \
                         dump-many-vars \
                         DUMP_MANY_VARS="$cached_vars" \
@@ -128,7 +132,7 @@ function get_abs_build_var()
         echo "Couldn't locate the top of the tree.  Try setting TOP." >&2
         return
     fi
-    (\cd $T; CALLED_FROM_SETUP=true BUILD_SYSTEM=build/core \
+    (\cd $T; export CALLED_FROM_SETUP=true; export BUILD_SYSTEM=build/core; \
       command make --no-print-directory -f build/core/config.mk dumpvar-abs-$1)
 }
 
@@ -146,7 +150,7 @@ function get_build_var()
         echo "Couldn't locate the top of the tree.  Try setting TOP." >&2
         return
     fi
-    (\cd $T; CALLED_FROM_SETUP=true BUILD_SYSTEM=build/core \
+    (\cd $T; export CALLED_FROM_SETUP=true; export BUILD_SYSTEM=build/core; \
       command make --no-print-directory -f build/core/config.mk dumpvar-$1)
 }
 
@@ -702,9 +706,22 @@ function lunch()
     fi
 
     local product=$(echo -n $selection | sed -e "s/-.*$//")
+    check_product $product
+    if [ $? -ne 0 ]
+    then
+        # if we can't find a product, try to grab it off the CM github
+        T=$(gettop)
+        pushd $T > /dev/null
+        build/tools/roomservice.py $product
+        popd > /dev/null
+        check_product $product
+    else
+        build/tools/roomservice.py $product true
+    fi
     TARGET_PRODUCT=$product \
     TARGET_BUILD_VARIANT=$variant \
     build_build_var_cache
+
     if [ $? -ne 0 ]
     then
         echo
@@ -2236,6 +2253,231 @@ EOF
     return 0
     else
         echo "The connected device does not appear to be ${CM_BUILD}${VANIR_BUILD}, run away!"
+    fi
+}
+
+alias mmp='dopush mm'
+alias mmmp='dopush mmm'
+alias mmap='dopush mma'
+alias mkap='dopush mka'
+alias cmkap='dopush cmka'
+
+function repopick() {
+    T=$(gettop)
+    $T/build/tools/repopick.py $@
+}
+
+function fixup_common_out_dir() {
+    common_out_dir=$(get_build_var OUT_DIR)/target/common
+    target_device=$(get_build_var TARGET_DEVICE)
+    if [ ! -z $CM_FIXUP_COMMON_OUT ]; then
+        if [ -d ${common_out_dir} ] && [ ! -L ${common_out_dir} ]; then
+            mv ${common_out_dir} ${common_out_dir}-${target_device}
+            ln -s ${common_out_dir}-${target_device} ${common_out_dir}
+        else
+            [ -L ${common_out_dir} ] && rm ${common_out_dir}
+            mkdir -p ${common_out_dir}-${target_device}
+            ln -s ${common_out_dir}-${target_device} ${common_out_dir}
+        fi
+    else
+        [ -L ${common_out_dir} ] && rm ${common_out_dir}
+        mkdir -p ${common_out_dir}
+    fi
+}
+
+
+function mms() {
+    local T=$(gettop)
+    if [ -z "$T" ]
+    then
+        echo "Couldn't locate the top of the tree.  Try setting TOP."
+        return 1
+    fi
+
+    case `uname -s` in
+        Darwin)
+            local NUM_CPUS=$(sysctl hw.ncpu|cut -d" " -f2)
+            ONE_SHOT_MAKEFILE="__none__" \
+                make -C $T -j $NUM_CPUS "$@"
+            ;;
+        *)
+            local NUM_CPUS=$(cat /proc/cpuinfo | grep "^processor" | wc -l)
+            ONE_SHOT_MAKEFILE="__none__" \
+                mk_timer schedtool -B -n 1 -e ionice -n 1 \
+                make -C $T -j $NUM_CPUS "$@"
+            ;;
+    esac
+}
+
+
+function repolastsync() {
+    RLSPATH="$ANDROID_BUILD_TOP/.repo/.repo_fetchtimes.json"
+    RLSLOCAL=$(date -d "$(stat -c %z $RLSPATH)" +"%e %b %Y, %T %Z")
+    RLSUTC=$(date -d "$(stat -c %z $RLSPATH)" -u +"%e %b %Y, %T %Z")
+    echo "Last repo sync: $RLSLOCAL / $RLSUTC"
+}
+
+function reposync() {
+    case `uname -s` in
+        Darwin)
+            repo sync -j 4 "$@"
+            ;;
+        *)
+            schedtool -B -n 1 -e ionice -n 1 `which repo` sync -j 4 "$@"
+            ;;
+    esac
+}
+
+function repodiff() {
+    if [ -z "$*" ]; then
+        echo "Usage: repodiff <ref-from> [[ref-to] [--numstat]]"
+        return
+    fi
+    diffopts=$* repo forall -c \
+      'echo "$REPO_PATH ($REPO_REMOTE)"; git diff ${diffopts} 2>/dev/null ;'
+}
+
+# Return success if adb is up and not in recovery
+function _adb_connected {
+    {
+        if [[ "$(adb get-state)" == device &&
+              "$(adb shell test -e /sbin/recovery; echo $?)" == 0 ]]
+        then
+            return 0
+        fi
+    } 2>/dev/null
+
+    return 1
+};
+
+# Credit for color strip sed: http://goo.gl/BoIcm
+function dopush()
+{
+    local func=$1
+    shift
+
+    adb start-server # Prevent unexpected starting server message from adb get-state in the next line
+    if ! _adb_connected; then
+        echo "No device is online. Waiting for one..."
+        echo "Please connect USB and/or enable USB debugging"
+        until _adb_connected; do
+            sleep 1
+        done
+        echo "Device Found."
+    fi
+
+    if (adb shell getprop ro.cm.device | grep -q "$CM_BUILD") || [ "$FORCE_PUSH" = "true" ];
+    then
+    # retrieve IP and PORT info if we're using a TCP connection
+    TCPIPPORT=$(adb devices | egrep '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+[^0-9]+' \
+        | head -1 | awk '{print $1}')
+    adb root &> /dev/null
+    sleep 0.3
+    if [ -n "$TCPIPPORT" ]
+    then
+        # adb root just killed our connection
+        # so reconnect...
+        adb connect "$TCPIPPORT"
+    fi
+    adb wait-for-device &> /dev/null
+    sleep 0.3
+    adb remount &> /dev/null
+
+    mkdir -p $OUT
+    ($func $*|tee $OUT/.log;return ${PIPESTATUS[0]})
+    ret=$?;
+    if [ $ret -ne 0 ]; then
+        rm -f $OUT/.log;return $ret
+    fi
+
+    # Install: <file>
+    if [ `uname` = "Linux" ]; then
+        LOC="$(cat $OUT/.log | sed -r 's/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g' | grep '^Install: ' | cut -d ':' -f 2)"
+    else
+        LOC="$(cat $OUT/.log | sed -E "s/"$'\E'"\[([0-9]{1,3}((;[0-9]{1,3})*)?)?[m|K]//g" | grep '^Install: ' | cut -d ':' -f 2)"
+    fi
+
+    # Copy: <file>
+    if [ `uname` = "Linux" ]; then
+        LOC="$LOC $(cat $OUT/.log | sed -r 's/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g' | grep '^Copy: ' | cut -d ':' -f 2)"
+    else
+        LOC="$LOC $(cat $OUT/.log | sed -E "s/"$'\E'"\[([0-9]{1,3}((;[0-9]{1,3})*)?)?[m|K]//g" | grep '^Copy: ' | cut -d ':' -f 2)"
+    fi
+
+    # If any files are going to /data, push an octal file permissions reader to device
+    if [ -n "$(echo $LOC | egrep '(^|\s)/data')" ]; then
+        CHKPERM="/data/local/tmp/chkfileperm.sh"
+(
+cat <<'EOF'
+#!/system/xbin/sh
+FILE=$@
+if [ -e $FILE ]; then
+    ls -l $FILE | awk '{k=0;for(i=0;i<=8;i++)k+=((substr($1,i+2,1)~/[rwx]/)*2^(8-i));if(k)printf("%0o ",k);print}' | cut -d ' ' -f1
+fi
+EOF
+) > $OUT/.chkfileperm.sh
+        echo "Pushing file permissions checker to device"
+        adb push $OUT/.chkfileperm.sh $CHKPERM
+        adb shell chmod 755 $CHKPERM
+        rm -f $OUT/.chkfileperm.sh
+    fi
+
+    stop_n_start=false
+    for FILE in $(echo $LOC | tr " " "\n"); do
+        # Make sure file is in $OUT/system or $OUT/data
+        case $FILE in
+            $OUT/system/*|$OUT/data/*)
+                # Get target file name (i.e. /system/bin/adb)
+                TARGET=$(echo $FILE | sed "s#$OUT##")
+            ;;
+            *) continue ;;
+        esac
+
+        case $TARGET in
+            /data/*)
+                # fs_config only sets permissions and se labels for files pushed to /system
+                if [ -n "$CHKPERM" ]; then
+                    OLDPERM=$(adb shell $CHKPERM $TARGET)
+                    OLDPERM=$(echo $OLDPERM | tr -d '\r' | tr -d '\n')
+                    OLDOWN=$(adb shell ls -al $TARGET | awk '{print $2}')
+                    OLDGRP=$(adb shell ls -al $TARGET | awk '{print $3}')
+                fi
+                echo "Pushing: $TARGET"
+                adb push $FILE $TARGET
+                if [ -n "$OLDPERM" ]; then
+                    echo "Setting file permissions: $OLDPERM, $OLDOWN":"$OLDGRP"
+                    adb shell chown "$OLDOWN":"$OLDGRP" $TARGET
+                    adb shell chmod "$OLDPERM" $TARGET
+                else
+                    echo "$TARGET did not exist previously, you should set file permissions manually"
+                fi
+                adb shell restorecon "$TARGET"
+            ;;
+            /system/priv-app/SystemUI/SystemUI.apk|/system/framework/*)
+                # Only need to stop services once
+                if ! $stop_n_start; then
+                    adb shell stop
+                    stop_n_start=true
+                fi
+                echo "Pushing: $TARGET"
+                adb push $FILE $TARGET
+            ;;
+            *)
+                echo "Pushing: $TARGET"
+                adb push $FILE $TARGET
+            ;;
+        esac
+    done
+    if [ -n "$CHKPERM" ]; then
+        adb shell rm $CHKPERM
+    fi
+    if $stop_n_start; then
+        adb shell start
+    fi
+    rm -f $OUT/.log
+    return 0
+    else
+        echo "The connected device does not appear to be $CM_BUILD, run away!"
     fi
 }
 

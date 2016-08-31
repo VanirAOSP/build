@@ -189,7 +189,7 @@ FIND_LEAVES_EXCLUDES := $(addprefix --prune=, $(OUT_DIR) $(SCAN_EXCLUDE_DIRS) .r
 $(call project-set-path-variant,recovery,RECOVERY_VARIANT,bootable/recovery)
 
 -include vendor/extra/BoardConfigExtra.mk
--include vendor/cm/config/BoardConfigCM.mk
+-include vendor/vanir/config/BoardConfigCM.mk
 -include vendor/vanir/config/BoardConfigVanir.mk
 
 # The build system exposes several variables for where to find the kernel
@@ -524,7 +524,11 @@ endif # TARGET_BUILD_APPS || TARGET_BUILD_PDK
 # Generic tools.
 JACK := $(HOST_OUT_EXECUTABLES)/jack
 
+ifeq ($(USE_HOST_LEX),yes)
+LEX := flex
+else
 LEX := prebuilts/misc/$(BUILD_OS)-$(HOST_PREBUILT_ARCH)/flex/flex-2.5.39
+endif
 # The default PKGDATADIR built in the prebuilt bison is a relative path
 # external/bison/data.
 # To run bison from elsewhere you need to set up enviromental variable
