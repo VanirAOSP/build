@@ -3,7 +3,7 @@
 print_build_config_vars := \
   PLATFORM_VERSION_CODENAME \
   PLATFORM_VERSION \
-  CM_VERSION \
+  VANIR_VERSION \
   TARGET_PRODUCT \
   TARGET_BUILD_VARIANT \
   TARGET_BUILD_TYPE \
@@ -37,17 +37,6 @@ ifeq ($(TARGET_BUILD_PDK),true)
 print_build_config_vars += \
   TARGET_BUILD_PDK \
   PDK_FUSION_PLATFORM_ZIP
-endif
-
-ifneq ($(CM_BUILD),)
-print_build_config_vars += \
-  CM_VERSION
-endif
-
-ifeq ($(CYNGN_TARGET),true)
-print_build_config_vars += \
-  CYNGN_TARGET \
-  CYNGN_FEATURES
 endif
 
 # ---------------------------------------------------------------
