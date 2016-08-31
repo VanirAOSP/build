@@ -165,25 +165,23 @@ function check_product()
 
     if (echo -n $1 | grep -q -e "^cm_") ; then
        CM_BUILD=$(echo -n $1 | sed -e 's/^cm_//g')
-       export BUILD_NUMBER=$((date +%s%N ; echo $CM_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
+       [ ! -z "$CM_BUILD" ] && export BUILD_NUMBER=$((date +%s%N ; echo $CM_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
     else
        CM_BUILD=
     fi
     if (echo -n $1 | grep -q -e "^vanir_"); then
        VANIR_BUILD=$(echo -n $1 | sed -e 's/^vanir_//g')
-       export BUILD_NUMBER=$((date +%s%N ; echo $VANIR_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
-    else
-       if (echo -n $1 | grep -q -e "^commotio_"); then
+       [ ! -z "$VANIR_BUILD" ] && export BUILD_NUMBER=$((date +%s%N ; echo $VANIR_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
+    elif (echo -n $1 | grep -q -e "^commotio_"); then
        VANIR_BUILD=$(echo -n $1 | sed -e 's/^commotio_//g')
-       export BUILD_NUMBER=$((date +%s%N ; echo $VANIR_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
+       [ ! -z "$VANIR_BUILD" ] && export BUILD_NUMBER=$((date +%s%N ; echo $VANIR_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
     else
        VANIR_BUILD=
-       fi
     fi
     export CM_BUILD
     export VANIR_BUILD
 
-        TARGET_PRODUCT=$1 \
+    TARGET_PRODUCT=$1 \
         TARGET_BUILD_VARIANT= \
         TARGET_BUILD_TYPE= \
         TARGET_BUILD_APPS= \
@@ -714,14 +712,9 @@ function lunch()
         echo "** Do you have the right repo manifest?"
         product=
     fi
-
-    if [ $? -ne 0 ]
-    then
-        echo
-        echo "** Don't have a product spec for: '$product'"
-        echo "** Do you have the right repo manifest?"
-        product=
-    fi
+    TARGET_PRODUCT=$product \
+    TARGET_BUILD_VARIANT=$variant \
+    build_build_var_cache
 
     if [ -z "$product" -o -z "$variant" ]
     then
@@ -733,8 +726,6 @@ function lunch()
     export TARGET_BUILD_VARIANT=$variant
     export TARGET_BUILD_TYPE=release
 
-    build_build_var_cache
-
     echo
 
     fixup_common_out_dir
@@ -744,7 +735,7 @@ function lunch()
     if [ $T ]; then
         pushd . >& /dev/null
         cd $T
-        local TARGET_PREBUILT_KERNEL=`get_build_var TARGET_PREBUILT_KERNEL`
+        local TARGET_PREBUILT_KERNEL=$(get_build_var TARGET_PREBUILT_KERNEL)
         if [ ! $TARGET_PREBUILT_KERNEL ] || [ "$TARGET_PREBUILT_KERNEL" = "false" ]; then
             source build/tools/bottleservice.sh
             champagne $product || return 1
