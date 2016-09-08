@@ -147,7 +147,10 @@ endef
 # $(2): Value to append
 #
 define inherit-product_append-var
-  $(eval $(1) := $($(1)) $(INHERIT_TAG)$(strip $(2)))
+  $(if $(findstring ../,$(2)),\
+    $(eval np := $(call normalize-paths,$(2))),\
+    $(eval np := $(strip $(2))))\
+  $(eval $(1) := $($(1)) $(INHERIT_TAG)$(np))
 endef
 
 #
@@ -166,9 +169,12 @@ endef
 # $(1): Product being inherited
 #
 define inherit-product_track-node
+  $(if $(findstring ../,$(1)),\
+    $(eval np := $(call normalize-paths,$(1))),\
+    $(eval np := $(strip $(1))))\
   $(eval inherit_var := \
       PRODUCTS.$(strip $(word 1,$(_include_stack))).INHERITS_FROM) \
-  $(eval $(inherit_var) := $(sort $($(inherit_var)) $(strip $(1)))) \
+  $(eval $(inherit_var) := $(sort $($(inherit_var)) $(np))) \
   $(eval inherit_var:=) \
   $(eval ALL_PRODUCTS := $(sort $(ALL_PRODUCTS) $(word 1,$(_include_stack))))
 endef
@@ -181,13 +187,11 @@ endef
 #  2. Records the inheritance in the .INHERITS_FROM variable
 #  3. Records that we've visited this node, in ALL_PRODUCTS
 #
+
 define inherit-product
-  $(if $(findstring ../,$(1)),\
-    $(eval np := $(call normalize-paths,$(1))),\
-    $(eval np := $(strip $(1))))\
   $(foreach v,$(_product_var_list), \
-      $(call inherit-product_append-var,$(v),$(np))) \
-  $(call inherit-product_track-node,$(np))
+      $(call inherit-product_append-var,$(v),$(1))) \
+  $(call inherit-product_track-node,$(1))
 endef
 
 #

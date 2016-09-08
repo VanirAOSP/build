@@ -1121,8 +1121,8 @@ findbugs: $(INTERNAL_FINDBUGS_HTML_TARGET) $(INTERNAL_FINDBUGS_XML_TARGET)
 
 .PHONY: clean
 clean:
-	@rm -rf $(OUT_DIR)/*
-	@echo -e ${CL_GRN}"Entire build directory removed."${CL_RST}
+	@rm -rf $(OUT_DIR)/* $(OUT_DIR)/..?* $(OUT_DIR)/.[!.]*
+	@echo "Entire build directory removed."
 	@echo "clobber" > $(ANDROID_BUILD_TOP)/.lastbuild
 
 .PHONY: clobber
