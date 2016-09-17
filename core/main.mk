@@ -1132,14 +1132,14 @@ clobber: clean
 .PHONY: novo
 novo:
 	@rm -rf $(OUT_DIR)/target/*
-	@echo -e ${CL_GRN}"Target directory removed."${CL_RST}
+	@echo "Target directory removed."
 	@echo "novo" > $(ANDROID_BUILD_TOP)/.lastbuild
 
 # This is designed for building in memory.  Clean products, but keep common files - DHO
 .PHONY: burst
 burst:
 	@rm -rf $(OUT_DIR)/target/product/*
-	@echo -e ${CL_GRN}"Product directory removed."${CL_RST}
+	@echo "Product directory removed."
 	@echo "burst" > $(ANDROID_BUILD_TOP)/.lastbuild
 
 # This is designed for building in memory + keeping smaller build folders + common files - DHO
@@ -1150,7 +1150,7 @@ surgical:
 	@rm -rf $(OUT_DIR)/target/product/*/vanir_*-ota-eng.$(USER).zip
 	@rm -rf $(OUT_DIR)/target/product/*/system.img
 	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
-	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
+	@echo "Surgical Strike Completed."
 
 # This is designed for building on SSD but to whittle away at the bulk file size - DHO
 .PHONY: biopsy
@@ -1159,7 +1159,7 @@ biopsy:
 	@rm -rf $(OUT_DIR)/target/product/*/system.img
 	@rm -rf $(OUT_DIR)/target/product/*/userdata.img
 	@rm -rf $(OUT_DIR)/target/product/*/system/app/*
-	@echo -e ${CL_GRN}"Surgical Strike Completed."${CL_RST}
+	@echo "Surgical Strike Completed."
 
 
 # The rules for dataclean and installclean are defined in cleanbuild.mk.

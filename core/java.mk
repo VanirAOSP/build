@@ -597,7 +597,7 @@ $(full_classes_proguard_jar) : $(full_classes_jar) $(extra_input_jar) $(my_suppo
 
 else  # LOCAL_PROGUARD_ENABLED not defined
 $(full_classes_proguard_jar) : $(full_classes_jar)
-	@echo -e ${CL_GRN}"Copying:"${CL_RST}" $@"
+	@echo Copying: $@
 	$(hide) $(ACP) -fp $< $@
 
 endif # LOCAL_PROGUARD_ENABLED defined
@@ -632,7 +632,7 @@ $(findbugs_xml): PRIVATE_AUXCLASSPATH := $(addprefix -auxclasspath ,$(strip \
     $(call normalize-path-list,$(filter %.jar,$(full_java_libs)))))
 $(findbugs_xml): PRIVATE_FINDBUGS_FLAGS := $(LOCAL_FINDBUGS_FLAGS)
 $(findbugs_xml) : $(full_classes_jar) $(filter %.xml, $(LOCAL_FINDBUGS_FLAGS))
-	@echo -e ${CL_GRN}"Findbugs:"${CL_RST}" $@"
+	@echo Findbugs: $@
 	$(hide) $(FINDBUGS) -textui -effort:min -xml:withMessages \
 		$(PRIVATE_AUXCLASSPATH) $(PRIVATE_FINDBUGS_FLAGS) \
 		$< \
@@ -645,7 +645,7 @@ $(findbugs_html) : PRIVATE_XML_FILE := $(findbugs_xml)
 $(LOCAL_MODULE)-findbugs : $(findbugs_html)
 $(findbugs_html) : $(findbugs_xml)
 	@mkdir -p $(dir $@)
-	@echo -e ${CL_GRN}"ConvertXmlToText:"${CL_RST}" $@"
+	@echo ConvertXmlToText: $@
 	$(hide) $(FINDBUGS_DIR)/convertXmlToText -html:fancy.xsl $(PRIVATE_XML_FILE) \
 	> $@
 
@@ -704,7 +704,7 @@ $(jack_check_timestamp): $(jack_all_deps) | setup-jack-server
 
 ifeq ($(LOCAL_IS_STATIC_JAVA_LIBRARY),true)
 $(full_classes_jack): $(jack_all_deps) | setup-jack-server
-	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
+	@echo Building with Jack: $@
 	$(java-to-jack)
 
 # Update timestamps of .toc files for static java libraries so
@@ -727,7 +727,7 @@ $(built_dex_intermediate): PRIVATE_JACK_COVERAGE_OPTIONS :=
 endif
 
 $(built_dex_intermediate): $(jack_all_deps) | setup-jack-server
-	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
+	@echo Building with Jack: $@
 	$(jack-java-to-dex)
 
 # $(full_classes_jack) is just by-product of $(built_dex_intermediate).
@@ -743,7 +743,7 @@ endif #LOCAL_IS_STATIC_JAVA_LIBRARY
 $(noshrob_classes_jack): PRIVATE_JACK_INTERMEDIATES_DIR := $(intermediates.COMMON)/jack-noshrob-rsc
 $(noshrob_classes_jack): PRIVATE_JACK_PROGUARD_FLAGS :=
 $(noshrob_classes_jack): $(jack_all_deps) | setup-jack-server
-	@echo -e ${BG_MAG}${CL_WHT}"Jack"${CL_RST}${BG_BLK}${CL_MAG}"ing:"${CL_RST}" $@"
+	@echo Building with Jack: $@
 	$(java-to-jack)
 endif  # full_classes_jar is defined
 endif # LOCAL_JACK_ENABLED
