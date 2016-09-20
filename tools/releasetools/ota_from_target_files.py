@@ -647,13 +647,16 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.Print("Target: %s" % CalculateFingerprint(
       oem_props, oem_dict, OPTIONS.info_dict))
 
-  script.AppendExtra("ifelse(is_mounted(\"/system\"), unmount(\"/system\"));")
+  script.Unmount("/system");
   device_specific.FullOTA_InstallBegin()
+
+  script.Unmount("/system");
 
   CopyInstallTools(output_zip)
   script.UnpackPackageDir("install", "/tmp/install")
   script.SetPermissionsRecursive("/tmp/install", 0, 0, 0o755, 0o644, None, None)
   script.SetPermissionsRecursive("/tmp/install/bin", 0, 0, 0o755, 0o755, None, None)
+  script.RunInstallScript("updatertext.sh", "footer");
 
   if OPTIONS.backuptool:
     script.Mount("/system")
@@ -668,13 +671,10 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
     system_progress -= 0.1
 
   if not OPTIONS.wipe_user_data:
-    script.AppendExtra("if is_mounted(\"/data\") then")
-    script.ValidateSignatures("data")
-    script.AppendExtra("else")
     script.Mount("/data")
+    script.RunInstallScript("automagic.sh")
     script.ValidateSignatures("data")
-    script.Unmount("/data")
-    script.AppendExtra("endif;")
+    script.Umount("/data")
 
   if "selinux_fc" in OPTIONS.info_dict:
     WritePolicyConfig(OPTIONS.info_dict["selinux_fc"], output_zip)
@@ -743,6 +743,7 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   device_specific.FullOTA_PostValidate()
 
   if OPTIONS.backuptool:
+    script.Print("Resurrecting gapps from pre-flash backup")
     script.ShowProgress(0.02, 10)
     if block_based:
       script.Mount("/system")
@@ -777,6 +778,7 @@ reboot_now("%(bcb_dev)s", "");
 endif;
 endif;
 """ % bcb_dev)
+  script.RunInstallScript("updatertext.sh", "footer");
   script.SetProgress(1)
   script.AddToZip(input_zip, output_zip, input_path=OPTIONS.updater_binary)
   metadata["ota-required-cache"] = str(script.required_cache)
