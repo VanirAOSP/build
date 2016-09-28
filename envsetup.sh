@@ -9,9 +9,6 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - mmm:       Builds all of the modules in the supplied directories, but not their dependencies.
              To limit the modules being built use the syntax: mmm dir/:target1,target2.
 - mma:       Builds all of the modules in the current directory, and their dependencies.
-- mmp:     Builds all of the modules in the current directory and pushes them to the device.
-- mmap:    Builds all of the modules in the current directory, and its dependencies, then pushes the package to the device.
-- mmmp:    Builds all of the modules in the supplied directories and pushes them to the device.
 - mmma:      Builds all of the modules in the supplied directories, and their dependencies.
 - provision: Flash device with all required partitions. Options will be passed on to fastboot.
 - cgrep:     Greps on all local C/C++ files.
@@ -556,11 +553,7 @@ function print_lunch_menu()
     echo
     echo "You're building on" $uname
     echo
-    if [ "z${CM_DEVICES_ONLY}" != "z" ]; then
-       echo "Breakfast menu... pick a combo:"
-    else
-       echo "Lunch menu... pick a combo:"
-    fi
+    echo "Lunch menu... pick a combo:"
 
     local i=1
     local choice
@@ -569,10 +562,6 @@ function print_lunch_menu()
         echo " $i. $choice "
         i=$(($i+1))
     done | column
-
-    if [ "z${CM_DEVICES_ONLY}" != "z" ]; then
-       echo "... and don't forget the bacon!"
-    fi
 
     echo
 }
@@ -659,7 +648,7 @@ function lunch()
         cd $T
         local TARGET_PREBUILT_KERNEL=$(get_build_var TARGET_PREBUILT_KERNEL)
         if [ ! $TARGET_PREBUILT_KERNEL ] || [ "$TARGET_PREBUILT_KERNEL" = "false" ]; then
-            source build/tools/bottleservice.sh
+            source $T/vendor/vanir/build/tools/bottleservice.sh
             champagne $product || return 1
         fi
         popd >& /dev/null
@@ -1264,10 +1253,6 @@ case `uname -s` in
             find -E . -name .repo -prune -o -name .git -prune -o -path ./out -prune -o -type f -iregex '.*/(Makefile|Makefile\..*|.*\.make|.*\.mak|.*\.mk)' \
                 -exec grep --color -n "$@" {} +
         }
-        function segrep()
-        {
-            find -E . -name .repo -prune -o -name .git -prune -o -path ./out -prune -o -regextype posix-egrep -iregex '(.*\/file_contexts|.*\/property_contexts|.*\.te)' -type f -print0 | xargs -0 grep --color -n "$@"
-        }
 
         function treegrep()
         {
@@ -1282,12 +1267,6 @@ case `uname -s` in
             find . -name .repo -prune -o -name .git -prune -o -path ./out -prune -o -regextype posix-egrep -iregex '(.*\/Makefile|.*\/Makefile\..*|.*\.make|.*\.mak|.*\.mk)' -type f \
                 -exec grep --color -n "$@" {} +
         }
-
-        function segrep()
-        {
-            find . -name .repo -prune -o -name .git -prune -o -path ./out -prune -o -regextype posix-egrep -iregex '(.*\/file_contexts|.*\/property_contexts|.*\.te)' -type f -print0 | xargs -0 grep --color -n "$@"
-        }
-
 
         function treegrep()
         {
@@ -1718,45 +1697,6 @@ do
 done
 unset f
 
-if [ $STFU_REPO ]; then
-    pushd . >& /dev/null
-    cd $(gettop)/.repo/repo
-    [ `git remote -v | grep github | wc -l` -eq 0 ] && git remote add github https://github.com/nuclearmistake/repo
-    git fetch github >& /dev/null
-    git checkout github/master >& /dev/null
-    popd >& /dev/null
-fi
-
-#rst (repo start helper), rup (repo upload helper)
-source $(gettop)/build/nukehawtness
-
-parse_git_dirty() {
- [ $(git status --porcelain 2> /dev/null | wc -l) -ne 0 ] && echo " \*"
-}
-parse_git_branch() {
- [ "$(parse_git_dirty)" = "" ] && echo -en "\033[1;32m" || echo -en "\033[1;31m"
- git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/ (\1$(parse_git_dirty))/"
-}
-if [ ! $GITPS1ENGAGED ]; then
-export GITPS1ENGAGED=1
-export PS1=`echo "$PS1" | sed 's/\[\$ \]*//g'`
-export NONE='\[\033[0m\]'
-istheregit=$(which git)
-if [ `echo $PS1 | grep parse_git_branch | wc -l` -eq 0 ]; then
-  if [ -x "$istheregit" ]; then
-      export PS1="${NONE}$PS1\$(parse_git_branch)${NONE}"
-  else
-      export PS1="$PS1$ "
-  fi
-  export PS1=`echo "$PS1" | sed 's/$[ ]*$//g'`"\n${NONE}\$ "
-fi
-fi
-
-#allow tab completion of git commands and branch names
-if [ `typeset -F | grep _git | wc -l` -eq 0 ]; then
-    source $(gettop)/build/git-completion.bash
-fi
-
 # Add completions
 check_bash_version && {
     dirs="sdk/bash_completion vendor/vanir/bash_completion"
@@ -1771,6 +1711,6 @@ check_bash_version && {
 }
 
 # Ensure that latest ccache is compiled for host
-build/tools/ccache_version_check.sh
 export ANDROID_BUILD_TOP=$(gettop)
 . vendor/vanir/build/envsetup.sh
+export PATH

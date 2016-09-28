@@ -2159,7 +2159,7 @@ else
 	@echo "Running releasetool"
 	$(hide) ./vendor/$(DHO_VENDOR)/tools/squisher $(SQUISHER_ARGS)
 endif
-	$(ANDROID_BUILD_TOP)/build/tools/vanir_build_logger.sh $(PRODUCT_OUT)
+	$(ANDROID_BUILD_TOP)/vendor/vanir/build/tools/vanir_build_logger.sh $(PRODUCT_OUT)
 
 endif    # build_ota_package
 # -----------------------------------------------------------------
