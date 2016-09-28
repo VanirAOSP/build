@@ -1,2 +1,0 @@
-#!/bin/bash
-7z a -r -tzip -mx=0 bootanimation.zip $*
