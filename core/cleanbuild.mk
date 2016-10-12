@@ -288,6 +288,7 @@ dataclean:
 installclean: FILES := $(installclean_files)
 installclean: dataclean
 	$(hide) rm -rf $(FILES)
+	@echo "novo" > $(ANDROID_BUILD_TOP)/.lastbuild
 	@echo "Deleted images and staging directories."
 
 .PHONY: objclean
