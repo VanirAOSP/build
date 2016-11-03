@@ -647,6 +647,9 @@ function lunch()
         pushd . >& /dev/null
         cd $T
         local TARGET_PREBUILT_KERNEL=$(get_build_var TARGET_PREBUILT_KERNEL)
+        export TARGET_DEVICE=$(get_build_var TARGET_DEVICE)
+        export TARGET_LERNEL_SOURCE=$(get_build_var TARGET_KERNEL_SOURCE)
+        export TARGET_NO_KERNEL=$(get_build_var TARGET_NO_KERNEL) 
         if [ ! $TARGET_PREBUILT_KERNEL ] || [ "$TARGET_PREBUILT_KERNEL" = "false" ]; then
             source $T/vendor/vanir/build/tools/bottleservice.sh
             champagne $product || return 1
