@@ -623,9 +623,6 @@ function lunch()
         echo "** Do you have the right repo manifest?"
         product=
     fi
-    TARGET_PRODUCT=$product \
-    TARGET_BUILD_VARIANT=$variant \
-    build_build_var_cache
 
     if [ -z "$product" -o -z "$variant" ]
     then
@@ -638,10 +635,7 @@ function lunch()
     export TARGET_BUILD_TYPE=release
 
     echo
-
-    fixup_common_out_dir
-
-    set_stuff_for_environment
+    destroy_build_var_cache
     T=$(gettop)
     if [ $T ]; then
         pushd . >& /dev/null
@@ -652,6 +646,11 @@ function lunch()
         fi
         popd >& /dev/null
     fi
+    TARGET_PRODUCT=$product \
+    TARGET_BUILD_VARIANT=$variant \
+    build_build_var_cache
+    fixup_common_out_dir
+    set_stuff_for_environment
     printconfig
     destroy_build_var_cache
 }
