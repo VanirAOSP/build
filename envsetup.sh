@@ -648,8 +648,7 @@ function lunch()
         cd $T
         local TARGET_PREBUILT_KERNEL=$(get_build_var TARGET_PREBUILT_KERNEL)
         if [ ! $TARGET_PREBUILT_KERNEL ] || [ "$TARGET_PREBUILT_KERNEL" = "false" ]; then
-            source $T/vendor/vanir/build/tools/bottleservice.sh
-            champagne $product || return 1
+            source $T/vendor/vanir/build/tools/bottleservice.sh $product || return 1
         fi
         popd >& /dev/null
     fi
