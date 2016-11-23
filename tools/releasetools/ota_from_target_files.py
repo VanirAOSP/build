@@ -660,16 +660,16 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.Print("Target: %s" % CalculateFingerprint(
       oem_props, oem_dict, OPTIONS.info_dict))
 
-  script.Unmount("/system");
+  script.Unmount("/system")
   device_specific.FullOTA_InstallBegin()
 
-  script.Unmount("/system");
+  script.Unmount("/system")
 
   CopyInstallTools(output_zip)
   script.UnpackPackageDir("install", "/tmp/install")
   script.SetPermissionsRecursive("/tmp/install", 0, 0, 0o755, 0o644, None, None)
   script.SetPermissionsRecursive("/tmp/install/bin", 0, 0, 0o755, 0o755, None, None)
-  script.RunInstallScript("updatertext.sh", "header");
+  script.RunInstallScript("updatertext.sh", "header")
 
   if OPTIONS.backuptool:
     script.Mount("/system")
@@ -791,7 +791,7 @@ reboot_now("%(bcb_dev)s", "");
 endif;
 endif;
 """ % bcb_dev)
-  script.RunInstallScript("updatertext.sh", "footer");
+  script.RunInstallScript("updatertext.sh", "footer")
   script.SetProgress(1)
   script.AddToZip(input_zip, output_zip, input_path=OPTIONS.updater_binary)
   metadata["ota-required-cache"] = str(script.required_cache)
