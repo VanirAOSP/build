@@ -1,16 +1,14 @@
-#!/bin/bash
-
 ### Calls repo start but restores working directory to original state afterwards (rather than leaving the dev branch at the manifest head)
-smartstart()
+function smartstart()
 {
     oldhead=`git rev-parse HEAD 2>/dev/null`
     doit() { repo start $*; git reset --hard $oldhead; }
-    git stash save | grep 'No local changes to save' && doit $* || (doit $* && git stash pop)
+    git stash save 2>&1 | grep 'No local changes to save' && doit $* || (doit $* && git stash pop)
     return $?
 }
 
 
-resolve()
+function resolve()
 {
   output=""
   for x in $*; do
@@ -23,7 +21,7 @@ resolve()
 }
 
 ### SEXY REPO START HELPER (assumes you are starting a branch on the project you're in if you ommit that argument)
-rst()
+function rst()
 {
 if [ $# -eq 1 ]; then
     pushd . >& /dev/null;
@@ -52,7 +50,7 @@ fi
 }
 
 ### SEXY REPO UPLOAD HELPER!
-rup()
+function rup()
 {
   if [ $# -eq 0 ]; then
     pushd . >& /dev/null;
