@@ -209,7 +209,8 @@ if __name__ == '__main__':
     manifest = subprocess.check_output(['repo', 'manifest'])
     xml_root = ElementTree.fromstring(manifest)
     projects = xml_root.findall('project')
-    default_revision = xml_root.findall('default')[0].get('revision').split('/')[-1]
+    remotes = xml_root.findall('remote')
+    default_revision = xml_root.findall('default')[0].get('revision')
 
     #dump project data into the a list of dicts with the following data:
     #{project: {path, revision}}
@@ -219,10 +220,15 @@ if __name__ == '__main__':
         path = project.get('path')
         revision = project.get('revision')
         if revision is None:
-            revision = default_revision
+            for remote in remotes:
+                if remote.get('name') == project.get('remote'):
+                    revision = remote.get('revision')
+            if revision is None:
+                revision = default_revision
 
         if not name in project_name_to_data:
             project_name_to_data[name] = {}
+        revision = revision.split('refs/heads/')[-1]
         project_name_to_data[name][revision] = path
 
     # get data on requested changes
@@ -270,6 +276,7 @@ if __name__ == '__main__':
             'subject': review['subject'],
             'project': review['project'],
             'branch': review['branch'],
+            'change_id': review['change_id'],
             'change_number': review['number'],
             'status': review['status'],
             'fetch': None
@@ -311,6 +318,29 @@ if __name__ == '__main__':
         # If --start-branch is given, create the branch (more than once per path is okay; repo ignores gracefully)
         if args.start_branch:
             subprocess.check_output(['repo', 'start', args.start_branch[0], project_path])
+
+        # Determine the maximum commits to check already picked changes
+        check_picked_count = 10
+        branch_commits_count = int(subprocess.check_output(['git', 'rev-list', '--count', 'HEAD'], cwd=project_path))
+        if branch_commits_count <= check_picked_count:
+            check_picked_count = branch_commits_count - 1
+
+        # Check if change is already picked to HEAD...HEAD~check_picked_count
+        found_change = False
+        for i in range(0, check_picked_count):
+            output = subprocess.check_output(['git', 'show', '-q', 'HEAD~{0}'.format(i)], cwd=project_path).split()
+            if 'Change-Id:' in output:
+                head_change_id = ''
+                for j,t in enumerate(reversed(output)):
+                    if t == 'Change-Id:':
+                        head_change_id = output[len(output) - j]
+                        break
+                if head_change_id.strip() == item['change_id']:
+                    print('Skipping {0} - already picked in {1} as HEAD~{2}'.format(item['id'], project_path, i))
+                    found_change = True
+                    break
+        if found_change:
+            continue
 
         # Print out some useful info
         if not args.quiet:
