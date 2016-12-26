@@ -618,6 +618,24 @@ function lunch()
     check_product $product
     if [ $? -ne 0 ]
     then
+        # if we can't find a product, try to grab it off the CM github
+        T=$(gettop)
+        pushd $T > /dev/null
+        vendor/cm/build/tools/roomservice.py $product
+        popd > /dev/null
+        check_product $product
+    else
+        T=$(gettop)
+        pushd $T > /dev/null
+        vendor/cm/build/tools/roomservice.py $product true
+        popd > /dev/null
+    fi
+    TARGET_PRODUCT=$product \
+    TARGET_BUILD_VARIANT=$variant \
+    build_build_var_cache
+
+    if [ $? -ne 0 ]
+    then
         echo
         echo "** Don't have a product spec for: '$product'"
         echo "** Do you have the right repo manifest?"
@@ -1710,5 +1728,5 @@ check_bash_version && {
 
 # Ensure that latest ccache is compiled for host
 export ANDROID_BUILD_TOP=$(gettop)
-. vendor/vanir/build/envsetup.sh
+. $ANDROID_BUILD_TOP/vendor/vanir/build/envsetup.sh
 export PATH
