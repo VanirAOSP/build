@@ -143,9 +143,11 @@ function check_product()
         CM_BUILD=
     fi
     if (echo -n $1 | grep -q -e "^vanir_"); then
+        CM_BUILD=
        VANIR_BUILD=$(echo -n $1 | sed -e 's/^vanir_//g')
        [ ! -z "$VANIR_BUILD" ] && export BUILD_NUMBER=$((date +%s%N ; echo $VANIR_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
     elif (echo -n $1 | grep -q -e "^commotio_"); then
+        CM_BUILD=
        VANIR_BUILD=$(echo -n $1 | sed -e 's/^commotio_//g')
        [ ! -z "$VANIR_BUILD" ] && export BUILD_NUMBER=$((date +%s%N ; echo $VANIR_BUILD; hostname) | openssl sha1 | sed -e 's/.*=//g; s/ //g' | cut -c1-10)
     else
@@ -620,7 +622,7 @@ function lunch()
 
     local product=$(echo -n $selection | sed -e "s/-.*$//")
     check_product $product
-    if [ $? -ne 0 ]
+    if [ $? -ne 0 ] && [ ! -z "$CM_BUILD" ]
     then
         # if we can't find a product, try to grab it off the CM github
         T=$(gettop)
@@ -628,7 +630,7 @@ function lunch()
         vendor/cm/build/tools/roomservice.py $product
         cd - > /dev/null
         check_product $product
-    else
+    elif [ ! -z "$CM_BUILD" ]; then
         T=$(gettop)
         pushd $T > /dev/null
         vendor/cm/build/tools/roomservice.py $product true
