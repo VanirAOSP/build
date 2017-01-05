@@ -626,13 +626,13 @@ function lunch()
     then
         # if we can't find a product, try to grab it off the CM github
         T=$(gettop)
-        pushd $T > /dev/null
+        cd $T > /dev/null
         vendor/cm/build/tools/roomservice.py $product
         cd - > /dev/null
         check_product $product
     elif [ ! -z "$CM_BUILD" ]; then
         T=$(gettop)
-        pushd $T > /dev/null
+        cd $T > /dev/null
         vendor/cm/build/tools/roomservice.py $product true
         cd - > /dev/null
     fi
