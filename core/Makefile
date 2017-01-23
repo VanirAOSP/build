@@ -1787,6 +1787,7 @@ OTATOOLS += \
   $(HOST_LIBRARY_PATH)/libext2_profile-host$(HOST_SHLIB_SUFFIX) \
   $(HOST_LIBRARY_PATH)/libext2_quota-host$(HOST_SHLIB_SUFFIX) \
   $(HOST_LIBRARY_PATH)/libext2_uuid-host$(HOST_SHLIB_SUFFIX) \
+  $(HOST_LIBRARY_PATH)/libf2fs_fmt_host_dyn$(HOST_SHLIB_SUFFIX) \
   $(HOST_LIBRARY_PATH)/libconscrypt_openjdk_jni$(HOST_SHLIB_SUFFIX) \
   $(HOST_LIBRARY_PATH)/libbrillo$(HOST_SHLIB_SUFFIX) \
   $(HOST_LIBRARY_PATH)/libbrillo-stream$(HOST_SHLIB_SUFFIX) \
@@ -2230,7 +2231,7 @@ endif
 ifneq ($(TARGET_UNIFIED_DEVICE),)
     OTA_SCRIPT_OVERRIDE_PROP := true
     ifeq ($(TARGET_OTA_ASSERT_DEVICE),)
-        OTA_SCRIPT_OVERRIDE_DEVICE := $(TARGET_OTA_ASSERT_DEVICE)
+        OTA_SCRIPT_OVERRIDE_DEVICE := $(TARGET_DEVICE)
     endif
 endif
 
