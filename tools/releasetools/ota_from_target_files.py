@@ -128,6 +128,7 @@ Usage:  ota_from_target_files [flags] input_target_files output_ota_package
 
   --payload_signer_args <args>
       Specify the arguments needed for payload signer.
+
 """
 
 from __future__ import print_function
@@ -178,11 +179,13 @@ OPTIONS.cache_size = None
 OPTIONS.stash_threshold = 0.8
 OPTIONS.gen_verify = False
 OPTIONS.log_diff = None
-OPTIONS.backuptool = False
+OPTIONS.backuptool = True
 OPTIONS.override_device = 'auto'
 OPTIONS.override_prop = False
 OPTIONS.payload_signer = None
 OPTIONS.payload_signer_args = []
+OPTIONS.override_device = 'auto'
+OPTIONS.override_prop = False
 
 def MostPopularKey(d, default):
   """Given a dict, return the key corresponding to the largest
@@ -2028,6 +2031,8 @@ def main(argv):
       OPTIONS.payload_signer = a
     elif o == "--payload_signer_args":
       OPTIONS.payload_signer_args = shlex.split(a)
+    elif o in ("--backup"):
+      OPTIONS.backuptool = bool(a.lower() == 'true')
     else:
       return False
     return True
@@ -2059,7 +2064,7 @@ def main(argv):
                                  "log_diff=",
                                  "backup=",
                                  "payload_signer=",
-                                 "payload_signer_args=",
+                                 "payload_signer_args="
                              ], extra_option_handler=option_handler)
 
   if len(args) != 2:

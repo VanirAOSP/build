@@ -243,7 +243,6 @@ def LoadInfoDict(input_file, input_dir=None):
             vendor_base_fs_file,))
         del d["vendor_base_fs_file"]
 
-
   if "device_type" not in d:
     d["device_type"] = "MMC"
   try:
