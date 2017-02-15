@@ -2255,10 +2255,6 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE)
 .PHONY: otapackage bacon baconator
 
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
-bacon: otapackage
-	$(hide) ln -f $(INTERNAL_OTA_PACKAGE_TARGET) $(CM_TARGET_PACKAGE)
-	$(hide) $(MD5SUM) $(CM_TARGET_PACKAGE) | sed "s|$(PRODUCT_OUT)/||" > $(CM_TARGET_PACKAGE).md5sum
-	@echo "Package Complete: $(CM_TARGET_PACKAGE)" >&2
 
 baconator:
 	@echo bacon >> $(ANDROID_BUILD_TOP)/.lastbuild
