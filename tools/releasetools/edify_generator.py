@@ -160,7 +160,7 @@ class EdifyGenerator(object):
            ", ".join(["%s" % (b,) for b in basebands]) +
            '; this device has baseband " + getprop("ro.baseband") + ".");' +
            ");")
-    self.script.append(self._WordWrap(cmd))
+    self.script.append(self.WordWrap(cmd))
 
   def RunInstallScript(self, scriptname, *args):
     cmd = ('run_program("/tmp/install/bin/%s"%s);' % (scriptname, ("" if not args else (', '+(', '.join(['"%s"' % (a,) for a in args]))))))
