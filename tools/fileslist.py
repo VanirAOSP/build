@@ -15,9 +15,8 @@
 # limitations under the License.
 #
 
-import json, hashlib, operator, os, sys
 from __future__ import print_function
-
+import json, hashlib, operator, os, sys
 
 def get_file_size(path):
   st = os.lstat(path)
