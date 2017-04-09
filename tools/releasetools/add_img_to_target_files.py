@@ -480,9 +480,9 @@ def AddImagesToTargetFiles(filename):
     AddUserdataExtra(output_zip)
     banner("cache")
     AddCache(output_zip)
-    if has_oem:
-      banner("oem")
-      AddOem(output_zip)
+  if has_oem:
+    banner("oem")
+    AddOem(output_zip)
 
   # For devices using A/B update, copy over images from RADIO/ to IMAGES/ and
   # make sure we have all the needed images ready under IMAGES/.
