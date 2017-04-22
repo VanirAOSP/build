@@ -191,7 +191,7 @@ def BuildVerityMetadata(image_size, verity_metadata_path, root_hash, salt,
                         block_device, signer_path, key)
   if signer_args:
     cmd += " --signer_args=\"%s\"" % (' '.join(signer_args),)
-  print(cmd)
+  print cmd
   runcmd = [str(a) for a in ["system/extras/verity/build_verity_metadata.py", "build", image_size, verity_metadata_path, root_hash, salt, block_device, signer_path, key]];
   if verity_key_password is not None:
     sp = subprocess.Popen(runcmd, stdin=subprocess.PIPE)
