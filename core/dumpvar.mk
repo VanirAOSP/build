@@ -37,6 +37,10 @@ ifeq ($(WITH_GMS),true)
 print_build_config_vars += \
   WITH_GMS
 endif
+ifeq ($(WITHOUT_LOGCAT),true)
+print_build_config_vars += \
+  WITHOUT_LOGCAT
+endif
 
 ifeq ($(TARGET_BUILD_PDK),true)
 print_build_config_vars += \
