@@ -8,7 +8,19 @@ ARCH_ARM_HAVE_NEON              := true
 
 local_arch_has_lpae := false
 
-ifneq (,$(filter cortex-a15 cortex-a53.a57 denver krait,$(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT)))
+ifeq (,$(filter-out cortex-a53.a57,$(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT))$(filter-out cortex-a57.cortex-a53,$(TARGET_BIG_LITTLE_VARIANT))$(filter-out $(TARGET_CPU_VARIANT),$(TARGET_2ND_CPU_VARIANT)))
+# test for known working big.Little configuration
+## CPU_VARIANT == 2ND_CPU_VARIANT == cortex-a53.a57 && TARGET_BIG_LITTLE_VARIANT == cortex-a57.cortex-a53
+
+## Other cortex-a53.a57 and cortex-a53 are handled below
+
+	arch_variant_cflags := -mcpu=cortex-a15 -mfpu=neon-vfpv4 -mtune=cortex-a57.cortex-a53
+
+	local_arch_has_lpae := true
+	arch_variant_ldflags := \
+		-Wl,--no-fix-cortex-a8
+else
+ifneq (,$(filter cortex-a15 denver krait,$(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT)))
 	# TODO: krait is not a cortex-a15, we set the variant to cortex-a15 so that
 	#       hardware divide operations are generated. This should be removed and a
 	#       krait CPU variant added to GCC. For clang we specify -mcpu for krait in
@@ -48,6 +60,7 @@ endif
 endif
 endif
 endif
+endif
 
 ifeq (true,$(local_arch_has_lpae))
 	# Fake an ARM compiler flag as these processors support LPAE which GCC/clang
@@ -61,7 +74,3 @@ local_arch_has_lpae :=
 
 arch_variant_cflags += \
     -mfloat-abi=softfp
-
-ifneq ($(strip $(TARGET_BIG_LITTLE_VARIANT)),)
-	arch_variant_cflags += -mtune=$(TARGET_BIG_LITTLE_VARIANT)
-endif
