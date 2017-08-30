@@ -192,9 +192,9 @@ include $(BUILD_SYSTEM)/device.mk
   all_product_configs := $(call get-product-makefiles,\
       $(SRC_TARGET_DIR)/product/AndroidProducts.mk)
   else
-    # Read in all of the product definitions specified by the AndroidProducts.mk
-    # files in the tree.
-    all_product_configs := $(get-all-product-makefiles)
+  # Read in all of the product definitions specified by the AndroidProducts.mk
+  # files in the tree.
+  all_product_configs := $(get-all-product-makefiles)
   endif # TARGET_BUILD_APPS
 #endif # CM_BUILD
 
@@ -212,9 +212,11 @@ $(foreach f, $(all_product_configs),\
     $(eval _cpm_word2 := $(word 2,$(_cpm_words)))\
     $(if $(_cpm_word2),\
         $(eval all_product_makefiles += $(_cpm_word2))\
+        $(eval all_named_products += $(_cpm_word1))\
         $(if $(filter $(TARGET_PRODUCT),$(_cpm_word1)),\
             $(eval current_product_makefile += $(_cpm_word2)),),\
         $(eval all_product_makefiles += $(f))\
+        $(eval all_named_products += $(basename $(notdir $(f))))\
         $(if $(filter $(TARGET_PRODUCT),$(basename $(notdir $(f)))),\
             $(eval current_product_makefile += $(f)),)))
 
@@ -279,6 +281,8 @@ all_product_configs :=
 # A list of module names of BOOTCLASSPATH (jar files)
 PRODUCT_BOOT_JARS := $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_BOOT_JARS))
 PRODUCT_SYSTEM_SERVER_JARS := $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_SYSTEM_SERVER_JARS))
+PRODUCT_SYSTEM_SERVER_APPS := $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_SYSTEM_SERVER_APPS))
+PRODUCT_DEXPREOPT_SPEED_APPS := $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_DEXPREOPT_SPEED_APPS))
 
 # Find the device that this product maps to.
 TARGET_DEVICE := $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_DEVICE)
@@ -386,21 +390,23 @@ listcopies:
 # whitespace characters on either side of the '='.
 PRODUCT_PROPERTY_OVERRIDES := \
     $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_PROPERTY_OVERRIDES))
+.KATI_READONLY := PRODUCT_PROPERTY_OVERRIDES
 
 PRODUCT_SHIPPING_API_LEVEL := $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_SHIPPING_API_LEVEL))
-ifdef PRODUCT_SHIPPING_API_LEVEL
-ADDITIONAL_BUILD_PROPERTIES += \
-    ro.product.first_api_level=$(PRODUCT_SHIPPING_API_LEVEL)
-endif
 
 # A list of property assignments, like "key = value", with zero or more
 # whitespace characters on either side of the '='.
 # used for adding properties to default.prop
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES := \
     $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_DEFAULT_PROPERTY_OVERRIDES))
+.KATI_READONLY := PRODUCT_DEFAULT_PROPERTY_OVERRIDES
 
+# A list of property assignments, like "key = value", with zero or more
+# whitespace characters on either side of the '='.
+# used for overriding properties in build.prop
 PRODUCT_BUILD_PROP_OVERRIDES := \
-	$(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_BUILD_PROP_OVERRIDES))
+    $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_BUILD_PROP_OVERRIDES))
+.KATI_READONLY := PRODUCT_BUILD_PROP_OVERRIDES
 
 # Should we use the default resources or add any product specific overlays
 PRODUCT_PACKAGE_OVERLAYS := \
@@ -411,11 +417,6 @@ DEVICE_PACKAGE_OVERLAYS := \
 # The list of product-specific kernel header dirs
 PRODUCT_VENDOR_KERNEL_HEADERS := \
     $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_VENDOR_KERNEL_HEADERS)
-
-# Add the product-defined properties to the build properties.
-ADDITIONAL_BUILD_PROPERTIES := \
-    $(ADDITIONAL_BUILD_PROPERTIES) \
-    $(PRODUCT_PROPERTY_OVERRIDES)
 
 # The OTA key(s) specified by the product config, if any.  The names
 # of these keys are stored in the target-files zip so that post-build
@@ -458,3 +459,19 @@ $(foreach c,$(PRODUCT_SANITIZER_MODULE_CONFIGS),\
     $(eval cf := $(subst $(_PSMC_SP_PLACE_HOLDER),$(space),$(cf)))\
     $(eval SANITIZER.$(TARGET_PRODUCT).$(m).CONFIG := $(cf))))
 _psmc_modules :=
+
+# Make this art variable visible to soong_config.mk.
+PRODUCT_ART_USE_READ_BARRIER := \
+    $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_ART_USE_READ_BARRIER))
+
+# Whether the product is an Android Things variant.
+PRODUCT_IOT := \
+    $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_IOT))
+
+# Package list to apply enforcing RRO.
+PRODUCT_ENFORCE_RRO_TARGETS := \
+    $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_ENFORCE_RRO_TARGETS))
+
+# Add reserved headroom to a system image.
+PRODUCT_SYSTEM_HEADROOM := \
+    $(strip $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_SYSTEM_HEADROOM))

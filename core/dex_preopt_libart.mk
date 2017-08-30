@@ -25,15 +25,11 @@ PRELOADED_CLASSES := $(call word-colon,1,$(firstword \
 COMPILED_CLASSES := $(call word-colon,1,$(firstword \
     $(filter %system/etc/compiled-classes,$(PRODUCT_COPY_FILES))))
 
-# start of image reserved address space
-LIBART_IMG_HOST_BASE_ADDRESS   := 0x60000000
 
 ifneq ($(LIBART_IMG_BASE),)
 LIBART_IMG_TARGET_BASE_ADDRESS := $(LIBART_IMG_BASE)
 else
-LIBART_IMG_TARGET_BASE_ADDRESS := 0x70000000
 endif
-
 define get-product-default-property
 $(strip $(patsubst $(1)=%,%,$(filter $(1)=%,$(PRODUCT_DEFAULT_PROPERTY_OVERRIDES))))
 endef
@@ -50,7 +46,6 @@ ifeq ($(TARGET_ARCH),$(filter $(TARGET_ARCH),mips mips64))
 # building the image. We therefore limit the Xmx value. This isn't done
 # via a property as we want the larger Xmx value if we're running on a
 # MIPS device.
-LIBART_IMG_TARGET_BASE_ADDRESS := 0x30000000
 DEX2OAT_XMX := 128m
 endif
 
@@ -71,7 +66,7 @@ endef
 # $(2): the full install path (including file name) of the corresponding .apk.
 ifeq ($(BOARD_USES_SYSTEM_OTHER_ODEX),true)
 define get-odex-installed-file-path
-$(if $(filter $(foreach f,$(SYSTEM_OTHER_ODEX_FILTER),$(TARGET_OUT)/$(f)),$(2)),
+$(if $(call install-on-system-other, $(2)),
   $(call get-odex-file-path,$(1),$(patsubst $(TARGET_OUT)/%,$(TARGET_OUT_SYSTEM_OTHER)/%,$(2))),
   $(call get-odex-file-path,$(1),$(2)))
 endef
@@ -95,16 +90,18 @@ LIBART_TARGET_BOOT_DEX_FILES := $(foreach jar,$(LIBART_TARGET_BOOT_JARS),$(call 
 # is converted into to boot.art (to match the legacy assumption that boot.art
 # exists), and the rest are converted to boot-<name>.art.
 # In addition, each .art file has an associated .oat file.
-LIBART_TARGET_BOOT_ART_EXTRA_FILES := $(foreach jar,$(wordlist 2,999,$(LIBART_TARGET_BOOT_JARS)),boot-$(jar).art boot-$(jar).oat)
-LIBART_TARGET_BOOT_ART_EXTRA_FILES += boot.oat
+LIBART_TARGET_BOOT_ART_EXTRA_FILES := $(foreach jar,$(wordlist 2,999,$(LIBART_TARGET_BOOT_JARS)),boot-$(jar).art boot-$(jar).oat boot-$(jar).vdex)
+LIBART_TARGET_BOOT_ART_EXTRA_FILES += boot.oat boot.vdex
 
 my_2nd_arch_prefix :=
 include $(BUILD_SYSTEM)/dex_preopt_libart_boot.mk
 
+ifneq ($(TARGET_TRANSLATE_2ND_ARCH),true)
 ifdef TARGET_2ND_ARCH
 my_2nd_arch_prefix := $(TARGET_2ND_ARCH_VAR_PREFIX)
 include $(BUILD_SYSTEM)/dex_preopt_libart_boot.mk
 my_2nd_arch_prefix :=
+endif
 endif
 
 
@@ -127,9 +124,13 @@ $(hide) ANDROID_LOG_TAGS="*:e" $(DEX2OAT) \
 	--instruction-set=$($(PRIVATE_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_ARCH) \
 	--instruction-set-variant=$($(PRIVATE_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_CPU_VARIANT) \
 	--instruction-set-features=$($(PRIVATE_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES) \
-	--include-patch-information --runtime-arg -Xnorelocate --no-generate-debug-info \
+	--runtime-arg -Xnorelocate --compile-pic \
+	--no-generate-debug-info --generate-build-id \
 	--abort-on-hard-verifier-error \
+	--force-determinism \
 	--no-inline-from=core-oj.jar \
 	$(PRIVATE_DEX_PREOPT_FLAGS) \
+	$(PRIVATE_ART_FILE_PREOPT_FLAGS) \
+	$(PRIVATE_PROFILE_PREOPT_FLAGS) \
 	$(GLOBAL_DEXPREOPT_FLAGS)
 endef

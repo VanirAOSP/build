@@ -34,8 +34,35 @@ $(my_built_odex) : $($(my_2nd_arch_prefix)DEXPREOPT_ONE_FILE_DEPENDENCY_BUILT_BO
 
 my_installed_odex := $(call get-odex-installed-file-path,$($(my_2nd_arch_prefix)DEX2OAT_TARGET_ARCH),$(LOCAL_INSTALLED_MODULE))
 
+my_built_vdex := $(patsubst %.odex,%.vdex,$(my_built_odex))
+my_installed_vdex := $(patsubst %.odex,%.vdex,$(my_installed_odex))
+my_installed_art := $(patsubst %.odex,%.art,$(my_installed_odex))
+
+ifndef LOCAL_DEX_PREOPT_APP_IMAGE
+# Local override not defined, use the global one.
+ifeq (true,$(WITH_DEX_PREOPT_APP_IMAGE))
+  LOCAL_DEX_PREOPT_APP_IMAGE := true
+endif
+endif
+
+ifeq (true,$(LOCAL_DEX_PREOPT_APP_IMAGE))
+my_built_art := $(patsubst %.odex,%.art,$(my_built_odex))
+$(my_built_odex): PRIVATE_ART_FILE_PREOPT_FLAGS := --app-image-file=$(my_built_art) \
+    --image-format=lz4
+$(eval $(call copy-one-file,$(my_built_art),$(my_installed_art)))
+built_art += $(my_built_art)
+installed_art += $(my_installed_art)
+built_installed_art += $(my_built_art):$(my_installed_art)
+endif
+
 $(eval $(call copy-one-file,$(my_built_odex),$(my_installed_odex)))
+$(eval $(call copy-one-file,$(my_built_vdex),$(my_installed_vdex)))
 
 built_odex += $(my_built_odex)
+built_vdex += $(my_built_vdex)
+
 installed_odex += $(my_installed_odex)
+installed_vdex += $(my_installed_vdex)
+
 built_installed_odex += $(my_built_odex):$(my_installed_odex)
+built_installed_vdex += $(my_built_vdex):$(my_installed_vdex)

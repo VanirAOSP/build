@@ -151,31 +151,21 @@ endif  # if not ONE_SHOT_MAKEFILE dont_bother
 # necessary to keep things consistent.
 
 previous_build_config_file := $(PRODUCT_OUT)/previous_build_config.mk
-
-# A change in the list of aapt configs warrants an installclean, too.
-aapt_config_list := $(strip $(PRODUCT_AAPT_CONFIG) $(PRODUCT_AAPT_PREF_CONFIG))
+current_build_config_file := $(PRODUCT_OUT)/current_build_config.mk
 
 current_build_config := \
-    $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT)-{$(aapt_config_list)}
-current_sanitize_target := $(strip $(SANITIZE_TARGET))
-ifeq (,$(current_sanitize_target))
-  current_sanitize_target := false
-endif
-aapt_config_list :=
+    $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT)
 force_installclean := false
-force_objclean := false
 
 # Read the current state from the file, if present.
 # Will set PREVIOUS_BUILD_CONFIG.
 #
 PREVIOUS_BUILD_CONFIG :=
-PREVIOUS_SANITIZE_TARGET :=
 -include $(previous_build_config_file)
 PREVIOUS_BUILD_CONFIG := $(strip $(PREVIOUS_BUILD_CONFIG))
-PREVIOUS_SANITIZE_TARGET := $(strip $(PREVIOUS_SANITIZE_TARGET))
 
 ifdef PREVIOUS_BUILD_CONFIG
-  ifneq "$(current_build_config)" "$(PREVIOUS_BUILD_CONFIG)"
+  ifneq ($(current_build_config),$(PREVIOUS_BUILD_CONFIG))
     $(info *** Build configuration changed: "$(PREVIOUS_BUILD_CONFIG)" -> "$(current_build_config)")
     ifneq ($(DISABLE_AUTO_INSTALLCLEAN),true)
       force_installclean := true
@@ -185,49 +175,52 @@ ifdef PREVIOUS_BUILD_CONFIG
   endif
 endif  # else, this is the first build, so no need to clean.
 
-ifdef PREVIOUS_SANITIZE_TARGET
-  ifneq "$(current_sanitize_target)" "$(PREVIOUS_SANITIZE_TARGET)"
-    $(info *** SANITIZE_TARGET changed: "$(PREVIOUS_SANITIZE_TARGET)" -> "$(current_sanitize_target)")
-    force_objclean := true
-  endif
-endif  # else, this is the first build, so no need to clean.
-
 # Write the new state to the file.
 #
-ifneq ($(PREVIOUS_BUILD_CONFIG)-$(PREVIOUS_SANITIZE_TARGET),$(current_build_config)-$(current_sanitize_target))
 $(shell \
-  mkdir -p $(dir $(previous_build_config_file)) && \
+  mkdir -p $(dir $(current_build_config_file)) && \
   echo "PREVIOUS_BUILD_CONFIG := $(current_build_config)" > \
-      $(previous_build_config_file) && \
-  echo "PREVIOUS_SANITIZE_TARGET := $(current_sanitize_target)" >> \
-      $(previous_build_config_file) \
+      $(current_build_config_file) \
  )
-endif
+$(shell cmp $(current_build_config_file) $(previous_build_config_file) > /dev/null 2>&1 || \
+  mv -f $(current_build_config_file) $(previous_build_config_file))
+
 PREVIOUS_BUILD_CONFIG :=
-PREVIOUS_SANITIZE_TARGET :=
 previous_build_config_file :=
+current_build_config_file :=
 current_build_config :=
 
 #
 # installclean logic
 #
 
-# The files/dirs to delete during an installclean.  This includes the
-# non-common APPS directory, which may contain the wrong resources.
+# The files/dirs to delete during an installclean.
 #
-# Deletes all of the files that change between different build types,
-# like "make user" vs. "make sdk".  This lets you work with different
-# build types without having to do a full clean each time.  E.g.:
+# Deletes all of the installed files -- the intent is to remove files
+# that may no longer be installed, either because the user previously
+# installed them, or they were previously installed by default but no
+# longer are.
 #
-#     $ make -j8 all
-#     $ make installclean
-#     $ make -j8 user
-#     $ make installclean
-#     $ make -j8 sdk
+# This is faster than a full clean, since we're not deleting the
+# intermediates. Instead of recompiling, we can just copy the results.
 #
+# Host bin, frameworks, and lib* are intentionally omitted, since
+# otherwise we'd have to rebuild any generated files created with those
+# tools.
 installclean_files := \
 	$(HOST_OUT)/obj/NOTICE_FILES \
+	$(HOST_OUT)/obj/PACKAGING \
+	$(HOST_OUT)/coverage \
+	$(HOST_OUT)/cts \
+	$(HOST_OUT)/nativetest* \
 	$(HOST_OUT)/sdk \
+	$(HOST_OUT)/sdk_addon \
+	$(HOST_OUT)/testcases \
+	$(HOST_OUT)/vts \
+	$(HOST_CROSS_OUT)/bin \
+	$(HOST_CROSS_OUT)/coverage \
+	$(HOST_CROSS_OUT)/lib* \
+	$(HOST_CROSS_OUT)/nativetest* \
 	$(PRODUCT_OUT)/*.img \
 	$(PRODUCT_OUT)/*.ini \
 	$(PRODUCT_OUT)/*.txt \
@@ -237,7 +230,6 @@ installclean_files := \
 	$(PRODUCT_OUT)/*.zip.md5sum \
 	$(PRODUCT_OUT)/data \
 	$(PRODUCT_OUT)/skin \
-	$(PRODUCT_OUT)/obj/APPS \
 	$(PRODUCT_OUT)/obj/NOTICE_FILES \
 	$(PRODUCT_OUT)/obj/PACKAGING \
 	$(PRODUCT_OUT)/recovery \
@@ -246,17 +238,14 @@ installclean_files := \
 	$(PRODUCT_OUT)/system_other \
 	$(PRODUCT_OUT)/vendor \
 	$(PRODUCT_OUT)/oem \
-	$(PRODUCT_OUT)/dex_bootjars \
-	$(PRODUCT_OUT)/obj/JAVA_LIBRARIES \
 	$(PRODUCT_OUT)/obj/FAKE \
-	$(PRODUCT_OUT)/obj/EXECUTABLES/adbd_intermediates \
-	$(PRODUCT_OUT)/obj/EXECUTABLES/logd_intermediates \
-	$(PRODUCT_OUT)/obj/STATIC_LIBRARIES/libfs_mgr_intermediates \
-	$(PRODUCT_OUT)/obj/EXECUTABLES/init_intermediates \
-	$(PRODUCT_OUT)/obj/ETC/mac_permissions.xml_intermediates \
-	$(PRODUCT_OUT)/obj/ETC/sepolicy_intermediates \
-	$(PRODUCT_OUT)/obj/ETC/sepolicy.recovery_intermediates \
-	$(PRODUCT_OUT)/obj/ETC/init.environ.rc_intermediates
+	$(PRODUCT_OUT)/breakpad \
+	$(PRODUCT_OUT)/cache \
+	$(PRODUCT_OUT)/coverage \
+	$(PRODUCT_OUT)/installer \
+	$(PRODUCT_OUT)/odm \
+	$(PRODUCT_OUT)/sysloader \
+	$(PRODUCT_OUT)/testcases \
 
 # The files/dirs to delete during a dataclean, which removes any files
 # in the staging and emulator data partitions.
@@ -264,12 +253,6 @@ dataclean_files := \
 	$(PRODUCT_OUT)/data/* \
 	$(PRODUCT_OUT)/data-qemu/* \
 	$(PRODUCT_OUT)/userdata-qemu.img
-
-# The files/dirs to delete during an objclean, which removes any files
-# in the staging and emulator data partitions.
-objclean_files := \
-	$(TARGET_OUT_INTERMEDIATES) \
-	$($(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_OUT_INTERMEDIATES)
 
 # make sure *_OUT is set so that we won't result in deleting random parts
 # of the filesystem.
@@ -291,27 +274,13 @@ installclean: dataclean
 	@echo "novo" > $(ANDROID_BUILD_TOP)/.lastbuild
 	@echo "Deleted images and staging directories."
 
-.PHONY: objclean
-objclean: FILES := $(objclean_files)
-objclean:
-	$(hide) rm -rf $(FILES)
-	@echo "Deleted images and staging directories."
-
-ifeq "$(force_installclean)" "true"
+ifeq ($(force_installclean),true)
   $(info *** Forcing "make installclean"...)
   $(info *** rm -rf $(dataclean_files) $(installclean_files))
   $(shell rm -rf $(dataclean_files) $(installclean_files))
   $(info *** Done with the cleaning, now starting the real build.)
 endif
 force_installclean :=
-
-ifeq "$(force_objclean)" "true"
-  $(info *** Forcing cleanup of intermediate files...)
-  $(info *** rm -rf $(objclean_files))
-  $(shell rm -rf $(objclean_files))
-  $(info *** Done with the cleaning, now starting the real build.)
-endif
-force_objclean :=
 
 ###########################################################
 

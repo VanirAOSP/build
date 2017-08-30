@@ -14,18 +14,11 @@
 # limitations under the License.
 #
 
+# Used by the compiler wrapper, but should only be set by gomacc
+unexport GOMACC_PATH
+
 # Notice: this works only with Google's Goma build infrastructure.
 ifneq ($(filter-out false,$(USE_GOMA)),)
-  # Check if USE_NINJA is not false because GNU make won't work well
-  # with goma. Note this file is evaluated twice, once by GNU make and
-  # once by kati with USE_NINJA=false. We do this check in the former
-  # pass.
-  ifndef KATI
-    ifeq ($(USE_NINJA),false)
-      $(error USE_GOMA=true is not compatible with USE_NINJA=false)
-    endif
-  endif
-
   # Goma requires a lot of processes and file descriptors.
   ifeq ($(shell echo $$(($$(ulimit -u) < 2500 || $$(ulimit -n) < 16000))),1)
     $(warning Max user processes and/or open files are insufficient)
@@ -56,11 +49,9 @@ ifneq ($(filter-out false,$(USE_GOMA)),)
   # gomacc can start goma client's daemon process automatically, but
   # it is safer and faster to start up it beforehand. We run this as a
   # background process so this won't slow down the build.
-  # We use "ensure_start" command when the compiler_proxy is already
-  # running and uses GOMA_HERMETIC=error flag. The compiler_proxy will
-  # restart otherwise.
-  # TODO(hamaji): Remove this condition after http://b/25676777 is fixed.
-  $(shell ( if ( curl http://localhost:$$($(GOMA_CC) port)/flagz | grep GOMA_HERMETIC=error ); then cmd=ensure_start; else cmd=restart; fi; GOMA_HERMETIC=error $(goma_ctl) $${cmd} ) &> /dev/null &)
+  ifndef NOSTART_GOMA
+    $(shell ( $(goma_ctl) ensure_start ) &> /dev/null &)
+  endif
 
   goma_ctl :=
   goma_dir :=

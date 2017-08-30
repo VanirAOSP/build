@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 
 namespace android {
 
@@ -290,7 +291,7 @@ private:
             mExtraField(NULL),
             mFileComment(NULL)
         {}
-        virtual ~CentralDirEntry(void) {
+        ~CentralDirEntry(void) {
             delete[] mFileName;
             delete[] mExtraField;
             delete[] mFileComment;

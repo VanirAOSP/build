@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+$(call record-module-type,HOST_JAVA_LIBRARY)
+
 #
 # Standard rules for building a host java library.
 #
@@ -35,6 +37,7 @@ emma_intermediates_dir := $(intermediates.COMMON)/emma_out
 # emma is hardcoded to use the leaf name of its input for the output file --
 # only the output directory can be changed
 full_classes_emma_jar := $(emma_intermediates_dir)/lib/$(notdir $(full_classes_jarjar_jar))
+full_classes_jar := $(intermediates.COMMON)/classes.jar
 
 LOCAL_INTERMEDIATE_TARGETS += \
     $(full_classes_compiled_jar) \
@@ -55,6 +58,11 @@ include $(BUILD_SYSTEM)/java_common.mk
 # Run build/tools/java-layers.py for more details.
 layers_file := $(addprefix $(LOCAL_PATH)/, $(LOCAL_JAVA_LAYERS_FILE))
 
+# If error prone is enabled then add LOCAL_ERROR_PRONE_FLAGS to LOCAL_JAVACFLAGS
+ifeq ($(RUN_ERROR_PRONE),true)
+LOCAL_JAVACFLAGS += $(LOCAL_ERROR_PRONE_FLAGS)
+endif
+
 $(full_classes_compiled_jar): PRIVATE_JAVA_LAYERS_FILE := $(layers_file)
 $(full_classes_compiled_jar): PRIVATE_JAVACFLAGS := $(GLOBAL_JAVAC_DEBUG_FLAGS) $(LOCAL_JAVACFLAGS)
 $(full_classes_compiled_jar): PRIVATE_JAR_EXCLUDE_FILES :=
@@ -66,9 +74,12 @@ $(full_classes_compiled_jar): \
         $(full_java_lib_deps) \
         $(jar_manifest_file) \
         $(proto_java_sources_file_stamp) \
-        $(LOCAL_MODULE_MAKEFILE_DEP) \
+        $(NORMALIZE_PATH) \
         $(LOCAL_ADDITIONAL_DEPENDENCIES)
 	$(transform-host-java-to-package)
+
+javac-check : $(full_classes_compiled_jar)
+javac-check-$(LOCAL_MODULE) : $(full_classes_compiled_jar)
 
 # Run jarjar if necessary, otherwise just copy the file.
 ifneq ($(strip $(LOCAL_JARJAR_RULES)),)
@@ -77,9 +88,7 @@ $(full_classes_jarjar_jar): $(full_classes_compiled_jar) $(LOCAL_JARJAR_RULES) |
 	@echo JarJar: $@
 	$(hide) java -jar $(JARJAR) process $(PRIVATE_JARJAR_RULES) $< $@
 else
-$(full_classes_jarjar_jar): $(full_classes_compiled_jar) | $(ACP)
-	@echo Copying: $@
-	$(hide) $(ACP) -fp $< $@
+full_classes_jarjar_jar := $(full_classes_compiled_jar)
 endif
 
 ifeq (true,$(LOCAL_EMMA_INSTRUMENT))
@@ -96,14 +105,9 @@ endif
 # $(full_classes_emma_jar)
 $(full_classes_emma_jar) : $(full_classes_jarjar_jar) | $(EMMA_JAR)
 	$(transform-classes.jar-to-emma)
-
-$(built_javalib_jar) : $(full_classes_emma_jar)
-	@echo "Copying: $@"
-	$(hide) $(ACP) -fp $< $@
-
 else # LOCAL_EMMA_INSTRUMENT
-$(built_javalib_jar): $(full_classes_jarjar_jar) | $(ACP)
-	@echo Copying: $@
-	$(hide) $(ACP) -fp $< $@
+full_classes_emma_jar := $(full_classes_jarjar_jar)
 endif # LOCAL_EMMA_INSTRUMENT
 
+$(eval $(call copy-one-file,$(full_classes_emma_jar),$(LOCAL_BUILT_MODULE)))
+$(eval $(call copy-one-file,$(full_classes_emma_jar),$(full_classes_jar)))

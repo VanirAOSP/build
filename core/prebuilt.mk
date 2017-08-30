@@ -5,12 +5,20 @@
 ## None.
 ##
 ###########################################################
+$(call record-module-type,PREBUILT)
 
 ifdef LOCAL_IS_HOST_MODULE
   my_prefix := HOST_
   LOCAL_HOST_PREFIX :=
 else
   my_prefix := TARGET_
+
+  ifeq ($(TARGET_TRANSLATE_2ND_ARCH),true)
+    # Only support prebuilt shared and static libraries for translated arch
+    ifeq ($(filter SHARED_LIBRARIES STATIC_LIBRARIES NATIVE_TESTS,$(LOCAL_MODULE_CLASS)),)
+      LOCAL_MULTILIB := first
+    endif
+  endif
 endif
 
 include $(BUILD_SYSTEM)/multilib.mk
@@ -52,7 +60,7 @@ LOCAL_2ND_ARCH_VAR_PREFIX :=
 
 ifdef LOCAL_IS_HOST_MODULE
 ifdef HOST_CROSS_OS
-ifneq (,$(filter EXECUTABLES STATIC_LIBRARIES SHARED_LIBRARIES,$(LOCAL_MODULE_CLASS)))
+ifneq (,$(filter EXECUTABLES STATIC_LIBRARIES SHARED_LIBRARIES NATIVE_TESTS,$(LOCAL_MODULE_CLASS)))
 my_prefix := HOST_CROSS_
 LOCAL_HOST_PREFIX := $(my_prefix)
 include $(BUILD_SYSTEM)/module_arch_supported.mk

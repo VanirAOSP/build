@@ -175,7 +175,5 @@ if __name__ == '__main__':
     common.CloseInheritedPipes()
     main(sys.argv[1:])
   except common.ExternalError as e:
-    print()
-    print("   ERROR: %s" % e)
-    print()
+    print("\n   ERROR: %s\n" % (e,))
     sys.exit(1)

@@ -58,7 +58,7 @@ endif
 # Do not pack relocations for executables. Because packing results in
 # non-zero p_vaddr which causes kernel to load executables to lower
 # address (starting at 0x8000) http://b/20665974
-ifeq ($(LOCAL_MODULE_CLASS),EXECUTABLES)
+ifneq ($(filter EXECUTABLES NATIVE_TESTS,$(LOCAL_MODULE_CLASS)),)
   my_pack_module_relocations := false
 endif
 
@@ -77,10 +77,10 @@ endif
 
 ifeq (true,$(my_pack_module_relocations))
 # Pack relocations
-$(relocation_packer_output): $(relocation_packer_input) | $(ACP)
+$(relocation_packer_output): $(relocation_packer_input)
 	$(pack-elf-relocations)
 else
-$(relocation_packer_output): $(relocation_packer_input) | $(ACP)
+$(relocation_packer_output): $(relocation_packer_input)
 	@echo "target Unpacked: $(PRIVATE_MODULE) ($@)"
 	$(copy-file-to-target)
 endif
@@ -95,7 +95,7 @@ my_unstripped_path := $(LOCAL_UNSTRIPPED_PATH)
 endif
 symbolic_input := $(relocation_packer_output)
 symbolic_output := $(my_unstripped_path)/$(my_installed_module_stem)
-$(symbolic_output) : $(symbolic_input) | $(ACP)
+$(symbolic_output) : $(symbolic_input)
 	@echo "target Symbolic: $(PRIVATE_MODULE) ($@)"
 	$(copy-file-to-target)
 
@@ -124,11 +124,21 @@ my_strip_module := $(firstword \
   $(LOCAL_STRIP_MODULE_$($(my_prefix)$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH)) \
   $(LOCAL_STRIP_MODULE))
 ifeq ($(my_strip_module),)
+  my_strip_module := mini-debug-info
+endif
+
+ifeq ($(my_strip_module),mini-debug-info)
+# Don't use mini-debug-info on mips (both 32-bit and 64-bit). objcopy checks that all
+# SH_MIPS_DWARF sections having name prefix .debug_ or .zdebug_, so there seems no easy
+# way using objcopy to remove all debug sections except .debug_frame on mips.
+ifneq ($(filter mips mips64,$($(my_prefix)$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH)),)
   my_strip_module := true
+endif
 endif
 
 $(strip_output): PRIVATE_STRIP := $($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_STRIP)
 $(strip_output): PRIVATE_OBJCOPY := $($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_OBJCOPY)
+$(strip_output): PRIVATE_NM := $($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_NM)
 $(strip_output): PRIVATE_READELF := $($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_READELF)
 ifeq ($(my_strip_module),no_debuglink)
 $(strip_output): PRIVATE_NO_DEBUGLINK := true
@@ -136,7 +146,11 @@ else
 $(strip_output): PRIVATE_NO_DEBUGLINK :=
 endif
 
-ifneq ($(filter true no_debuglink,$(my_strip_module)),)
+ifeq ($(my_strip_module),mini-debug-info)
+# Strip the binary, but keep debug frames and symbol table in a compressed .gnu_debugdata section.
+$(strip_output): $(strip_input) | $($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_STRIP) $($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_OBJCOPY) $($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_NM)
+	$(transform-to-stripped-keep-mini-debug-info)
+else ifneq ($(filter true no_debuglink,$(my_strip_module)),)
 # Strip the binary
 $(strip_output): $(strip_input) | $($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_STRIP)
 	$(transform-to-stripped)
@@ -156,18 +170,9 @@ endif
 else
 # Don't strip the binary, just copy it.  We can't skip this step
 # because a copy of the binary must appear at LOCAL_BUILT_MODULE.
-#
-# If the binary we're copying is acp or a prerequisite,
-# use cp(1) instead.
-ifneq ($(LOCAL_ACP_UNAVAILABLE),true)
-$(strip_output): $(strip_input) | $(ACP)
-	@echo "target Unstripped: $(PRIVATE_MODULE) ($@)"
-	$(copy-file-to-target)
-else
 $(strip_output): $(strip_input)
 	@echo "target Unstripped: $(PRIVATE_MODULE) ($@)"
-	$(copy-file-to-target-with-cp)
-endif
+	$(copy-file-to-target)
 endif # my_strip_module
 
 $(cleantarget): PRIVATE_CLEAN_FILES += \

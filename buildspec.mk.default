@@ -36,6 +36,12 @@ ifndef TARGET_BUILD_VARIANT
 #TARGET_BUILD_VARIANT:=eng
 endif
 
+# Choose a targeted release.  If you don't pick one, the default is the
+# soonest future release.
+ifndef TARGET_PLATFORM_RELEASE
+#TARGET_PLATFORM_RELEASE:=OPR1
+endif
+
 # Choose additional targets to always install, even when building
 # minimal targets like "make droid".  This takes simple target names
 # like "Browser" or "MyApp", the names used by LOCAL_MODULE or
@@ -60,9 +66,6 @@ endif
 # to a non-empty value, the appropriate HOST_/TARGET_CUSTOM_DEBUG_CFLAGS
 # will be added to LOCAL_CFLAGS when building the module.
 #DEBUG_MODULE_ModuleName:=true
-
-# Specify an alternative tool chain prefix if needed.
-#TARGET_TOOLS_PREFIX:=
 
 # Specify the extra CFLAGS to use when building a module whose
 # DEBUG_MODULE_ variable is set.  Host and device flags are handled
@@ -108,4 +111,4 @@ endif
 # variable will be changed.  After you have modified this file with the new
 # changes (see buildspec.mk.default), update this to the new value from
 # buildspec.mk.default.
-BUILD_ENV_SEQUENCE_NUMBER := 10
+BUILD_ENV_SEQUENCE_NUMBER := 13

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/resource.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -316,33 +317,83 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  std::string jarg = "-j" + std::to_string(tokens + 1);
+  std::string jarg;
+  if (parallel) {
+    if (tokens == 0) {
+      if (ninja) {
+        // ninja is parallel by default
+        jarg = "";
+      } else {
+        // make -j with no argument, guess a reasonable parallelism like ninja does
+        jarg = "-j" + std::to_string(sysconf(_SC_NPROCESSORS_ONLN) + 2);
+      }
+    } else {
+      jarg = "-j" + std::to_string(tokens + 1);
+    }
+  }
+
 
   if (ninja) {
     if (!parallel) {
       // ninja is parallel by default, pass -j1 to disable parallelism if make wasn't parallel
       args.push_back(strdup("-j1"));
-    } else if (tokens > 0) {
-      args.push_back(strdup(jarg.c_str()));
+    } else {
+      if (jarg != "") {
+        args.push_back(strdup(jarg.c_str()));
+      }
     }
     if (keep_going) {
       args.push_back(strdup("-k0"));
     }
   } else {
-    args.push_back(strdup(jarg.c_str()));
+    if (jarg != "") {
+      args.push_back(strdup(jarg.c_str()));
+    }
   }
 
   args.insert(args.end(), &argv[2], &argv[argc]);
 
   args.push_back(nullptr);
 
-  pid_t pid = fork();
+  static pid_t pid;
+
+  // Set up signal handlers to forward SIGTERM to child.
+  // Assume that all other signals are sent to the entire process group,
+  // and that we'll wait for our child to exit instead of handling them.
+  struct sigaction action = {};
+  action.sa_flags = SA_RESTART;
+  action.sa_handler = [](int signal) {
+    if (signal == SIGTERM && pid > 0) {
+      kill(pid, signal);
+    }
+  };
+
+  int ret = 0;
+  if (!ret) ret = sigaction(SIGHUP, &action, NULL);
+  if (!ret) ret = sigaction(SIGINT, &action, NULL);
+  if (!ret) ret = sigaction(SIGQUIT, &action, NULL);
+  if (!ret) ret = sigaction(SIGTERM, &action, NULL);
+  if (!ret) ret = sigaction(SIGALRM, &action, NULL);
+  if (ret < 0) {
+    error(errno, errno, "sigaction failed");
+  }
+
+  pid = fork();
   if (pid < 0) {
     error(errno, errno, "fork failed");
   } else if (pid == 0) {
     // child
     unsetenv("MAKEFLAGS");
     unsetenv("MAKELEVEL");
+
+    // make 3.81 sets the stack ulimit to unlimited, which may cause problems
+    // for child processes
+    struct rlimit rlim{};
+    if (getrlimit(RLIMIT_STACK, &rlim) == 0 && rlim.rlim_cur == RLIM_INFINITY) {
+      rlim.rlim_cur = 8*1024*1024;
+      setrlimit(RLIMIT_STACK, &rlim);
+    }
+
     int ret = execvp(path, args.data());
     if (ret < 0) {
       error(errno, errno, "exec %s failed", path);
@@ -351,9 +402,10 @@ int main(int argc, char* argv[]) {
   }
 
   // parent
+
   siginfo_t status = {};
   int exit_status = 0;
-  int ret = waitid(P_PID, pid, &status, WEXITED);
+  ret = waitid(P_PID, pid, &status, WEXITED);
   if (ret < 0) {
     error(errno, errno, "waitpid failed");
   } else if (status.si_code == CLD_EXITED) {

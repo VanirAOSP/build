@@ -94,6 +94,7 @@ import errno
 import os
 import re
 import shutil
+import stat
 import subprocess
 import tempfile
 import zipfile
@@ -197,6 +198,9 @@ def ProcessTargetFiles(input_tf_zip, output_tf_zip, misc_info,
 
   # tmpdir will only be used to regenerate the recovery-from-boot patch.
   tmpdir = tempfile.mkdtemp()
+  # We're not setting the permissions precisely as in attr, because that work
+  # will be handled by mkbootfs (using the values from the canned or the
+  # compiled-in fs_config).
   def write_to_temp(fn, attr, data):
     fn = os.path.join(tmpdir, fn)
     if fn.endswith("/"):
@@ -207,7 +211,7 @@ def ProcessTargetFiles(input_tf_zip, output_tf_zip, misc_info,
       if d and not os.path.exists(d):
         os.makedirs(d)
 
-      if attr >> 16 == 0xa1ff:
+      if stat.S_ISLNK(attr >> 16):
         os.symlink(data, fn)
       else:
         with open(fn, "wb") as f:
@@ -237,27 +241,25 @@ def ProcessTargetFiles(input_tf_zip, output_tf_zip, misc_info,
     # System properties.
     elif info.filename in ("SYSTEM/build.prop",
                            "VENDOR/build.prop",
-                           "BOOT/RAMDISK/default.prop",
-                           "ROOT/default.prop",
-                           "RECOVERY/RAMDISK/default.prop"):
-      print("rewriting %s:" % info.filename)
-      new_data = RewriteProps(data, misc_info)
+                           "SYSTEM/etc/prop.default",
+                           "BOOT/RAMDISK/default.prop",  # legacy
+                           "ROOT/default.prop",  # legacy
+                           "RECOVERY/RAMDISK/prop.default",
+                           "RECOVERY/RAMDISK/default.prop"):  # legacy
+      print "rewriting %s:" % (info.filename,)
+      if stat.S_ISLNK(info.external_attr >> 16):
+        new_data = data
+      else:
+        new_data = RewriteProps(data, misc_info)
       common.ZipWriteStr(output_tf_zip, out_info, new_data)
-      if info.filename in ("BOOT/RAMDISK/default.prop",
-                           "ROOT/default.prop",
-                           "RECOVERY/RAMDISK/default.prop"):
+      if info.filename in ("BOOT/RAMDISK/default.prop",  # legacy
+                           "ROOT/default.prop",  # legacy
+                           "RECOVERY/RAMDISK/prop.default",
+                           "RECOVERY/RAMDISK/default.prop"):  # legacy
         write_to_temp(info.filename, info.external_attr, new_data)
 
     elif info.filename.endswith("mac_permissions.xml"):
-      print("rewriting %s with new keys." % info.filename)
-      new_data = ReplaceCerts(data)
-      common.ZipWriteStr(output_tf_zip, out_info, new_data)
-    elif info.filename.startswith("SYSTEM/etc/permissions/"):
-      print("rewriting %s with new keys." % info.filename)
-      new_data = ReplaceCerts(data)
-      common.ZipWriteStr(output_tf_zip, out_info, new_data)
-    elif info.filename.startswith("SYSTEM/etc/permissions/"):
-      print("rewriting %s with new keys." % info.filename)
+      print "rewriting %s with new keys." % (info.filename,)
       new_data = ReplaceCerts(data)
       common.ZipWriteStr(output_tf_zip, out_info, new_data)
 
@@ -294,7 +296,7 @@ def ProcessTargetFiles(input_tf_zip, output_tf_zip, misc_info,
       pass
 
     # Skip the care_map as we will regenerate the system/vendor images.
-    elif (info.filename == "META/care_map.txt"):
+    elif info.filename == "META/care_map.txt":
       pass
 
     # Copy BOOT/, RECOVERY/, META/, ROOT/ to rebuild recovery patch. This case
@@ -368,10 +370,10 @@ def ReplaceCerts(data):
   """Given a string of data, replace all occurences of a set
   of X509 certs with a newer set of X509 certs and return
   the updated data string."""
-  for old, new in OPTIONS.key_map.items():
+  for old, new in OPTIONS.key_map.iteritems():
     try:
       if OPTIONS.verbose:
-        print("    Replacing %s.x509.pem with %s.x509.pem" % (old, new))
+        print "    Replacing %s.x509.pem with %s.x509.pem" % (old, new)
       f = open(old + ".x509.pem")
       old_cert16 = base64.b16encode(common.ParseCertificate(f.read())).lower()
       f.close()
@@ -382,14 +384,14 @@ def ReplaceCerts(data):
       pattern = "\\b"+old_cert16+"\\b"
       (data, num) = re.subn(pattern, new_cert16, data, flags=re.IGNORECASE)
       if OPTIONS.verbose:
-        print("    Replaced %d occurence(s) of %s.x509.pem with "
-              "%s.x509.pem" % (num, old, new))
+        print "    Replaced %d occurence(s) of %s.x509.pem with " \
+            "%s.x509.pem" % (num, old, new)
     except IOError as e:
       if e.errno == errno.ENOENT and not OPTIONS.verbose:
         continue
 
-      print("    Error accessing %s. %s. Skip replacing %s.x509.pem "
-            "with %s.x509.pem." % (e.filename, e.strerror, old, new))
+      print "    Error accessing %s. %s. Skip replacing %s.x509.pem " \
+          "with %s.x509.pem." % (e.filename, e.strerror, old, new)
 
   return data
 
@@ -429,7 +431,7 @@ def RewriteProps(data, misc_info):
         value = "/".join(pieces)
       elif key == "ro.build.description":
         pieces = value.split(" ")
-        #assert len(pieces) == 5
+        assert len(pieces) == 5
         pieces[-1] = EditTags(pieces[-1])
         value = " ".join(pieces)
       elif key == "ro.build.tags":
@@ -442,8 +444,8 @@ def RewriteProps(data, misc_info):
         value = " ".join(value)
       line = key + "=" + value
     if line != original_line:
-      print("  replace: ", original_line)
-      print("     with: ", line)
+      print "  replace: ", original_line
+      print "     with: ", line
     output.append(line)
   return "\n".join(output) + "\n"
 
@@ -459,7 +461,7 @@ def ReplaceOtaKeys(input_tf_zip, output_tf_zip, misc_info):
     extra_recovery_keys = [OPTIONS.key_map.get(k, k) + ".x509.pem"
                            for k in extra_recovery_keys.split()]
     if extra_recovery_keys:
-      print("extra recovery-only key(s): " + ", ".join(extra_recovery_keys))
+      print "extra recovery-only key(s): " + ", ".join(extra_recovery_keys)
   else:
     extra_recovery_keys = []
 
@@ -473,8 +475,8 @@ def ReplaceOtaKeys(input_tf_zip, output_tf_zip, misc_info):
     mapped_keys.append(OPTIONS.key_map.get(k, k) + ".x509.pem")
 
   if mapped_keys:
-    print("using:\n   ", "\n   ".join(mapped_keys))
-    print("for OTA package verification")
+    print "using:\n   ", "\n   ".join(mapped_keys)
+    print "for OTA package verification"
   else:
     devkey = misc_info.get("default_system_dev_certificate",
                            "build/target/product/security/testkey")
@@ -502,19 +504,11 @@ def ReplaceOtaKeys(input_tf_zip, output_tf_zip, misc_info):
     recovery_keys_location = "RECOVERY/RAMDISK/res/keys"
   common.ZipWriteStr(output_tf_zip, recovery_keys_location, new_recovery_keys)
 
-  # Save the base64 key representation in the update for key-change
-  # validations
-  p = common.Run(["python", "build/tools/getb64key.py", mapped_keys[0]],
-                 stdout=subprocess.PIPE)
-  data, _ = p.communicate()
-  if p.returncode == 0:
-    common.ZipWriteStr(output_tf_zip, "META/releasekey.txt", data)
-
   # SystemUpdateActivity uses the x509.pem version of the keys, but
   # put into a zipfile system/etc/security/otacerts.zip.
   # We DO NOT include the extra_recovery_keys (if any) here.
 
-  temp_file = StringIO()
+  temp_file = cStringIO.StringIO()
   certs_zip = zipfile.ZipFile(temp_file, "w")
   for k in mapped_keys:
     common.ZipWrite(certs_zip, k)
@@ -530,7 +524,7 @@ def ReplaceOtaKeys(input_tf_zip, output_tf_zip, misc_info):
       print("\n  WARNING: Found more than one OTA keys; Using the first one"
             " as payload verification key.\n\n")
 
-    print("Using %s for payload verification." % mapped_keys[0])
+    print "Using %s for payload verification." % (mapped_keys[0],)
     cmd = common.Run(
         ["openssl", "x509", "-pubkey", "-noout", "-in", mapped_keys[0]],
         stdout=subprocess.PIPE)
@@ -548,7 +542,7 @@ def ReplaceOtaKeys(input_tf_zip, output_tf_zip, misc_info):
 
 
 def ReplaceVerityPublicKey(targetfile_zip, filename, key_path):
-  print("Replacing verity public key with %s" % key_path)
+  print "Replacing verity public key with %s" % key_path
   with open(key_path) as f:
     data = f.read()
   common.ZipWriteStr(targetfile_zip, filename, data)
@@ -557,7 +551,7 @@ def ReplaceVerityPublicKey(targetfile_zip, filename, key_path):
 
 def ReplaceVerityPrivateKey(targetfile_input_zip, targetfile_output_zip,
                             misc_info, key_path):
-  print("Replacing verity private key with %s" % key_path)
+  print "Replacing verity private key with %s" % key_path
   current_key = misc_info["verity_key"]
   original_misc_info = targetfile_input_zip.read("META/misc_info.txt")
   new_misc_info = original_misc_info.replace(current_key, key_path)
@@ -575,17 +569,20 @@ def ReplaceVerityKeyId(targetfile_input_zip, targetfile_output_zip, keypath):
   for param in in_cmdline.split():
     if "veritykeyid" in param:
       # extract keyid using openssl command
-      p = common.Run(["openssl", "x509", "-in", keypath, "-text"], stdout=subprocess.PIPE)
+      p = common.Run(
+          ["openssl", "x509", "-in", keypath, "-text"],
+          stdout=subprocess.PIPE)
       keyid, stderr = p.communicate()
-      keyid = re.search(r'keyid:([0-9a-fA-F:]*)', keyid).group(1).replace(':', '').lower()
-      print("Replacing verity keyid with %s error=%s" % keyid, stderr)
+      keyid = re.search(
+          r'keyid:([0-9a-fA-F:]*)', keyid).group(1).replace(':', '').lower()
+      print "Replacing verity keyid with %s error=%s" % (keyid, stderr)
       out_cmdline.append("veritykeyid=id:%s" % (keyid,))
     else:
       out_cmdline.append(param)
 
   out_cmdline = ' '.join(out_cmdline)
   out_cmdline = out_cmdline.strip()
-  print("out_cmdline %s" % out_cmdline)
+  print "out_cmdline %s" % (out_cmdline)
   common.ZipWriteStr(targetfile_output_zip, "BOOT/cmdline", out_cmdline)
   return out_cmdline
 
@@ -614,7 +611,6 @@ def GetApiLevelAndCodename(input_tf_zip):
   codename = None
   for line in data.split("\n"):
     line = line.strip()
-    original_line = line
     if line and line[0] != '#' and "=" in line:
       key, value = line.split("=", 1)
       key = key.strip()
@@ -637,7 +633,6 @@ def GetCodenameToApiLevelMap(input_tf_zip):
   codenames = None
   for line in data.split("\n"):
     line = line.strip()
-    original_line = line
     if line and line[0] != '#' and "=" in line:
       key, value = line.split("=", 1)
       key = key.strip()
@@ -720,12 +715,8 @@ def main(argv):
   CheckAllApksSigned(input_zip, apk_key_map)
 
   key_passwords = common.GetKeyPasswords(set(apk_key_map.values()))
-  platform_api_level, platform_codename = GetApiLevelAndCodename(input_zip)
+  platform_api_level, _ = GetApiLevelAndCodename(input_zip)
   codename_to_api_level_map = GetCodenameToApiLevelMap(input_zip)
-  # Android N will be API Level 24, but isn't yet.
-  # TODO: Remove this workaround once Android N is officially API Level 24.
-  if platform_api_level == 23 and platform_codename == "N":
-    platform_api_level = 24
 
   ProcessTargetFiles(input_zip, output_zip, misc_info,
                      apk_key_map, key_passwords,
@@ -739,16 +730,14 @@ def main(argv):
   new_args = ["--is_signing", args[1]]
   add_img_to_target_files.main(new_args)
 
-  print("done.")
+  print "done."
 
 
 if __name__ == '__main__':
   try:
     main(sys.argv[1:])
-  except common.ExternalError as e:
-    print()
-    print("   ERROR: %s" % e)
-    print()
+  except common.ExternalError, e:
+    print
+    print "   ERROR: %s" % (e,)
+    print
     sys.exit(1)
-  finally:
-    common.Cleanup()

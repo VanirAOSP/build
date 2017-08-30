@@ -77,26 +77,28 @@ class EdifyGenerator(object):
     with temporary=True) to this one."""
     self.script.extend(other.script)
 
-  def AssertOemProperty(self, name, value):
-    """Assert that a property on the OEM paritition matches a value."""
+  def AssertOemProperty(self, name, values):
+    """Assert that a property on the OEM paritition matches allowed values."""
     if not name:
       raise ValueError("must specify an OEM property")
-    if not value:
+    if not values:
       raise ValueError("must specify the OEM value")
+    get_prop_command = None
     if common.OPTIONS.oem_no_mount:
-      cmd = ('getprop("{name}") == "{value}" || '
-             'abort("E{code}: This package expects the value \\"{value}\\" for '
-             '\\"{name}\\"; this has value \\"" + '
-             'getprop("{name}") + "\\".");').format(
-                 code=common.ErrorCode.OEM_PROP_MISMATCH,
-                 name=name, value=value)
+      get_prop_command = 'getprop("%s")' % name
     else:
-      cmd = ('file_getprop("/oem/oem.prop", "{name}") == "{value}" || '
-             'abort("E{code}: This package expects the value \\"{value}\\" for '
-             '\\"{name}\\" on the OEM partition; this has value \\"" + '
-             'file_getprop("/oem/oem.prop", "{name}") + "\\".");').format(
-                 code=common.ErrorCode.OEM_PROP_MISMATCH,
-                 name=name, value=value)
+      get_prop_command = 'file_getprop("/oem/oem.prop", "%s")' % name
+
+    cmd = ''
+    for value in values:
+      cmd += '%s == "%s" || ' % (get_prop_command, value)
+    cmd += (
+        'abort("E{code}: This package expects the value \\"{values}\\" for '
+        '\\"{name}\\"; this has value \\"" + '
+        '{get_prop_command} + "\\".");').format(
+            code=common.ErrorCode.OEM_PROP_MISMATCH,
+            get_prop_command=get_prop_command, name=name,
+            values='\\" or \\"'.join(values))
     self.script.append(cmd)
 
   def AssertSomeFingerprint(self, *fp):
@@ -121,6 +123,17 @@ class EdifyGenerator(object):
                common.ErrorCode.THUMBPRINT_MISMATCH, " or ".join(fp))
     self.script.append(cmd)
 
+  def AssertFingerprintOrThumbprint(self, fp, tp):
+    """Assert that the current recovery build fingerprint is fp, or thumbprint
+       is tp."""
+    cmd = ('getprop("ro.build.fingerprint") == "{fp}" ||\n'
+           '    getprop("ro.build.thumbprint") == "{tp}" ||\n'
+           '    abort("Package expects build fingerprint of {fp} or '
+           'thumbprint of {tp}; this device has a fingerprint of " '
+           '+ getprop("ro.build.fingerprint") + " and a thumbprint of " '
+           '+ getprop("ro.build.thumbprint") + ".");').format(fp=fp, tp=tp)
+    self.script.append(cmd)
+
   def AssertOlderBuild(self, timestamp, timestamp_text):
     """Assert that the build on the device is older (or the same as)
     the given timestamp."""
@@ -133,21 +146,18 @@ class EdifyGenerator(object):
   def AssertDevice(self, device):
     """Assert that the device identifier is the given string."""
     cmd = ('assert(' +
-           ' || '.join(['getprop("ro.product.device") == "%s" || getprop("ro.build.product") == "%s"'
+           ' || \0'.join(['getprop("ro.product.device") == "%s" || getprop("ro.build.product") == "%s"'
                          % (i, i) for i in device.split(",")]) +
            ' || abort("E%d: This package is for device: %s; ' +
            'this device is " + getprop("ro.product.device") + ".");' +
            ');') % (common.ErrorCode.DEVICE_MISMATCH, device)
-    self.script.append(cmd)
+    self.script.append(self.WordWrap(cmd))
 
   def AssertSomeBootloader(self, *bootloaders):
-    """Assert that the bootloader version is one of *bootloaders."""
+    """Asert that the bootloader version is one of *bootloaders."""
     cmd = ("assert(" +
-           " || ".join(['getprop("ro.bootloader") == "%s"' % (b,)
+           " ||\0".join(['getprop("ro.bootloader") == "%s"' % (b,)
                          for b in bootloaders]) +
-           ' || abort("This package supports bootloader(s): ' +
-           ", ".join(["%s" % (b,) for b in bootloaders]) +
-           '; this device has bootloader " + getprop("ro.bootloader") + ".");' +
            ");")
     self.script.append(self.WordWrap(cmd))
 
@@ -187,7 +197,7 @@ class EdifyGenerator(object):
     self.script.append("set_progress(%f);" % (frac,))
 
   def PatchCheck(self, filename, *sha1):
-    """Check that the given file (or MTD reference) has one of the
+    """Check that the given file has one of the
     given *sha1 hashes, checking the version saved in cache if the
     file does not match."""
     self.script.append(
@@ -197,7 +207,7 @@ class EdifyGenerator(object):
             common.ErrorCode.BAD_PATCH_FILE, filename))
 
   def Verify(self, filename):
-    """Check that the given file (or MTD reference) has one of the
+    """Check that the given file has one of the
     given hashes (encoded in the filename)."""
     self.script.append(
         'apply_patch_check("{filename}") && '
@@ -206,7 +216,7 @@ class EdifyGenerator(object):
             filename=filename))
 
   def FileCheck(self, filename, *sha1):
-    """Check that the given file (or MTD reference) has one of the
+    """Check that the given file has one of the
     given *sha1 hashes."""
     self.script.append('assert(sha1_check(read_file("%s")' % (filename,) +
                        "".join([', "%s"' % (i,) for i in sha1]) +
@@ -299,36 +309,6 @@ class EdifyGenerator(object):
 
     self.script.append('wipe_block_device("%s", %s);' % (device, size))
 
-  def DeleteFiles(self, file_list):
-    """Delete all files in file_list."""
-    if not file_list:
-      return
-    cmd = "delete(" + ",\0".join(['"%s"' % (i,) for i in file_list]) + ");"
-    self.script.append(self.WordWrap(cmd))
-
-  def DeleteFilesIfNotMatching(self, file_list):
-    """Delete the file in file_list if not matching the checksum."""
-    if not file_list:
-      return
-    for name, sha1 in file_list:
-      cmd = ('sha1_check(read_file("{name}"), "{sha1}") || '
-             'delete("{name}");'.format(name=name, sha1=sha1))
-      self.script.append(self.WordWrap(cmd))
-
-  def RenameFile(self, srcfile, tgtfile):
-    """Moves a file from one location to another."""
-    if self.info.get("update_rename_support", False):
-      self.script.append('rename("%s", "%s");' % (srcfile, tgtfile))
-    else:
-      raise ValueError("Rename not supported by update binary")
-
-  def SkipNextActionIfTargetExists(self, tgtfile, tgtsha1):
-    """Prepend an action with an apply_patch_check in order to
-       skip the action if the file exists.  Used when a patch
-       is later renamed."""
-    cmd = ('sha1_check(read_file("%s"), %s) ||' % (tgtfile, tgtsha1))
-    self.script.append(self.WordWrap(cmd))
-
   def ApplyPatch(self, srcfile, tgtfile, tgtsize, tgtsha1, *patchpairs):
     """Apply binary patches (in *patchpairs) to the given srcfile to
     produce tgtfile (which may be "-" to indicate overwriting the
@@ -353,15 +333,7 @@ class EdifyGenerator(object):
       p = fstab[mount_point]
       partition_type = common.PARTITION_TYPES[p.fs_type]
       args = {'device': p.device, 'fn': fn}
-      if partition_type == "MTD":
-        self.script.append(
-            'write_raw_image(package_extract_file("%(fn)s"), "%(device)s");'
-            % args)
-      elif partition_type == "OSIP":
-        self.script.append(
-            'write_osip_image(package_extract_file("%(fn)s"), "%(device)s");'
-            % args)
-      elif partition_type == "EMMC":
+      if partition_type == "EMMC":
         if mapfn:
           args["map"] = mapfn
           self.script.append(
@@ -372,48 +344,6 @@ class EdifyGenerator(object):
       else:
         raise ValueError(
             "don't know how to write \"%s\" partitions" % p.fs_type)
-
-  def SetPermissions(self, fn, uid, gid, mode, selabel, capabilities):
-    """Set file ownership and permissions."""
-    if not self.info.get("use_set_metadata", False):
-      self.script.append('set_perm(%d, %d, 0%o, "%s");' % (uid, gid, mode, fn))
-    else:
-      cmd = 'set_metadata("%s", "uid", %d, "gid", %d, "mode", 0%o' \
-          % (fn, uid, gid, mode)
-      if capabilities is not None:
-        cmd += ', "capabilities", %s' % ( capabilities )
-      if selabel is not None:
-        cmd += ', "selabel", "%s"' % selabel
-      cmd += ');'
-      self.script.append(cmd)
-
-  def SetPermissionsRecursive(self, fn, uid, gid, dmode, fmode, selabel,
-                              capabilities):
-    """Recursively set path ownership and permissions."""
-    if not self.info.get("use_set_metadata", False):
-      self.script.append('set_perm_recursive(%d, %d, 0%o, 0%o, "%s");'
-                         % (uid, gid, dmode, fmode, fn))
-    else:
-      cmd = 'set_metadata_recursive("%s", "uid", %d, "gid", %d, ' \
-          '"dmode", 0%o, "fmode", 0%o' \
-          % (fn, uid, gid, dmode, fmode)
-      if capabilities is not None:
-        cmd += ', "capabilities", "%s"' % ( capabilities )
-      if selabel is not None:
-        cmd += ', "selabel", "%s"' % selabel
-      cmd += ');'
-      self.script.append(cmd)
-
-  def MakeSymlinks(self, symlink_list):
-    """Create symlinks, given a list of (dest, link) pairs."""
-    by_dest = {}
-    for d, l in symlink_list:
-      by_dest.setdefault(d, []).append(l)
-
-    for dest, links in sorted(by_dest.items()):
-      cmd = ('symlink("%s", ' % (dest,) +
-             ",\0".join(['"' + i + '"' for i in sorted(links)]) + ");")
-      self.script.append(self.WordWrap(cmd))
 
   def AppendExtra(self, extra):
     """Append text verbatim to the output script."""

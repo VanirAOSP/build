@@ -24,6 +24,7 @@ PRODUCT_NAME := core
 
 PRODUCT_PACKAGES += \
     BackupRestoreConfirmation \
+    CompanionDeviceManager \
     CtsShimPrebuilt \
     CtsShimPrivPrebuilt \
     DownloadProvider \
@@ -36,6 +37,8 @@ PRODUCT_PACKAGES += \
     Shell \
     StatementService \
     WallpaperBackup \
+    android.hidl.base-V1.0-java \
+    android.hidl.manager-V1.0-java \
     bcc \
     bu \
     com.android.future.usb.accessory \
@@ -58,8 +61,9 @@ PRODUCT_PACKAGES += \
     gatekeeperd \
     keystore \
     keystore.default \
+    ld.config.txt \
     ld.mc \
-    libbcc \
+    libaaudio \
     libOpenMAXAL \
     libOpenSLES \
     libdownmix \
@@ -68,11 +72,14 @@ PRODUCT_PACKAGES += \
     libfilterfw \
     libkeystore \
     libgatekeeper \
+    libwebviewchromium_loader \
+    libwebviewchromium_plat_support \
     libwilhelm \
     logd \
     make_ext4fs \
     e2fsck \
     resize2fs \
+    tune2fs \
     screencap \
     sensorservice \
     telephony-common \
@@ -80,10 +87,16 @@ PRODUCT_PACKAGES += \
     uncrypt \
     voip-common \
     webview \
+    webview_zygote \
     wifi-service
 
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.software.webview.xml:system/etc/permissions/android.software.webview.xml
+
+ifneq (REL,$(PLATFORM_VERSION_CODENAME))
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.software.preview_sdk.xml:system/etc/permissions/android.software.preview_sdk.xml
+endif
 
 # The order of PRODUCT_BOOT_JARS matters.
 PRODUCT_BOOT_JARS := \
@@ -91,7 +104,7 @@ PRODUCT_BOOT_JARS := \
     core-libart \
     conscrypt \
     okhttp \
-    core-junit \
+    legacy-test \
     bouncycastle \
     ext \
     framework \
@@ -99,23 +112,27 @@ PRODUCT_BOOT_JARS := \
     voip-common \
     ims-common \
     apache-xml \
-    org.apache.http.legacy.boot
+    org.apache.http.legacy.boot \
+    android.hidl.base-V1.0-java \
+    android.hidl.manager-V1.0-java
 
 # The order of PRODUCT_SYSTEM_SERVER_JARS matters.
-ifneq ($(TARGET_DISABLE_CMSDK), true)
 PRODUCT_SYSTEM_SERVER_JARS := \
-    org.cyanogenmod.platform \
-    org.cyanogenmod.hardware
-endif
-PRODUCT_SYSTEM_SERVER_JARS += \
     services \
     ethernet-service \
     wifi-service
 
-# Adoptable external storage f2fs support
+# The set of packages whose code can be loaded by the system server.
+PRODUCT_SYSTEM_SERVER_APPS += \
+    SettingsProvider \
+    WallpaperBackup
+
+# Adoptable external storage supports both ext4 and f2fs
 PRODUCT_PACKAGES += \
+    e2fsck \
+    make_ext4fs \
     fsck.f2fs \
-    mkfs.f2fs \
+    make_f2fs \
 
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     ro.zygote=zygote32
@@ -124,27 +141,6 @@ PRODUCT_COPY_FILES += \
 
 PRODUCT_COPY_FILES += \
     system/core/rootdir/etc/public.libraries.android.txt:system/etc/public.libraries.txt
-
-# Different dexopt types for different package update/install times.
-# On eng builds, make "boot" reasons do pure JIT for faster turnaround.
-ifeq (eng,$(TARGET_BUILD_VARIANT))
-    PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-        pm.dexopt.first-boot=verify-at-runtime \
-        pm.dexopt.boot=verify-at-runtime
-else
-    PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-        pm.dexopt.first-boot=interpret-only \
-        pm.dexopt.boot=verify-profile
-endif
-PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-    pm.dexopt.install=interpret-only \
-    pm.dexopt.bg-dexopt=speed-profile \
-    pm.dexopt.ab-ota=speed-profile \
-    pm.dexopt.nsys-library=speed \
-    pm.dexopt.shared-apk=speed \
-    pm.dexopt.forced-dexopt=speed \
-    pm.dexopt.core-app=speed
-
 
 # Enable boot.oat filtering of compiled classes to reduce boot.oat size. b/28026683
 PRODUCT_COPY_FILES += $(call add-to-product-copy-files-if-exists,\

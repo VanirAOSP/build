@@ -3,6 +3,7 @@
 ##############################################
 
 my_sanitize := $(strip $(LOCAL_SANITIZE))
+my_sanitize_diag := $(strip $(LOCAL_SANITIZE_DIAG))
 
 # SANITIZE_HOST is only in effect if the module is already using clang (host
 # modules that haven't set `LOCAL_CLANG := false` and device modules that
@@ -19,9 +20,8 @@ ifeq ($(my_clang),true)
   endif
 endif
 
-# The sanitizer specified by the environment wins over the module.
 ifneq ($(my_global_sanitize),)
-  my_sanitize := $(my_global_sanitize)
+  my_sanitize := $(my_global_sanitize) $(my_sanitize)
 endif
 
 # The sanitizer specified in the product configuration wins over the previous.
@@ -32,10 +32,12 @@ ifneq ($(SANITIZER.$(TARGET_PRODUCT).$(LOCAL_MODULE).CONFIG),)
   endif
 endif
 
-# Add a filter point for 32-bit vs 64-bit sanitization (to lighten the burden).
-SANITIZE_ARCH ?= 32 64
-ifeq ($(filter $(SANITIZE_ARCH),$(my_32_64_bit_suffix)),)
-  my_sanitize :=
+ifndef LOCAL_IS_HOST_MODULE
+  # Add a filter point for 32-bit vs 64-bit sanitization (to lighten the burden)
+  SANITIZE_TARGET_ARCH ?= $(TARGET_ARCH) $(TARGET_2ND_ARCH)
+  ifeq ($(filter $(SANITIZE_TARGET_ARCH),$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH)),)
+    my_sanitize :=
+  endif
 endif
 
 # Add a filter point based on module owner (to lighten the burden). The format is a space- or
@@ -52,11 +54,35 @@ endif
 # Don't apply sanitizers to NDK code.
 ifdef LOCAL_SDK_VERSION
   my_sanitize :=
+  my_global_sanitize :=
 endif
 
 # Never always wins.
 ifeq ($(LOCAL_SANITIZE),never)
   my_sanitize :=
+endif
+
+# If CFI is disabled globally, remove it from my_sanitize.
+ifeq ($(strip $(ENABLE_CFI)),)
+  my_sanitize := $(filter-out cfi,$(my_sanitize))
+  my_sanitize_diag := $(filter-out cfi,$(my_sanitize_diag))
+endif
+
+# Disable CFI for arm32 (b/35157333).
+ifneq ($(filter arm,$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH)),)
+  my_sanitize := $(filter-out cfi,$(my_sanitize))
+  my_sanitize_diag := $(filter-out cfi,$(my_sanitize_diag))
+endif
+
+# CFI needs gold linker, and mips toolchain does not have one.
+ifneq ($(filter mips mips64,$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH)),)
+  my_sanitize := $(filter-out cfi,$(my_sanitize))
+  my_sanitize_diag := $(filter-out cfi,$(my_sanitize_diag))
+endif
+
+my_nosanitize = $(strip $(LOCAL_NOSANITIZE))
+ifneq ($(my_nosanitize),)
+  my_sanitize := $(filter-out $(my_nosanitize),$(my_sanitize))
 endif
 
 # TSAN is not supported on 32-bit architectures. For non-multilib cases, make
@@ -71,21 +97,23 @@ ifneq ($(filter thread,$(my_sanitize)),)
   endif
 endif
 
+ifneq ($(filter safe-stack,$(my_sanitize)),)
+  ifeq ($(my_32_64_bit_suffix),32)
+    my_sanitize := $(filter-out safe-stack,$(my_sanitize))
+  endif
+endif
+
 # Undefined symbols can occur if a non-sanitized library links
 # sanitized static libraries. That's OK, because the executable
 # always depends on the ASan runtime library, which defines these
 # symbols.
-ifneq ($(strip $(SANITIZE_TARGET)),)
+ifneq ($(filter address thread,$(strip $(SANITIZE_TARGET))),)
   ifndef LOCAL_IS_HOST_MODULE
     ifeq ($(LOCAL_MODULE_CLASS),SHARED_LIBRARIES)
       ifeq ($(my_sanitize),)
         my_allow_undefined_symbols := true
       endif
     endif
-    # Workaround for a bug in AddressSanitizer that breaks stack unwinding.
-    # https://code.google.com/p/address-sanitizer/issues/detail?id=387
-    # Revert when external/compiler-rt is updated past r236014.
-    LOCAL_PACK_MODULE_RELOCATIONS := false
   endif
 endif
 
@@ -117,18 +145,32 @@ ifneq ($(my_sanitize),)
     my_ldflags += -fsanitize=$(fsanitize_arg)
     my_ldlibs += -lrt -ldl
   else
-    ifeq ($(filter address,$(my_sanitize)),)
-      my_cflags += -fsanitize-trap=all
-      my_cflags += -ftrap-function=abort
+    my_cflags += -fsanitize-trap=all
+    my_cflags += -ftrap-function=abort
+    ifneq ($(filter address thread,$(my_sanitize)),)
+      my_cflags += -fno-sanitize-trap=address,thread
+      my_shared_libraries += libdl
     endif
-    my_shared_libraries += libdl
   endif
 endif
 
-ifneq ($(filter address,$(my_sanitize)),)
-  # Frame pointer based unwinder in ASan requires ARM frame setup.
-  LOCAL_ARM_MODE := arm
-  my_cflags += $(ADDRESS_SANITIZER_CONFIG_EXTRA_CFLAGS)
+ifneq ($(filter cfi,$(my_sanitize)),)
+  # __cfi_check needs to be built as Thumb (see the code in linker_cfi.cpp).
+  # LLVM is not set up to do this on a function basis, so force Thumb on the
+  # entire module.
+  LOCAL_ARM_MODE := thumb
+  my_cflags += $(CFI_EXTRA_CFLAGS)
+  my_ldflags += $(CFI_EXTRA_LDFLAGS)
+  my_arflags += --plugin $(LLVM_PREBUILTS_PATH)/../lib64/LLVMgold.so
+  # Workaround for b/33678192. CFI jumptables need Thumb2 codegen.  Revert when
+  # Clang is updated past r290384.
+  ifneq ($(filter arm,$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH)),)
+    my_ldflags += -march=armv7-a
+  endif
+endif
+
+# If local or global modules need ASAN, add linker flags.
+ifneq ($(filter address,$(my_global_sanitize) $(my_sanitize)),)
   my_ldflags += $(ADDRESS_SANITIZER_CONFIG_EXTRA_LDFLAGS)
   ifdef LOCAL_IS_HOST_MODULE
     # -nodefaultlibs (provided with libc++) prevents the driver from linking
@@ -136,16 +178,38 @@ ifneq ($(filter address,$(my_sanitize)),)
     my_ldlibs += -lm -lpthread
     my_ldflags += -Wl,--no-as-needed
   else
-    my_cflags += -mllvm -asan-globals=0
+    # Add asan libraries unless LOCAL_MODULE is the asan library.
     # ASan runtime library must be the first in the link order.
-    my_shared_libraries := $($(LOCAL_2ND_ARCH_VAR_PREFIX)ADDRESS_SANITIZER_RUNTIME_LIBRARY) \
-                           $(my_shared_libraries) \
-                           $(ADDRESS_SANITIZER_CONFIG_EXTRA_SHARED_LIBRARIES)
-    my_static_libraries += $(ADDRESS_SANITIZER_CONFIG_EXTRA_STATIC_LIBRARIES)
+    ifeq (,$(filter $(LOCAL_MODULE),$($(LOCAL_2ND_ARCH_VAR_PREFIX)ADDRESS_SANITIZER_RUNTIME_LIBRARY)))
+      my_shared_libraries := $($(LOCAL_2ND_ARCH_VAR_PREFIX)ADDRESS_SANITIZER_RUNTIME_LIBRARY) \
+                             $(my_shared_libraries)
+    endif
+    ifeq (,$(filter $(LOCAL_MODULE),$(ADDRESS_SANITIZER_CONFIG_EXTRA_STATIC_LIBRARIES)))
+      my_static_libraries += $(ADDRESS_SANITIZER_CONFIG_EXTRA_STATIC_LIBRARIES)
+    endif
 
-    my_linker := $($(LOCAL_2ND_ARCH_VAR_PREFIX)ADDRESS_SANITIZER_LINKER)
-    # Make sure linker_asan get installed.
-    $(LOCAL_INSTALLED_MODULE) : | $(PRODUCT_OUT)$($(LOCAL_2ND_ARCH_VAR_PREFIX)ADDRESS_SANITIZER_LINKER)
+    # Do not add unnecessary dependency in shared libraries.
+    ifeq ($(LOCAL_MODULE_CLASS),SHARED_LIBRARIES)
+      my_ldflags += -Wl,--as-needed
+    endif
+
+    ifeq ($(LOCAL_MODULE_CLASS),EXECUTABLES)
+      ifneq ($(LOCAL_FORCE_STATIC_EXECUTABLE),true)
+        my_linker := $($(LOCAL_2ND_ARCH_VAR_PREFIX)ADDRESS_SANITIZER_LINKER)
+        # Make sure linker_asan get installed.
+        $(LOCAL_INSTALLED_MODULE) : | $(PRODUCT_OUT)$($(LOCAL_2ND_ARCH_VAR_PREFIX)ADDRESS_SANITIZER_LINKER)
+      endif
+    endif
+  endif
+endif
+
+# If local module needs ASAN, add compiler flags.
+ifneq ($(filter address,$(my_sanitize)),)
+  # Frame pointer based unwinder in ASan requires ARM frame setup.
+  LOCAL_ARM_MODE := arm
+  my_cflags += $(ADDRESS_SANITIZER_CONFIG_EXTRA_CFLAGS)
+  ifndef LOCAL_IS_HOST_MODULE
+    my_cflags += -mllvm -asan-globals=0
   endif
 endif
 
@@ -158,4 +222,14 @@ endif
 ifneq ($(strip $(LOCAL_SANITIZE_RECOVER)),)
   recover_arg := $(subst $(space),$(comma),$(LOCAL_SANITIZE_RECOVER)),
   my_cflags += -fsanitize-recover=$(recover_arg)
+endif
+
+ifneq ($(my_sanitize_diag),)
+  notrap_arg := $(subst $(space),$(comma),$(my_sanitize_diag)),
+  my_cflags += -fno-sanitize-trap=$(notrap_arg)
+  # Diagnostic requires a runtime library, unless ASan or TSan are also enabled.
+  ifeq ($(filter address thread,$(my_sanitize)),)
+    # Does not have to be the first DT_NEEDED unlike ASan.
+    my_shared_libraries += $($(LOCAL_2ND_ARCH_VAR_PREFIX)UBSAN_RUNTIME_LIBRARY)
+  endif
 endif

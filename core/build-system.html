@@ -438,7 +438,7 @@ intermediates:= $(local-generated-sources-dir)
 GEN := $(intermediates)/<font color=red>file.c</font>
 $(GEN): PRIVATE_INPUT_FILE := $(LOCAL_PATH)/<font color=red>input.file</font>
 $(GEN): PRIVATE_CUSTOM_TOOL = <font color=red>cat $(PRIVATE_INPUT_FILE) &gt; $@</font>
-$(GEN): <font color=red>$(LOCAL_PATH)/file.c</font>
+$(GEN): <font color=red>$(LOCAL_PATH)/input.file</font>
 	$(transform-generated-source)
 LOCAL_GENERATED_SOURCES += $(GEN)
 </pre>
@@ -706,6 +706,11 @@ example.</p>
 <p>If you have additional flags to pass into the javac compiler, add
 them here.  For example:</p>
 <p><code>LOCAL_JAVACFLAGS += -Xlint:deprecation</code></p>
+
+<h4>LOCAL_ERROR_PRONE_FLAGS</h4>
+<p>If you have additional flags to pass into the error prone compiler, add
+them here.  For example:</p>
+<p><code>LOCAL_ERROR_PRONE_FLAGS += -Xep:ClassCanBeStatic:ERROR</code></p>
 
 <h4>LOCAL_JAVA_LIBRARIES</h4>
 <p>When linking Java apps and libraries, <code>LOCAL_JAVA_LIBRARIES</code>

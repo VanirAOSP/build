@@ -17,51 +17,16 @@
 # Configuration for Darwin (Mac OS X) on x86_64.
 # Included by combo/select.mk
 
-HOST_GLOBAL_CFLAGS += -m64
-HOST_GLOBAL_LDFLAGS += -m64
-
-ifneq ($(strip $(BUILD_HOST_static)),)
-# Statically-linked binaries are desirable for sandboxed environment
-HOST_GLOBAL_LDFLAGS += -static
-endif # BUILD_HOST_static
-
-# Workaround differences in inttypes.h between host and target.
-# See bug 12708004.
-HOST_GLOBAL_CFLAGS += -D__STDC_FORMAT_MACROS -D__STDC_CONSTANT_MACROS
-
-include $(BUILD_COMBOS)/mac_version.mk
-
-HOST_TOOLCHAIN_ROOT := prebuilts/gcc/darwin-x86/host/i686-apple-darwin-4.2.1
-HOST_TOOLCHAIN_PREFIX := $(HOST_TOOLCHAIN_ROOT)/bin/i686-apple-darwin$(gcc_darwin_version)
-HOST_CC  := $(HOST_TOOLCHAIN_PREFIX)-gcc
-HOST_CXX := $(HOST_TOOLCHAIN_PREFIX)-g++
-
 define $(combo_var_prefix)transform-shared-lib-to-toc
 $(call _gen_toc_command_for_macho,$(1),$(2))
 endef
 
-# gcc location for clang; to be updated when clang is updated
-# HOST_TOOLCHAIN_ROOT is a Darwin-specific define
-HOST_TOOLCHAIN_FOR_CLANG := $(HOST_TOOLCHAIN_ROOT)
-
-HOST_AR := $(AR)
-
-HOST_GLOBAL_CFLAGS += -isysroot $(mac_sdk_root) -mmacosx-version-min=$(mac_sdk_version) -DMACOSX_DEPLOYMENT_TARGET=$(mac_sdk_version)
 ifeq (,$(wildcard $(mac_sdk_path)/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1))
 # libc++ header locations for XCode CLT 7.1+
 HOST_GLOBAL_CPPFLAGS += -isystem $(mac_sdk_path)/usr/include/c++/v1
 else
 # libc++ header locations for pre-XCode CLT 7.1+
-HOST_GLOBAL_CPPFLAGS += -isystem $(mac_sdk_path)/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1
 endif
-HOST_GLOBAL_LDFLAGS += -isysroot $(mac_sdk_root) -Wl,-syslibroot,$(mac_sdk_root) -mmacosx-version-min=$(mac_sdk_version)
-
-HOST_GLOBAL_CFLAGS += -fPIC -funwind-tables
-HOST_NO_UNDEFINED_LDFLAGS := -Wl,-undefined,error
-
-HOST_SHLIB_SUFFIX := .dylib
-HOST_JNILIB_SUFFIX := .jnilib
-
 HOST_GLOBAL_ARFLAGS := cqs
 
 # We Reuse the following functions with the same name from HOST_darwin-x86.mk:

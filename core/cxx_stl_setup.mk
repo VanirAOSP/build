@@ -70,6 +70,7 @@ else
     endif
 endif
 
+my_cxx_ldlibs :=
 ifneq ($(filter $(my_cxx_stl),libc++ libc++_static),)
     my_cflags += -D_USING_LIBCXX
 
@@ -89,7 +90,7 @@ ifneq ($(filter $(my_cxx_stl),libc++ libc++_static),)
         my_cppflags += -nostdinc++
         my_ldflags += -nodefaultlibs
         my_ldlibs += -lpthread -lm
-        my_ldlibs += $($($(my_prefix)OS)_$(my_link_type)_gcclibs)
+        my_cxx_ldlibs += $($($(my_prefix)OS)_$(my_link_type)_gcclibs)
     else
         ifeq (arm,$($(my_prefix)$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH))
             my_static_libraries += libunwind_llvm
@@ -105,18 +106,16 @@ ifneq ($(filter $(my_cxx_stl),libc++ libc++_static),)
 else ifeq ($(my_cxx_stl),ndk)
     # Using an NDK STL. Handled in binary.mk.
 else ifeq ($(my_cxx_stl),libstdc++)
-    # Using bionic's basic libstdc++. Not actually an STL. Only around until the
-    # tree is in good enough shape to not need it.
     ifndef LOCAL_IS_HOST_MODULE
-        my_c_includes += bionic/libstdc++/include
-        my_system_shared_libraries += libstdc++
+        $(error $(LOCAL_PATH): $(LOCAL_MODULE): libstdc++ is not supported for device modules)
+    else ifneq ($($(my_prefix)OS),windows)
+        $(error $(LOCAL_PATH): $(LOCAL_MODULE): libstdc++ is not supported on $($(my_prefix)OS))
     endif
-    # Host builds will use GNU libstdc++.
 else ifeq ($(my_cxx_stl),none)
     ifdef LOCAL_IS_HOST_MODULE
         my_cppflags += -nostdinc++
         my_ldflags += -nodefaultlibs
-        my_ldlibs += $($($(my_prefix)OS)_$(my_link_type)_gcclibs)
+        my_cxx_ldlibs += $($($(my_prefix)OS)_$(my_link_type)_gcclibs)
     endif
 else
     $(error $(LOCAL_PATH): $(LOCAL_MODULE): $(my_cxx_stl) is not a supported STL.)

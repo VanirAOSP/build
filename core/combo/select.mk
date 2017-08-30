@@ -28,23 +28,9 @@ combo_var_prefix := $(combo_2nd_arch_prefix)$(combo_target)
 
 # Set reasonable defaults for the various variables
 
-$(combo_var_prefix)CC := $(CC)
-$(combo_var_prefix)CXX := $(CXX)
-$(combo_var_prefix)AR := $(AR)
-$(combo_var_prefix)STRIP := $(STRIP)
-
-$(combo_var_prefix)GLOBAL_CFLAGS := -fno-exceptions -Wno-multichar $(BOARD_GLOBAL_CFLAGS)
-$(combo_var_prefix)RELEASE_CFLAGS := -O2 -g -fno-strict-aliasing $(BOARD_RELEASE_CFLAGS)
-$(combo_var_prefix)GLOBAL_CPPFLAGS := $(BOARD_GLOBAL_CPPFLAGS)
-$(combo_var_prefix)GLOBAL_LDFLAGS :=
 $(combo_var_prefix)GLOBAL_ARFLAGS := crsPD
-$(combo_var_prefix)GLOBAL_LD_DIRS :=
 
-$(combo_var_prefix)EXECUTABLE_SUFFIX :=
-$(combo_var_prefix)SHLIB_SUFFIX := .so
-$(combo_var_prefix)JNILIB_SUFFIX := $($(combo_var_prefix)SHLIB_SUFFIX)
 $(combo_var_prefix)STATIC_LIB_SUFFIX := .a
 
 # Now include the combo for this specific target.
 include $(BUILD_COMBOS)/$(combo_target)$(combo_os_arch).mk
-

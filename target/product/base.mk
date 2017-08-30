@@ -27,6 +27,7 @@ PRODUCT_PACKAGES += \
     app_process \
     applypatch \
     audioserver \
+    bit \
     blkid \
     bmgr \
     bugreport \
@@ -36,9 +37,13 @@ PRODUCT_PACKAGES += \
     dnsmasq \
     dpm \
     framework \
+    framework-sysconfig.xml \
     fsck_msdos \
     hid \
     ime \
+    incidentd \
+    incident \
+    incident_report \
     input \
     javax.obex \
     libandroid \
@@ -54,6 +59,7 @@ PRODUCT_PACKAGES += \
     libcamera2ndk \
     libdl \
     libdrmclearkeyplugin \
+    libclearkeycasplugin \
     libeffectproxy \
     libeffects \
     libinput \
@@ -98,11 +104,12 @@ PRODUCT_PACKAGES += \
     libmediandk \
     libvulkan \
     libwifi-service \
+    locksettings \
     media \
     media_cmd \
     mediadrmserver \
     mediaserver \
-    mediacodec \
+    mediametrics \
     mediaextractor \
     monkey \
     mtpd \
@@ -111,6 +118,7 @@ PRODUCT_PACKAGES += \
     ping \
     ping6 \
     platform.xml \
+    privapp-permissions-platform.xml \
     pppd \
     pm \
     racoon \
@@ -130,6 +138,17 @@ PRODUCT_PACKAGES += \
     vold \
     wm
 
+# Essential HAL modules
+PRODUCT_PACKAGES += \
+    android.hardware.media.omx@1.0-service
+
+# XML schema files
+PRODUCT_PACKAGES += \
+    media_profiles_V1_0.dtd
+
+# Packages included only for eng or userdebug builds, previously debug tagged
+PRODUCT_PACKAGES_DEBUG := \
+    perfprofd
 
 PRODUCT_COPY_FILES := $(call add-to-product-copy-files-if-exists,\
     frameworks/base/preloaded-classes:system/etc/preloaded-classes)

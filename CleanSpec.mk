@@ -378,6 +378,45 @@ $(call add-clean-step, rm -rf $(PRODUCT_OUT)/recovery/root/sdcard)
 $(call add-clean-step, rm -rf $(PRODUCT_OUT)/system/app/*)
 $(call add-clean-step, rm -rf $(PRODUCT_OUT)/system/priv-app/*)
 
+$(call add-clean-step, rm -rf $(TARGET_OUT_COMMON_INTERMEDIATES)/APPS/previous_overlays.txt)
+$(call add-clean-step, rm -rf $(TARGET_OUT_COMMON_INTERMEDIATES)/APPS/current_packages.txt)
+
+$(call add-clean-step, rm -rf $(HOST_OUT_INTERMEDIATES)/include)
+
+$(call add-clean-step, rm -rf $(HOST_OUT_COMMON_INTERMEDIATES)/APPS/*_intermediates/src)
+$(call add-clean-step, rm -rf $(HOST_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/*_intermediates/src)
+$(call add-clean-step, rm -rf $(TARGET_OUT_COMMON_INTERMEDIATES)/APPS/*_intermediates/src)
+$(call add-clean-step, rm -rf $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/*_intermediates/src)
+$(call add-clean-step, rm -rf $(TARGET_OUT_COMMON_INTERMEDIATES)/previous_gen_java_config.mk)
+$(call add-clean-step, rm -rf $(TARGET_OUT_COMMON_INTERMEDIATES)/current_gen_java_config.mk)
+
+$(call add-clean-step, rm -rf $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/*/package-res.apk)
+$(call add-clean-step, rm -rf $(TARGET_OUT_INTERMEDIATES)/APPS/*/package-res.apk)
+$(call add-clean-step, rm -rf $(TARGET_OUT_COMMON_INTERMEDIATES)/APPS/*_intermediates/src)
+$(call add-clean-step, rm -rf $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/*_intermediates/src)
+
+$(call add-clean-step, rm -rf $(HOST_OUT_TESTCASES))
+$(call add-clean-step, rm -rf $(TARGET_OUT_TESTCASES))
+
+$(call add-clean-step, rm -rf $(TARGET_OUT_ETC)/init)
+
+# Libraries are moved from {system|vendor}/lib to ./lib/framework, ./lib/vndk, etc.
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/system/lib*)
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/vendor/lib*)
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/system/vendor/lib*)
+
+# Revert that move
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/system/lib*)
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/vendor/lib*)
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/system/vendor/lib*)
+
+# Sanitized libraries now live in a different location.
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/data/lib*)
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/data/vendor/lib*)
+
+# Soong module variant change, remove obsolete intermediates
+$(call add-clean-step, rm -rf $(OUT_DIR)/soong/.intermediates)
+
 # ************************************************
 # NEWER CLEAN STEPS MUST BE AT THE END OF THE LIST
 # ************************************************

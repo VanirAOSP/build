@@ -16,40 +16,62 @@
 
 # Provides a functioning ART environment without Android frameworks
 
+# Minimal boot classpath. This should be a subset of PRODUCT_BOOT_JARS, and equivalent to
+# TARGET_CORE_JARS.
 PRODUCT_PACKAGES += \
     apache-xml \
-    ahat \
     bouncycastle \
-    cacerts \
-    conscrypt \
     core-oj \
-    core-junit \
     core-libart \
-    dalvikvm \
-    dex2oat \
-    dexdeps \
-    dexdump \
-    dexlist \
-    dmtracedump \
-    dx \
+    conscrypt \
+    okhttp \
+
+# Additional mixins to the boot classpath.
+PRODUCT_PACKAGES += \
+    legacy-test \
+
+# Why are we pulling in ext, which is frameworks/base, depending on tagsoup and nist-sip?
+PRODUCT_PACKAGES += \
     ext \
-    hprof-conv \
-    libart \
-    libart_fake \
-    libcrypto \
+
+# Why are we pulling in expat, which is used in frameworks, only, it seem?
+PRODUCT_PACKAGES += \
     libexpat \
-    libicui18n \
-    libicuuc \
+
+# Libcore.
+PRODUCT_PACKAGES += \
     libjavacore \
     libopenjdk \
     libopenjdkjvm \
-    libnativehelper \
-    libssl \
-    libz \
-    oatdump \
-    okhttp \
+
+# Libcore ICU. TODO: Try to figure out if/why we need them explicitly.
+PRODUCT_PACKAGES += \
+    libicui18n \
+    libicuuc \
+
+# ART.
+PRODUCT_PACKAGES += \
+    dalvikvm \
+    dex2oat \
+    dexoptanalyzer \
+    libart \
+    libart_fake \
+    libopenjdkjvmti \
     patchoat \
     profman
+
+# ART/dex helpers.
+PRODUCT_PACKAGES += \
+    ahat \
+    dexdiag \
+    dexdump \
+    dexlist \
+    hprof-conv \
+    oatdump \
+
+# Certificates.
+PRODUCT_PACKAGES += \
+    cacerts \
 
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     dalvik.vm.image-dex2oat-Xms=64m \
@@ -59,4 +81,22 @@ PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     ro.dalvik.vm.native.bridge=0 \
     dalvik.vm.usejit=true \
     dalvik.vm.usejitprofiles=true \
+    dalvik.vm.dexopt.secondary=true \
     dalvik.vm.appimageformat=lz4
+
+# Different dexopt types for different package update/install times.
+# On eng builds, make "boot" reasons only extract for faster turnaround.
+ifeq (eng,$(TARGET_BUILD_VARIANT))
+    PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
+        pm.dexopt.first-boot=extract \
+        pm.dexopt.boot=extract
+else
+    PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
+        pm.dexopt.first-boot=quicken \
+        pm.dexopt.boot=verify
+endif
+
+PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
+    pm.dexopt.install=quicken \
+    pm.dexopt.bg-dexopt=speed-profile \
+    pm.dexopt.ab-ota=speed-profile

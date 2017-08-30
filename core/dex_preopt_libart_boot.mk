@@ -52,7 +52,7 @@ $($(my_2nd_arch_prefix)LIBART_TARGET_BOOT_ART_EXTRA_INSTALLED_FILES) : $($(my_2n
 
 $($(my_2nd_arch_prefix)DEFAULT_DEX_PREOPT_BUILT_IMAGE_FILENAME): PRIVATE_2ND_ARCH_VAR_PREFIX := $(my_2nd_arch_prefix)
 # Use dex2oat debug version for better error reporting
-$($(my_2nd_arch_prefix)DEFAULT_DEX_PREOPT_BUILT_IMAGE_FILENAME) : $(LIBART_TARGET_BOOT_DEX_FILES) $(DEX2OAT_DEPENDENCY)
+$($(my_2nd_arch_prefix)DEFAULT_DEX_PREOPT_BUILT_IMAGE_FILENAME) : $(LIBART_TARGET_BOOT_DEX_FILES) $(PRELOADED_CLASSES) $(COMPILED_CLASSES) $(DEX2OAT_DEPENDENCY)
 	@echo "target dex2oat: $@"
 	@mkdir -p $(dir $@)
 	@mkdir -p $(dir $($(PRIVATE_2ND_ARCH_VAR_PREFIX)LIBART_TARGET_BOOT_OAT_UNSTRIPPED))
@@ -71,6 +71,8 @@ $($(my_2nd_arch_prefix)DEFAULT_DEX_PREOPT_BUILT_IMAGE_FILENAME) : $(LIBART_TARGE
 		--instruction-set=$($(PRIVATE_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_ARCH) \
 		--instruction-set-variant=$($(PRIVATE_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_CPU_VARIANT) \
 		--instruction-set-features=$($(PRIVATE_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES) \
-		--android-root=$(PRODUCT_OUT)/system --include-patch-information --runtime-arg -Xnorelocate --no-generate-debug-info \
+		--android-root=$(PRODUCT_OUT)/system \
+		--runtime-arg -Xnorelocate --compile-pic \
+		--no-generate-debug-info --generate-build-id \
 		--multi-image --no-inline-from=core-oj.jar \
 		$(PRODUCT_DEX_PREOPT_BOOT_FLAGS) $(GLOBAL_DEXPREOPT_FLAGS) $(COMPILED_CLASSES_FLAGS) $(ART_BOOT_IMAGE_EXTRA_ARGS)

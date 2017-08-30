@@ -1,3 +1,4 @@
+$(call record-module-type,HOST_EXECUTABLE)
 LOCAL_IS_HOST_MODULE := true
 my_prefix := HOST_
 LOCAL_HOST_PREFIX :=
@@ -5,12 +6,8 @@ include $(BUILD_SYSTEM)/multilib.mk
 
 ifndef LOCAL_MODULE_HOST_ARCH
 ifndef my_module_multilib
-ifeq ($(HOST_PREFER_32_BIT),true)
-my_module_multilib := 32
-else
 # By default we only build host module for the first arch.
 my_module_multilib := first
-endif
 endif
 endif
 
@@ -19,11 +16,13 @@ LOCAL_LDFLAGS += $(HOST_FPIE_FLAGS)
 endif
 
 ifeq ($(my_module_multilib),both)
+ifneq ($(LOCAL_MODULE_CLASS),NATIVE_TESTS)
 ifeq ($(LOCAL_MODULE_PATH_32)$(LOCAL_MODULE_STEM_32),)
 $(error $(LOCAL_PATH): LOCAL_MODULE_STEM_32 or LOCAL_MODULE_PATH_32 is required for LOCAL_MULTILIB := both for module $(LOCAL_MODULE))
 endif
 ifeq ($(LOCAL_MODULE_PATH_64)$(LOCAL_MODULE_STEM_64),)
 $(error $(LOCAL_PATH): LOCAL_MODULE_STEM_64 or LOCAL_MODULE_PATH_64 is required for LOCAL_MULTILIB := both for module $(LOCAL_MODULE))
+endif
 endif
 else #!LOCAL_MULTILIB == both
 LOCAL_NO_2ND_ARCH_MODULE_SUFFIX := true

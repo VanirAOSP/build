@@ -9,43 +9,22 @@ else
 SHELL := /bin/bash
 endif
 
-# this turns off the suffix rules built into make
-.SUFFIXES:
+ifndef KATI
 
-# this turns off the RCS / SCCS implicit rules of GNU Make
-% : RCS/%,v
-% : RCS/%
-% : %,v
-% : s.%
-% : SCCS/s.%
-
-# If a rule fails, delete $@.
-.DELETE_ON_ERROR:
-
-# Figure out where we are.
-#TOP := $(dir $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
-#TOP := $(patsubst %/,%,$(TOP))
-
-# TOPDIR is the normal variable you should use, because
-# if we are executing relative to the current directory
-# it can be "", whereas TOP must be "." which causes
-# pattern matching problems when make strips off the
-# trailing "./" from paths in various places.
-#ifeq ($(TOP),.)
-#TOPDIR :=
-#else
-#TOPDIR := $(TOP)/
-#endif
-
-# Check for broken versions of make.
-ifneq (1,$(strip $(shell expr $(MAKE_VERSION) \>= 3.81)))
-$(warning ********************************************************************************)
-$(warning *  You are using version $(MAKE_VERSION) of make.)
-$(warning *  Android can only be built by versions 3.81 and higher.)
-$(warning *  see https://source.android.com/source/download.html)
-$(warning ********************************************************************************)
-$(error stopping)
+host_prebuilts := linux-x86
+ifeq ($(shell uname),Darwin)
+host_prebuilts := darwin-x86
 endif
+
+.PHONY: run_soong_ui
+run_soong_ui:
+	+@prebuilts/build-tools/$(host_prebuilts)/bin/makeparallel --ninja build/soong/soong_ui.bash --make-mode $(MAKECMDGOALS)
+
+.PHONY: $(MAKECMDGOALS)
+$(sort $(MAKECMDGOALS)) : run_soong_ui
+	@#empty
+
+else # KATI
 
 # Absolute path of the present working direcotry.
 # This overrides the shell variable $PWD, which does not necessarily points to
@@ -57,9 +36,6 @@ TOPDIR :=
 
 BUILD_SYSTEM := $(TOPDIR)build/core
 
-# Ensure JAVA_NOT_REQUIRED is not set externally.
-JAVA_NOT_REQUIRED := false
-
 # This is the default target.  It must be the first declared target.
 .PHONY: droid
 DEFAULT_GOAL := droid
@@ -68,55 +44,17 @@ $(DEFAULT_GOAL): droid_targets
 .PHONY: droid_targets
 droid_targets:
 
-# Used to force goals to build.  Only use for conditionally defined goals.
-.PHONY: FORCE
-FORCE:
-
-# These goals don't need to collect and include Android.mks/CleanSpec.mks
-# in the source tree.
-dont_bother_goals := clean clobber dataclean installclean \
-    help out \
-    snod systemimage-nodeps \
-    stnod systemtarball-nodeps \
-    userdataimage-nodeps userdatatarball-nodeps \
-    cacheimage-nodeps \
-    vendorimage-nodeps \
-    systemotherimage-nodeps \
-    ramdisk-nodeps \
-    bootimage-nodeps \
-    recoveryimage-nodeps \
-    product-graph dump-products \
-    burst novo surgical biopsy
+# Set up various standard variables based on configuration
+# and host information.
+include $(BUILD_SYSTEM)/config.mk
 
 ifneq ($(filter $(dont_bother_goals), $(MAKECMDGOALS)),)
 dont_bother := true
 endif
 
-ORIGINAL_MAKECMDGOALS := $(MAKECMDGOALS)
+include $(SOONG_MAKEVARS_MK)
 
-# Targets that provide quick help on the build system.
-include $(BUILD_SYSTEM)/help.mk
-
-# Set up various standard variables based on configuration
-# and host information.
-include $(BUILD_SYSTEM)/config.mk
-
-relaunch_with_ninja :=
-ifneq ($(USE_NINJA),false)
-ifndef BUILDING_WITH_NINJA
-relaunch_with_ninja := true
-endif
-endif
-
-ifeq ($(relaunch_with_ninja),true)
-# Mark this is a ninja build.
-$(shell mkdir -p $(OUT_DIR) && touch $(OUT_DIR)/ninja_build)
-include build/core/ninja.mk
-else # !relaunch_with_ninja
-ifndef BUILDING_WITH_NINJA
-# Remove ninja build mark if it exists.
-$(shell rm -f $(OUT_DIR)/ninja_build)
-endif
+include $(BUILD_SYSTEM)/clang/config.mk
 
 # Write the build number to a file so it can be read back in
 # without changing the command line every time.  Avoids rebuilds
@@ -124,8 +62,8 @@ endif
 $(shell mkdir -p $(OUT_DIR) && \
     echo -n $(BUILD_NUMBER) > $(OUT_DIR)/build_number.txt && \
     echo -n $(BUILD_DATETIME) > $(OUT_DIR)/build_date.txt)
-BUILD_NUMBER_FROM_FILE := $(shell cat $(OUT_DIR)/build_number.txt)
-BUILD_DATETIME_FROM_FILE := $(shell cat $(OUT_DIR)/build_date.txt)
+BUILD_NUMBER_FROM_FILE := $$(cat $(OUT_DIR)/build_number.txt)
+BUILD_DATETIME_FROM_FILE := $$(cat $(OUT_DIR)/build_date.txt)
 ifeq ($(HOST_OS),darwin)
 DATE_FROM_FILE := date -r $(BUILD_DATETIME_FROM_FILE)
 else
@@ -136,9 +74,10 @@ endif
 -include cts/build/config.mk
 # VTS-specific config.
 -include test/vts/tools/vts-tradefed/build/config.mk
-
-# CMTS-specific config.
--include vendor/cmts/build/config.mk
+# device-tests-specific-config.
+-include tools/tradefederation/build/suites/device-tests/config.mk
+# general-tests-specific-config.
+-include tools/tradefederation/build/suites/general-tests/config.mk
 
 # This allows us to force a clean build - included after the config.mk
 # environment setup is done, but before we generate any dependencies.  This
@@ -150,9 +89,9 @@ include $(BUILD_SYSTEM)/cleanbuild.mk
 -include vendor/google/build/config.mk
 
 VERSION_CHECK_SEQUENCE_NUMBER := 6
-
+JAVA_NOT_REQUIRED_CHECKED :=
 -include $(OUT_DIR)/versions_checked.mk
-ifneq ($(VERSION_CHECK_SEQUENCE_NUMBER),$(VERSIONS_CHECKED))
+ifneq ($(VERSION_CHECK_SEQUENCE_NUMBER)$(JAVA_NOT_REQUIRED),$(VERSIONS_CHECKED)$(JAVA_NOT_REQUIRED_CHECKED))
 
 $(info Checking build tools versions...)
 
@@ -183,7 +122,7 @@ $(warning ************************************************************)
 $(error Directory names containing spaces not supported)
 endif
 
-ifeq ($(JAVA_NOT_REQUIRED), false)
+ifneq ($(JAVA_NOT_REQUIRED),true)
 java_version_str := $(shell unset _JAVA_OPTIONS && java -version 2>&1)
 javac_version_str := $(shell unset _JAVA_OPTIONS && javac -version 2>&1)
 
@@ -252,6 +191,8 @@ $(shell echo 'VERSIONS_CHECKED := $(VERSION_CHECK_SEQUENCE_NUMBER)' \
         > $(OUT_DIR)/versions_checked.mk)
 $(shell echo 'BUILD_EMULATOR ?= $(BUILD_EMULATOR)' \
         >> $(OUT_DIR)/versions_checked.mk)
+$(shell echo 'JAVA_NOT_REQUIRED_CHECKED := $(JAVA_NOT_REQUIRED)' \
+        >> $(OUT_DIR)/versions_checked.mk)
 endif
 
 # These are the modifier targets that don't do anything themselves, but
@@ -263,6 +204,37 @@ INTERNAL_MODIFIER_TARGETS := showcommands all
 ifeq (true,$(EMMA_INSTRUMENT_STATIC))
 EMMA_INSTRUMENT := true
 endif
+
+#
+# -----------------------------------------------------------------
+# Validate ADDITIONAL_DEFAULT_PROPERTIES.
+ifneq ($(ADDITIONAL_DEFAULT_PROPERTIES),)
+$(error ADDITIONAL_DEFAULT_PROPERTIES must not be set before here: $(ADDITIONAL_DEFAULT_PROPERTIES))
+endif
+
+#
+# -----------------------------------------------------------------
+# Validate ADDITIONAL_BUILD_PROPERTIES.
+ifneq ($(ADDITIONAL_BUILD_PROPERTIES),)
+$(error ADDITIONAL_BUILD_PROPERTIES must not be set before here: $(ADDITIONAL_BUILD_PROPERTIES))
+endif
+
+#
+# -----------------------------------------------------------------
+# Add the product-defined properties to the build properties.
+ifdef PRODUCT_SHIPPING_API_LEVEL
+ADDITIONAL_BUILD_PROPERTIES += \
+  ro.product.first_api_level=$(PRODUCT_SHIPPING_API_LEVEL)
+endif
+
+ifneq ($(BOARD_PROPERTY_OVERRIDES_SPLIT_ENABLED), true)
+  ADDITIONAL_BUILD_PROPERTIES += $(PRODUCT_PROPERTY_OVERRIDES)
+else
+  ifndef BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE
+    ADDITIONAL_BUILD_PROPERTIES += $(PRODUCT_PROPERTY_OVERRIDES)
+  endif
+endif
+
 
 # Bring in standard build system definitions.
 include $(BUILD_SYSTEM)/definitions.mk
@@ -327,6 +299,8 @@ include build/core/pdk_config.mk
 ifneq ($(PLATFORM_VERSION_CODENAME),REL)
   ADDITIONAL_BUILD_PROPERTIES += ro.bionic.ld.warning=1
 endif
+
+ADDITIONAL_BUILD_PROPERTIES += ro.treble.enabled=${PRODUCT_FULL_TREBLE}
 
 # -----------------------------------------------------------------
 ###
@@ -429,6 +403,9 @@ ifneq ($(words $(sort $(filter-out $(INTERNAL_MODIFIER_TARGETS) checkbuild emula
 $(error The 'sdk' target may not be specified with any other targets)
 endif
 
+# AUX dependencies are already added by now; remove triggers from the MAKECMDGOALS
+MAKECMDGOALS := $(strip $(filter-out AUX-%,$(MAKECMDGOALS)))
+
 # TODO: this should be eng I think.  Since the sdk is built from the eng
 # variant.
 tags_to_install := debug eng
@@ -474,26 +451,25 @@ endif
 #
 # Typical build; include any Android.mk files we can find.
 #
-subdirs := $(TOP)
 
 FULL_BUILD := true
 
-# Before we go and include all of the module makefiles, stash away
-# the PRODUCT_* values so that later we can verify they are not modified.
-stash_product_vars:=true
-ifeq ($(stash_product_vars),true)
-  $(call stash-product-vars, __STASHED)
+# Before we go and include all of the module makefiles, mark the PRODUCT_*
+# and ADDITIONAL*PROPERTIES values readonly so that they won't be modified.
+$(call readonly-product-vars)
+ADDITIONAL_DEFAULT_PROPERTIES := $(strip $(ADDITIONAL_DEFAULT_PROPERTIES))
+.KATI_READONLY := ADDITIONAL_DEFAULT_PROPERTIES
+ADDITIONAL_BUILD_PROPERTIES := $(strip $(ADDITIONAL_BUILD_PROPERTIES))
+.KATI_READONLY := ADDITIONAL_BUILD_PROPERTIES
+
+ifneq ($(PRODUCT_ENFORCE_RRO_TARGETS),)
+ENFORCE_RRO_SOURCES :=
 endif
 
 ifneq ($(ONE_SHOT_MAKEFILE),)
 # We've probably been invoked by the "mm" shell function
 # with a subdirectory's makefile.
-
-# No Makefiles to include if we are performing a mms/short-circuit build. Only
-# the targets mentioned by main.mk and tasks/* are built (kernel, boot.img etc)
-ifneq ($(ONE_SHOT_MAKEFILE),__none__)
-include $(ONE_SHOT_MAKEFILE)
-endif
+include $(SOONG_ANDROID_MK) $(wildcard $(ONE_SHOT_MAKEFILE))
 # Change CUSTOM_MODULES to include only modules that were
 # defined by this makefile; this will install all of those
 # modules as a side-effect.  Do this after including ONE_SHOT_MAKEFILE
@@ -507,11 +483,28 @@ NOTICE-HOST-%: ;
 NOTICE-TARGET-%: ;
 
 # A helper goal printing out install paths
-.PHONY: GET-INSTALL-PATH
-GET-INSTALL-PATH:
-	@echo "Install paths for modules in $(ONE_SHOT_MAKEFILE):"
-	@$(foreach m, $(ALL_MODULES), $(if $(ALL_MODULES.$(m).INSTALLED), \
-		echo 'INSTALL-PATH: $(m) $(ALL_MODULES.$(m).INSTALLED)';))
+define register_module_install_path
+.PHONY: GET-MODULE-INSTALL-PATH-$(1)
+GET-MODULE-INSTALL-PATH-$(1):
+	echo 'INSTALL-PATH: $(1) $(ALL_MODULES.$(1).INSTALLED)'
+endef
+
+SORTED_ALL_MODULES := $(sort $(ALL_MODULES))
+UNIQUE_ALL_MODULES :=
+$(foreach m,$(SORTED_ALL_MODULES),\
+    $(if $(call streq,$(m),$(lastword $(UNIQUE_ALL_MODULES))),,\
+        $(eval UNIQUE_ALL_MODULES += $(m))))
+SORTED_ALL_MODULES :=
+
+$(foreach mod,$(UNIQUE_ALL_MODULES),$(if $(ALL_MODULES.$(mod).INSTALLED),\
+    $(eval $(call register_module_install_path,$(mod)))\
+    $(foreach path,$(ALL_MODULES.$(mod).PATH),\
+        $(eval my_path_prefix := GET-INSTALL-PATH-IN)\
+        $(foreach component,$(subst /,$(space),$(path)),\
+            $(eval my_path_prefix := $$(my_path_prefix)-$$(component))\
+            $(eval .PHONY: $$(my_path_prefix))\
+            $(eval $$(my_path_prefix): GET-MODULE-INSTALL-PATH-$(mod))))))
+UNIQUE_ALL_MODULES :=
 
 else # ONE_SHOT_MAKEFILE
 
@@ -520,14 +513,9 @@ ifneq ($(dont_bother),true)
 # Include all of the makefiles in the system
 #
 
-# Can't use first-makefiles-under here because
-# --mindepth=2 makes the prunes not work.
-subdir_makefiles := \
-	$(shell build/tools/findleaves.py $(FIND_LEAVES_EXCLUDES) $(subdirs) Android.mk)
-
-ifeq ($(USE_SOONG),true)
-subdir_makefiles := $(SOONG_ANDROID_MK) $(call filter-soong-makefiles,$(subdir_makefiles))
-endif
+subdir_makefiles := $(SOONG_ANDROID_MK) $(call first-makefiles-under,$(TOP))
+subdir_makefiles_total := $(words $(subdir_makefiles))
+.KATI_READONLY := subdir_makefiles_total
 
 $(foreach mk, $(subdir_makefiles), $(eval include $(mk)))
 
@@ -540,33 +528,17 @@ endif # dont_bother
 
 endif # ONE_SHOT_MAKEFILE
 
-# Now with all Android.mks loaded we can do post cleaning steps.
-include $(BUILD_SYSTEM)/post_clean.mk
-
-ifeq ($(stash_product_vars),true)
-  $(call assert-product-vars, __STASHED)
-endif
-
-include $(BUILD_SYSTEM)/legacy_prebuilts.mk
-ifneq ($(filter-out $(GRANDFATHERED_ALL_PREBUILT),$(strip $(notdir $(ALL_PREBUILT)))),)
-  $(warning *** Some files have been added to ALL_PREBUILT.)
-  $(warning *)
-  $(warning * ALL_PREBUILT is a deprecated mechanism that)
-  $(warning * should not be used for new files.)
-  $(warning * As an alternative, use PRODUCT_COPY_FILES in)
-  $(warning * the appropriate product definition.)
-  $(warning * build/target/product/core.mk is the product)
-  $(warning * definition used in all products.)
-  $(warning *)
-  $(foreach bad_prebuilt,$(filter-out $(GRANDFATHERED_ALL_PREBUILT),$(strip $(notdir $(ALL_PREBUILT)))),$(warning * unexpected $(bad_prebuilt) in ALL_PREBUILT))
-  $(warning *)
-  $(error ALL_PREBUILT contains unexpected files)
-endif
-
 # -------------------------------------------------------------------
 # All module makefiles have been included at this point.
 # -------------------------------------------------------------------
 
+# -------------------------------------------------------------------
+# Enforce to generate all RRO packages for modules having resource
+# overlays.
+# -------------------------------------------------------------------
+ifneq ($(PRODUCT_ENFORCE_RRO_TARGETS),)
+$(call generate_all_enforce_rro_packages)
+endif
 
 # -------------------------------------------------------------------
 # Fix up CUSTOM_MODULES to refer to installed files rather than
@@ -590,19 +562,33 @@ CUSTOM_MODULES := \
 #
 # Resolve the required module name to 32-bit or 64-bit variant.
 # Get a list of corresponding 32-bit module names, if one exists.
+ifneq ($(TARGET_TRANSLATE_2ND_ARCH),true)
 define get-32-bit-modules
-$(strip $(foreach m,$(1),\
+$(sort $(foreach m,$(1),\
   $(if $(ALL_MODULES.$(m)$(TARGET_2ND_ARCH_MODULE_SUFFIX).CLASS),\
-    $(m)$(TARGET_2ND_ARCH_MODULE_SUFFIX))))
+    $(m)$(TARGET_2ND_ARCH_MODULE_SUFFIX))\
+  $(if $(ALL_MODULES.$(m)$(HOST_2ND_ARCH_MODULE_SUFFIX).CLASS),\
+    $(m)$(HOST_2ND_ARCH_MODULE_SUFFIX))\
+    ))
 endef
 # Get a list of corresponding 32-bit module names, if one exists;
 # otherwise return the original module name
 define get-32-bit-modules-if-we-can
-$(strip $(foreach m,$(1),\
-  $(if $(ALL_MODULES.$(m)$(TARGET_2ND_ARCH_MODULE_SUFFIX).CLASS),\
-    $(m)$(TARGET_2ND_ARCH_MODULE_SUFFIX),
-    $(m))))
+$(sort $(foreach m,$(1),\
+  $(if $(ALL_MODULES.$(m)$(TARGET_2ND_ARCH_MODULE_SUFFIX).CLASS)$(ALL_MODULES.$(m)$(HOST_2ND_ARCH_MODULE_SUFFIX).CLASS),\
+    $(if $(ALL_MODULES.$(m)$(TARGET_2ND_ARCH_MODULE_SUFFIX).CLASS),$(m)$(TARGET_2ND_ARCH_MODULE_SUFFIX)) \
+    $(if $(ALL_MODULES.$(m)$(HOST_2ND_ARCH_MODULE_SUFFIX).CLASS),$(m)$(HOST_2ND_ARCH_MODULE_SUFFIX)),\
+  $(m))))
 endef
+else  # TARGET_TRANSLATE_2ND_ARCH
+# For binary translation config, by default only install the first arch.
+define get-32-bit-modules
+endef
+
+define get-32-bit-modules-if-we-can
+$(strip $(1))
+endef
+endif  # TARGET_TRANSLATE_2ND_ARCH
 
 # If a module is for a cross host os, the required modules must be for
 # that OS too.
@@ -617,7 +603,7 @@ $(foreach m,$(ALL_MODULES),\
       $(eval r := $(addprefix host_cross_,$(r))))\
     $(if $(ALL_MODULES.$(m).FOR_2ND_ARCH),\
       $(eval r_r := $(call get-32-bit-modules-if-we-can,$(r))),\
-      $(if $(filter EXECUTABLES SHARED_LIBRARIES,$(ALL_MODULES.$(m).CLASS)),\
+      $(if $(filter EXECUTABLES SHARED_LIBRARIES NATIVE_TESTS,$(ALL_MODULES.$(m).CLASS)),\
         $(eval r_r := $(r)),\
         $(eval r_r := $(r) $(call get-32-bit-modules,$(r)))\
        )\
@@ -631,16 +617,24 @@ define add-required-deps
 $(1): | $(2)
 endef
 
+# Use a normal dependency instead of an order-only dependency when installing
+# host dynamic binaries so that the timestamp of the final binary always
+# changes, even if the toc optimization has skipped relinking the binary
+# and its dependant shared libraries.
+define add-required-host-so-deps
+$(1): $(2)
+endef
+
 $(foreach m,$(ALL_MODULES), \
   $(eval r := $(ALL_MODULES.$(m).REQUIRED)) \
   $(if $(r), \
     $(eval r := $(call module-installed-files,$(r))) \
     $(eval t_m := $(filter $(TARGET_OUT_ROOT)/%, $(ALL_MODULES.$(m).INSTALLED))) \
-    $(eval h_m := $(filter $(HOST_OUT_ROOT)/%, $(ALL_MODULES.$(m).INSTALLED))) \
-    $(eval hc_m := $(filter $(HOST_CROSS_OUT_ROOT)/%, $(ALL_MODULES.$(m).INSTALLED))) \
+    $(eval h_m := $(filter $(HOST_OUT)/%, $(ALL_MODULES.$(m).INSTALLED))) \
+    $(eval hc_m := $(filter $(HOST_CROSS_OUT)/%, $(ALL_MODULES.$(m).INSTALLED))) \
     $(eval t_r := $(filter $(TARGET_OUT_ROOT)/%, $(r))) \
-    $(eval h_r := $(filter $(HOST_OUT_ROOT)/%, $(r))) \
-    $(eval hc_r := $(filter $(HOST_CROSS_OUT_ROOT)/%, $(r))) \
+    $(eval h_r := $(filter $(HOST_OUT)/%, $(r))) \
+    $(eval hc_r := $(filter $(HOST_CROSS_OUT)/%, $(r))) \
     $(eval t_m := $(filter-out $(t_r), $(t_m))) \
     $(eval h_m := $(filter-out $(h_r), $(h_m))) \
     $(eval hc_m := $(filter-out $(hc_r), $(hc_m))) \
@@ -668,11 +662,14 @@ $(foreach m,$($(if $(2),$($(1)2ND_ARCH_VAR_PREFIX))$(1)DEPENDENCIES_ON_SHARED_LI
   $(eval p := $(subst :,$(space),$(m)))\
   $(eval mod := $(firstword $(p)))\
   $(eval deps := $(subst $(comma),$(space),$(lastword $(p))))\
+  $(eval root := $(1)OUT$(if $(call streq,$(1),TARGET_),_ROOT))\
   $(if $(2),$(eval deps := $(addsuffix $($(1)2ND_ARCH_MODULE_SUFFIX),$(deps))))\
   $(if $(3),$(eval deps := $(addprefix host_cross_,$(deps))))\
-  $(eval r := $(filter $($(1)OUT)/%,$(call module-installed-files,\
+  $(eval r := $(filter $($(root))/%,$(call module-installed-files,\
     $(deps))))\
-  $(eval $(call add-required-deps,$(word 2,$(p)),$(r)))\
+  $(if $(filter $(1),HOST_),\
+    $(eval $(call add-required-host-so-deps,$(word 2,$(p)),$(r))),\
+    $(eval $(call add-required-deps,$(word 2,$(p)),$(r))))\
   $(eval ALL_MODULES.$(mod).REQUIRED += $(deps)))
 endef
 
@@ -779,7 +776,7 @@ overridden_packages := $(call get-package-overrides,$(modules_to_install))
 ifdef overridden_packages
 #  old_modules_to_install := $(modules_to_install)
   modules_to_install := \
-      $(filter-out $(foreach p,$(overridden_packages),$(p) %/$(p).apk %/$(p).odex), \
+      $(filter-out $(foreach p,$(overridden_packages),$(p) %/$(p).apk %/$(p).odex %/$(p).vdex), \
           $(modules_to_install))
 endif
 #$(error filtered out
@@ -853,9 +850,6 @@ modules_to_check := $(sort $(modules_to_check))
 # This is used to to get the ordering right, you can also use these,
 # but they're considered undocumented, so don't complain if their
 # behavior changes.
-.PHONY: prebuilt
-prebuilt: $(ALL_PREBUILT)
-
 # An internal target that depends on all copied headers
 # (see copy_headers.make).  Other targets that need the
 # headers to be copied first can depend on this target.
@@ -866,17 +860,14 @@ $(ALL_C_CPP_ETC_OBJECTS): | all_copied_headers
 
 # All the droid stuff, in directories
 .PHONY: files
-files: prebuilt \
-        $(modules_to_install) \
-        $(INSTALLED_ANDROID_INFO_TXT_TARGET)
+files: $(modules_to_install) \
+       $(INSTALLED_ANDROID_INFO_TXT_TARGET)
 
 # -------------------------------------------------------------------
 
 .PHONY: checkbuild
 checkbuild: $(modules_to_check) droid_targets
-ifeq ($(USE_SOONG),true)
-checkbuild: checkbuild-soong
-endif
+
 ifeq (true,$(ANDROID_BUILD_EVERYTHING_BY_DEFAULT))
 droid: checkbuild
 endif
@@ -903,6 +894,9 @@ userdatatarball: $(INSTALLED_USERDATATARBALL_TARGET)
 .PHONY: cacheimage
 cacheimage: $(INSTALLED_CACHEIMAGE_TARGET)
 
+.PHONY: bptimage
+bptimage: $(INSTALLED_BPTIMAGE_TARGET)
+
 .PHONY: vendorimage
 vendorimage: $(INSTALLED_VENDORIMAGE_TARGET)
 
@@ -912,20 +906,11 @@ systemotherimage: $(INSTALLED_SYSTEMOTHERIMAGE_TARGET)
 .PHONY: bootimage
 bootimage: $(INSTALLED_BOOTIMAGE_TARGET)
 
-# phony target that include any targets in $(ALL_MODULES)
-.PHONY: all_modules
-ifndef BUILD_MODULES_IN_PATHS
-all_modules: $(ALL_MODULES)
-else
-# BUILD_MODULES_IN_PATHS is a list of paths relative to the top of the tree
-build_modules_in_paths := $(patsubst ./%,%,$(BUILD_MODULES_IN_PATHS))
-module_path_patterns := $(foreach p, $(build_modules_in_paths),\
-    $(if $(filter %/,$(p)),$(p)%,$(p)/%))
-my_all_modules := $(sort $(foreach m, $(ALL_MODULES),$(if $(filter\
-    $(module_path_patterns), $(addsuffix /,$(ALL_MODULES.$(m).PATH))),$(m))))
-all_modules: $(my_all_modules)
-endif
+.PHONY: vbmetaimage
+vbmetaimage: $(INSTALLED_VBMETAIMAGE_TARGET)
 
+.PHONY: auxiliary
+auxiliary: $(INSTALLED_AUX_TARGETS)
 
 # Build files and then package it into the rom formats
 .PHONY: droidcore
@@ -933,8 +918,10 @@ droidcore: files \
 	systemimage \
 	$(INSTALLED_BOOTIMAGE_TARGET) \
 	$(INSTALLED_RECOVERYIMAGE_TARGET) \
+	$(INSTALLED_VBMETAIMAGE_TARGET) \
 	$(INSTALLED_USERDATAIMAGE_TARGET) \
 	$(INSTALLED_CACHEIMAGE_TARGET) \
+	$(INSTALLED_BPTIMAGE_TARGET) \
 	$(INSTALLED_VENDORIMAGE_TARGET) \
 	$(INSTALLED_SYSTEMOTHERIMAGE_TARGET) \
 	$(INSTALLED_FILES_FILE) \
@@ -978,15 +965,18 @@ ifneq ($(TARGET_BUILD_APPS),)
   $(SYMBOLS_ZIP) : $(apps_only_installed_files)
   $(call dist-for-goals,apps_only, $(SYMBOLS_ZIP))
 
+  $(COVERAGE_ZIP) : $(apps_only_installed_files)
+  $(call dist-for-goals,apps_only, $(COVERAGE_ZIP))
+
 .PHONY: apps_only
 apps_only: $(unbundled_build_modules)
 
 droid_targets: apps_only
 
 # Combine the NOTICE files for a apps_only build
-$(eval $(call combine-notice-files, \
+$(eval $(call combine-notice-files, html, \
     $(target_notice_file_txt), \
-    $(target_notice_file_html), \
+    $(target_notice_file_html_or_xml), \
     "Notices for files for apps:", \
     $(TARGET_OUT_NOTICE_FILES), \
     $(apps_only_installed_files)))
@@ -998,6 +988,7 @@ else # TARGET_BUILD_APPS
     $(INTERNAL_OTA_PACKAGE_TARGET) \
     $(BUILT_OTATOOLS_PACKAGE) \
     $(SYMBOLS_ZIP) \
+    $(COVERAGE_ZIP) \
     $(INSTALLED_FILES_FILE) \
     $(INSTALLED_FILES_FILE_VENDOR) \
     $(INSTALLED_FILES_FILE_SYSTEMOTHER) \
@@ -1041,13 +1032,14 @@ sdk: $(ALL_SDK_TARGETS)
 $(call dist-for-goals,sdk win_sdk, \
     $(ALL_SDK_TARGETS) \
     $(SYMBOLS_ZIP) \
+    $(COVERAGE_ZIP) \
     $(INSTALLED_BUILD_PROP_TARGET) \
 )
 
 # umbrella targets to assit engineers in verifying builds
 .PHONY: java native target host java-host java-target native-host native-target \
         java-host-tests java-target-tests native-host-tests native-target-tests \
-        java-tests native-tests host-tests target-tests tests
+        java-tests native-tests host-tests target-tests tests java-dex
 # some synonyms
 .PHONY: host-java target-java host-native target-native \
         target-java-tests target-native-tests
@@ -1059,14 +1051,8 @@ target-java-tests : java-target-tests
 target-native-tests : native-target-tests
 tests : host-tests target-tests
 
-# To catch more build breakage, check build tests modules in eng and userdebug builds.
-ifneq ($(ANDROID_NO_TEST_CHECK),true)
-ifneq ($(TARGET_BUILD_PDK),true)
-ifneq ($(filter eng userdebug,$(TARGET_BUILD_VARIANT)),)
-droidcore : target-tests host-tests
-endif
-endif
-endif
+# Phony target to run all java compilations that use javac instead of jack.
+.PHONY: javac-check
 
 ifneq (,$(filter samplecode, $(MAKECMDGOALS)))
 .PHONY: samplecode
@@ -1077,7 +1063,7 @@ sample_APKS_COLLECTION := \
 $(foreach module,$(sample_MODULES),$(eval $(call \
         copy-one-file,$(module),$(sample_APKS_DEST_PATH)/$(notdir $(module)))))
 sample_ADDITIONAL_INSTALLED := \
-        $(filter-out $(modules_to_install) $(modules_to_check) $(ALL_PREBUILT),$(sample_MODULES))
+        $(filter-out $(modules_to_install) $(modules_to_check),$(sample_MODULES))
 samplecode: $(sample_APKS_COLLECTION)
 	@echo "Collect sample code apks: $^"
 	# remove apks that are not intended to be installed.
@@ -1146,4 +1132,15 @@ showcommands:
 .PHONY: nothing
 nothing:
 	@echo Successfully read the makefiles.
-endif # !relaunch_with_ninja
+
+.PHONY: tidy_only
+tidy_only:
+	@echo Successfully make tidy_only.
+
+ndk: $(SOONG_OUT_DIR)/ndk.timestamp
+.PHONY: ndk
+
+.PHONY: all_link_types
+all_link_types:
+
+endif # KATI

@@ -19,6 +19,7 @@
 # classpaths.  They can, however, be included wholesale in
 # other java modules.
 
+$(call record-module-type,STATIC_JAVA_LIBRARY)
 LOCAL_UNINSTALLABLE_MODULE := true
 LOCAL_IS_STATIC_JAVA_LIBRARY := true
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
@@ -68,7 +69,7 @@ endif
 
 proguard_options_file :=
 
-ifneq ($(LOCAL_PROGUARD_ENABLED),custom)
+ifneq ($(filter custom,$(LOCAL_PROGUARD_ENABLED)),custom)
   proguard_options_file := $(intermediates.COMMON)/proguard_options
 endif
 
@@ -140,12 +141,6 @@ $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_RESOURCE_PUBLICS_OUTPUT := $(intermediate
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_RESOURCE_DIR := $(LOCAL_RESOURCE_DIR)
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_AAPT_INCLUDES := $(framework_res_package_export)
 
-ifneq (,$(filter-out current system_current test_current, $(LOCAL_SDK_VERSION)))
-$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_DEFAULT_APP_TARGET_SDK := $(LOCAL_SDK_VERSION)
-else
-$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_DEFAULT_APP_TARGET_SDK := $(DEFAULT_APP_TARGET_SDK)
-endif
-
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_ASSET_DIR :=
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_PROGUARD_OPTIONS_FILE := $(proguard_options_file)
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_MANIFEST_PACKAGE_NAME :=
@@ -154,8 +149,23 @@ $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_MANIFEST_INSTRUMENTATION_FOR :=
 ifdef LOCAL_USE_AAPT2
 # One more level with name res so we can zip up the flat resources that can be linked by apps.
 my_compiled_res_base_dir := $(intermediates.COMMON)/flat-res/res
+renderscript_target_api :=
+ifneq (,$(LOCAL_RENDERSCRIPT_TARGET_API))
+renderscript_target_api := $(LOCAL_RENDERSCRIPT_TARGET_API)
+else
+ifneq (,$(LOCAL_SDK_VERSION))
+# Set target-api for LOCAL_SDK_VERSIONs other than current.
+ifneq (,$(filter-out current system_current test_current, $(LOCAL_SDK_VERSION)))
+renderscript_target_api := $(LOCAL_SDK_VERSION)
+endif
+endif  # LOCAL_SDK_VERSION is set
+endif  # LOCAL_RENDERSCRIPT_TARGET_API is set
+ifneq (,$(renderscript_target_api))
+ifneq ($(call math_gt_or_eq,$(renderscript_target_api),21),true)
 my_generated_res_dirs := $(rs_generated_res_dir)
 my_generated_res_dirs_deps := $(RenderScript_file_stamp)
+endif  # renderscript_target_api < 21
+endif  # renderscript_target_api is set
 include $(BUILD_SYSTEM)/aapt2.mk
 $(my_res_package) : $(framework_res_package_export_deps)
 else
@@ -173,15 +183,22 @@ $(jack_check_timestamp): $(R_file_stamp)
 endif # LOCAL_JACK_ENABLED
 $(full_classes_compiled_jar): $(R_file_stamp)
 
+
+# if we have custom proguarding done use the proguarded classes jar instead of the normal classes jar
+ifeq ($(filter custom,$(LOCAL_PROGUARD_ENABLED)),custom)
+aar_classes_jar = $(full_classes_jar)
+else
+aar_classes_jar = $(full_classes_pre_proguard_jar)
+endif
+
 # Rule to build AAR, archive including classes.jar, resource, etc.
 built_aar := $(intermediates.COMMON)/javalib.aar
 $(built_aar): PRIVATE_MODULE := $(LOCAL_MODULE)
 $(built_aar): PRIVATE_ANDROID_MANIFEST := $(full_android_manifest)
-$(built_aar): PRIVATE_CLASSES_JAR := $(full_classes_jar)
+$(built_aar): PRIVATE_CLASSES_JAR := $(aar_classes_jar)
 $(built_aar): PRIVATE_RESOURCE_DIR := $(LOCAL_RESOURCE_DIR)
 $(built_aar): PRIVATE_R_TXT := $(LOCAL_INTERMEDIATE_SOURCE_DIR)/R.txt
-$(built_aar): PRIVATE_CONSUMER_PROGUARD_FILE := $(LOCAL_CONSUMER_PROGUARD_FILE)
-$(built_aar) : $(full_classes_jar) $(full_android_manifest)
+$(built_aar) : $(aar_classes_jar) $(full_android_manifest)
 	@echo "target AAR:  $(PRIVATE_MODULE) ($@)"
 	$(hide) rm -rf $(dir $@)aar && mkdir -p $(dir $@)aar/res
 	$(hide) cp $(PRIVATE_ANDROID_MANIFEST) $(dir $@)aar/AndroidManifest.xml
@@ -189,9 +206,6 @@ $(built_aar) : $(full_classes_jar) $(full_android_manifest)
 	# Note: Use "cp -n" to honor the resource overlay rules, if multiple res dirs exist.
 	$(hide) $(foreach res,$(PRIVATE_RESOURCE_DIR),cp -Rfn $(res)/* $(dir $@)aar/res;)
 	$(hide) cp $(PRIVATE_R_TXT) $(dir $@)aar/R.txt
-	$(hide) if [ ! -z "$(PRIVATE_CONSUMER_PROGUARD_FILE)" ]; then \
-			echo "Including '$(PRIVATE_CONSUMER_PROGUARD_FILE)'"; \
-			cp $(PRIVATE_CONSUMER_PROGUARD_FILE) $(dir $@)aar/proguard.txt; fi
 	$(hide) jar -cMf $@ \
 	  -C $(dir $@)aar .
 
@@ -200,5 +214,6 @@ ALL_MODULES.$(LOCAL_MODULE).AAR := $(built_aar)
 endif  # need_compile_res
 
 # Reset internal variables.
+aar_classes_jar :=
 all_res_assets :=
 LOCAL_IS_STATIC_JAVA_LIBRARY :=

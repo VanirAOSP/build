@@ -32,10 +32,10 @@ endif
 endif
 ifeq (stlport_shared,$(LOCAL_NDK_STL_VARIANT))
 my_jni_shared_libraries += \
-    $(HISTORICAL_NDK_VERSIONS_ROOT)/current/sources/cxx-stl/stlport/libs/$(TARGET_$(my_2nd_arch_prefix)CPU_ABI)/libstlport_shared.so
+    $(HISTORICAL_NDK_VERSIONS_ROOT)/$(LOCAL_NDK_VERSION)/sources/cxx-stl/stlport/libs/$(TARGET_$(my_2nd_arch_prefix)CPU_ABI)/libstlport_shared.so
 else ifeq (c++_shared,$(LOCAL_NDK_STL_VARIANT))
 my_jni_shared_libraries += \
-    $(HISTORICAL_NDK_VERSIONS_ROOT)/current/sources/cxx-stl/llvm-libc++/libs/$(TARGET_$(my_2nd_arch_prefix)CPU_ABI)/libc++_shared.so
+    $(HISTORICAL_NDK_VERSIONS_ROOT)/$(LOCAL_NDK_VERSION)/sources/cxx-stl/llvm-libc++/libs/$(TARGET_$(my_2nd_arch_prefix)CPU_ABI)/libc++_shared.so
 endif
 
 # Set the abi directory used by the local JNI shared libraries.
@@ -59,6 +59,8 @@ my_shared_library_path := $($(my_2nd_arch_prefix)TARGET_OUT$(partition_tag)_SHAR
 $(LOCAL_INSTALLED_MODULE) : $(addprefix $(my_shared_library_path)/, $(my_jni_filenames))
 
 # Create symlink in the app specific lib path
+# Skip creating this symlink when running the second part of a target sanitization build.
+ifndef SANITIZE_TARGET
 ifdef LOCAL_POST_INSTALL_CMD
 # Add a shell command separator
 LOCAL_POST_INSTALL_CMD += ;
@@ -70,6 +72,11 @@ LOCAL_POST_INSTALL_CMD += \
   mkdir -p $(my_app_lib_path) \
   $(foreach lib, $(my_jni_filenames), ;ln -sf $(my_symlink_target_dir)/$(lib) $(my_app_lib_path)/$(lib))
 $(LOCAL_INSTALLED_MODULE): PRIVATE_POST_INSTALL_CMD := $(LOCAL_POST_INSTALL_CMD)
+else
+ifdef LOCAL_POST_INSTALL_CMD
+$(LOCAL_INSTALLED_MODULE): PRIVATE_POST_INSTALL_CMD := $(LOCAL_POST_INSTALL_CMD)
+endif
+endif
 
 # Clear jni_shared_libraries to not embed it into the apk.
 my_jni_shared_libraries :=
@@ -98,3 +105,33 @@ $(LOCAL_INSTALLED_MODULE) : $(addprefix $(my_app_lib_path)/, $(notdir $(my_prebu
 endif  # my_embed_jni
 endif  # inner my_prebuilt_jni_libs
 endif  # outer my_prebuilt_jni_libs
+
+# Verify that all included libraries are built against the NDK
+ifneq ($(strip $(LOCAL_JNI_SHARED_LIBRARIES)),)
+my_link_type := $(call intermediates-dir-for,APPS,$(LOCAL_MODULE))/$(my_2nd_arch_prefix)jni_link_type
+all_link_types: $(my_link_type)
+my_link_type_deps := $(strip \
+  $(foreach l,$(LOCAL_JNI_SHARED_LIBRARIES),\
+    $(call intermediates-dir-for,SHARED_LIBRARIES,$(l),,,$(my_2nd_arch_prefix))/link_type))
+ifneq ($(LOCAL_SDK_VERSION),)
+$(my_link_type): PRIVATE_LINK_TYPE := app:sdk
+$(my_link_type): PRIVATE_WARN_TYPES := native:platform
+$(my_link_type): PRIVATE_ALLOWED_TYPES := native:ndk
+else
+$(my_link_type): PRIVATE_LINK_TYPE := app:platform
+$(my_link_type): PRIVATE_WARN_TYPES :=
+$(my_link_type): PRIVATE_ALLOWED_TYPES := native:ndk native:platform
+endif
+$(eval $(call link-type-partitions,$(my_link_type)))
+$(my_link_type): PRIVATE_DEPS := $(my_link_type_deps)
+$(my_link_type): PRIVATE_MODULE := $(LOCAL_MODULE)
+$(my_link_type): PRIVATE_MAKEFILE := $(LOCAL_MODULE_MAKEFILE)
+$(my_link_type): $(my_link_type_deps) $(CHECK_LINK_TYPE)
+	@echo Check JNI module types: $@
+	$(check-link-type)
+
+$(LOCAL_BUILT_MODULE): | $(my_link_type)
+
+my_link_type :=
+my_link_type_deps :=
+endif

@@ -49,6 +49,37 @@ endef
 backslash := \a
 backslash := $(patsubst %a,%,$(backslash))
 
+# this turns off the suffix rules built into make
+.SUFFIXES:
+
+# this turns off the RCS / SCCS implicit rules of GNU Make
+% : RCS/%,v
+% : RCS/%
+% : %,v
+% : s.%
+% : SCCS/s.%
+
+# If a rule fails, delete $@.
+.DELETE_ON_ERROR:
+
+# Check for broken versions of make.
+ifndef KATI
+ifneq (1,$(strip $(shell expr $(MAKE_VERSION) \>= 3.81)))
+$(warning ********************************************************************************)
+$(warning *  You are using version $(MAKE_VERSION) of make.)
+$(warning *  Android can only be built by versions 3.81 and higher.)
+$(warning *  see https://source.android.com/source/download.html)
+$(warning ********************************************************************************)
+$(error stopping)
+endif
+endif
+
+# Used to force goals to build.  Only use for conditionally defined goals.
+.PHONY: FORCE
+FORCE:
+
+ORIGINAL_MAKECMDGOALS := $(MAKECMDGOALS)
+
 # Tell python not to spam the source tree with .pyc files.  This
 # only has an effect on python 2.6 and above.
 export PYTHONDONTWRITEBYTECODE := 1
@@ -58,24 +89,6 @@ $(warning The build system needs unmodified output of grep.)
 $(error Please remove --color=always from your  $$GREP_OPTIONS)
 endif
 
-# Standard source directories.
-SRC_DOCS:= $(TOPDIR)docs
-# TODO: Enforce some kind of layering; only add include paths
-#       when a module links against a particular library.
-# TODO: See if we can remove most of these from the global list.
-SRC_HEADERS := \
-	$(TOPDIR)system/core/include \
-	$(TOPDIR)system/media/audio/include \
-	$(TOPDIR)hardware/libhardware/include \
-	$(TOPDIR)hardware/libhardware_legacy/include \
-	$(TOPDIR)libnativehelper/include \
-	$(TOPDIR)frameworks/native/include \
-	$(TOPDIR)frameworks/native/opengl/include \
-	$(TOPDIR)frameworks/av/include \
-	$(TOPDIR)frameworks/base/include
-SRC_HOST_HEADERS:=$(TOPDIR)tools/include
-SRC_LIBRARIES:= $(TOPDIR)libs
-SRC_SERVERS:= $(TOPDIR)servers
 SRC_TARGET_DIR := $(TOPDIR)build/target
 SRC_API_DIR := $(TOPDIR)prebuilts/sdk/api
 SRC_SYSTEM_API_DIR := $(TOPDIR)prebuilts/sdk/system-api
@@ -83,6 +96,10 @@ SRC_TEST_API_DIR := $(TOPDIR)prebuilts/sdk/test-api
 
 # Some specific paths to tools
 SRC_DROIDDOC_DIR := $(TOPDIR)build/tools/droiddoc
+
+# Set up efficient math functions which are used in make.
+# Here since this file is included by envsetup as well as during build.
+include $(BUILD_SYSTEM)/math.mk
 
 # Various mappings to avoid hard-coding paths all over the place
 include $(BUILD_SYSTEM)/pathmap.mk
@@ -97,6 +114,9 @@ CLEAR_VARS:= $(BUILD_SYSTEM)/clear_vars.mk
 BUILD_HOST_STATIC_LIBRARY:= $(BUILD_SYSTEM)/host_static_library.mk
 BUILD_HOST_SHARED_LIBRARY:= $(BUILD_SYSTEM)/host_shared_library.mk
 BUILD_STATIC_LIBRARY:= $(BUILD_SYSTEM)/static_library.mk
+BUILD_HEADER_LIBRARY:= $(BUILD_SYSTEM)/header_library.mk
+BUILD_AUX_STATIC_LIBRARY:= $(BUILD_SYSTEM)/aux_static_library.mk
+BUILD_AUX_EXECUTABLE:= $(BUILD_SYSTEM)/aux_executable.mk
 BUILD_SHARED_LIBRARY:= $(BUILD_SYSTEM)/shared_library.mk
 BUILD_EXECUTABLE:= $(BUILD_SYSTEM)/executable.mk
 BUILD_HOST_EXECUTABLE:= $(BUILD_SYSTEM)/host_executable.mk
@@ -183,7 +203,14 @@ include $(BUILD_SYSTEM)/envsetup.mk
 
 # Pruned directory options used when using findleaves.py
 # See envsetup.mk for a description of SCAN_EXCLUDE_DIRS
-FIND_LEAVES_EXCLUDES := $(addprefix --prune=, $(OUT_DIR) $(SCAN_EXCLUDE_DIRS) .repo .git)
+FIND_LEAVES_EXCLUDES := $(addprefix --prune=, $(SCAN_EXCLUDE_DIRS) .repo .git)
+
+# General entries for project pathmap.  Any entries listed here should
+# be device and hardware independent.
+$(call project-set-path-variant,recovery,RECOVERY_VARIANT,bootable/recovery)
+
+-include vendor/extra/BoardConfigExtra.mk
+-include vendor/lineage/config/BoardConfigLineage.mk
 
 # General entries for project pathmap.  Any entries listed here should
 # be device and hardware independent.
@@ -223,8 +250,8 @@ $(call project-set-path-variant,recovery,RECOVERY_VARIANT,bootable/recovery)
 #     etc.
 #
 # NOTE: These directories MUST contain post-processed headers using the
-# bionic/libc/kernel/clean_header.py tool. Additionally, the original kernel
-# headers must also be checked in, but in a different subdirectory. By
+# bionic/libc/kernel/tools/clean_header.py tool. Additionally, the original
+# kernel headers must also be checked in, but in a different subdirectory. By
 # convention, the originals should be checked into original-kernel-headers
 # directory of the same parent dir. For example,
 #     device/samsung/tuna/kernel-headers            <----- post-processed
@@ -259,6 +286,9 @@ ifeq ($(TARGET_CPU_ABI),)
 endif
 TARGET_CPU_ABI2 := $(strip $(TARGET_CPU_ABI2))
 
+BOARD_KERNEL_BASE := $(strip $(BOARD_KERNEL_BASE))
+BOARD_KERNEL_PAGESIZE := $(strip $(BOARD_KERNEL_PAGESIZE))
+
 # Commands to generate .toc file common to ELF .so files.
 define _gen_toc_command_for_elf
 $(hide) ($($(PRIVATE_2ND_ARCH_VAR_PREFIX)$(PRIVATE_PREFIX)READELF) -d $(1) | grep SONAME || echo "No SONAME for $1") > $(2)
@@ -268,7 +298,7 @@ endef
 # Commands to generate .toc file from Darwin dynamic library.
 define _gen_toc_command_for_macho
 $(hide) otool -l $(1) | grep LC_ID_DYLIB -A 5 > $(2)
-$(hide) nm -gP $(1) | cut -f1-2 -d" " | grep -v U$$ >> $(2)
+$(hide) nm -gP $(1) | cut -f1-2 -d" " | (grep -v U$$ >> $(2) || true)
 endef
 
 combo_target := HOST_
@@ -309,8 +339,13 @@ combo_2nd_arch_prefix := $(TARGET_2ND_ARCH_VAR_PREFIX)
 include $(BUILD_SYSTEM)/combo/select.mk
 endif
 
+ifndef KATI
 include $(BUILD_SYSTEM)/ccache.mk
 include $(BUILD_SYSTEM)/goma.mk
+
+export CC_WRAPPER
+export CXX_WRAPPER
+endif
 
 ifdef TARGET_PREFER_32_BIT
 TARGET_PREFER_32_BIT_APPS := true
@@ -365,40 +400,41 @@ TARGET_CPU_ABI_LIST := $(subst $(space),$(comma),$(strip $(TARGET_CPU_ABI_LIST))
 TARGET_CPU_ABI_LIST_32_BIT := $(subst $(space),$(comma),$(strip $(TARGET_CPU_ABI_LIST_32_BIT)))
 TARGET_CPU_ABI_LIST_64_BIT := $(subst $(space),$(comma),$(strip $(TARGET_CPU_ABI_LIST_64_BIT)))
 
-# Compute TARGET_TOOLCHAIN_ROOT from TARGET_TOOLS_PREFIX
-# if only TARGET_TOOLS_PREFIX is passed to the make command.
-ifndef TARGET_TOOLCHAIN_ROOT
-TARGET_TOOLCHAIN_ROOT := $(patsubst %/, %, $(dir $(TARGET_TOOLS_PREFIX)))
-TARGET_TOOLCHAIN_ROOT := $(patsubst %/, %, $(dir $(TARGET_TOOLCHAIN_ROOT)))
-TARGET_TOOLCHAIN_ROOT := $(wildcard $(TARGET_TOOLCHAIN_ROOT))
+# GCC version selection
+TARGET_GCC_VERSION := 4.9
+ifdef TARGET_2ND_ARCH
+2ND_TARGET_GCC_VERSION := 4.9
 endif
 
-# Normalize WITH_STATIC_ANALYZER and WITH_SYNTAX_CHECK
+# Normalize WITH_STATIC_ANALYZER
 ifeq ($(strip $(WITH_STATIC_ANALYZER)),0)
   WITH_STATIC_ANALYZER :=
-endif
-ifeq ($(strip $(WITH_SYNTAX_CHECK)),0)
-  WITH_SYNTAX_CHECK :=
 endif
 
 # define clang/llvm versions and base directory.
 include $(BUILD_SYSTEM)/clang/versions.mk
 
-# Disable WITH_STATIC_ANALYZER and WITH_SYNTAX_CHECK if tool can't be found
+# Unset WITH_TIDY_ONLY if global WITH_TIDY_ONLY is not true nor 1.
+ifeq (,$(filter 1 true,$(WITH_TIDY_ONLY)))
+  WITH_TIDY_ONLY :=
+endif
+
+PATH_TO_CLANG_TIDY := \
+    $(LLVM_PREBUILTS_BASE)/$(BUILD_OS)-x86/$(LLVM_PREBUILTS_VERSION)/bin/clang-tidy
+ifeq ($(wildcard $(PATH_TO_CLANG_TIDY)),)
+  ifneq (,$(filter 1 true,$(WITH_TIDY)))
+    $(warning *** Disable WITH_TIDY because $(PATH_TO_CLANG_TIDY) does not exist)
+  endif
+  PATH_TO_CLANG_TIDY :=
+endif
+
+# Disable WITH_STATIC_ANALYZER if tool can't be found
 SYNTAX_TOOLS_PREFIX := \
     $(LLVM_PREBUILTS_BASE)/$(BUILD_OS)-x86/$(LLVM_PREBUILTS_VERSION)/tools/scan-build/libexec
 ifneq ($(strip $(WITH_STATIC_ANALYZER)),)
   ifeq ($(wildcard $(SYNTAX_TOOLS_PREFIX)/ccc-analyzer),)
     $(warning *** Disable WITH_STATIC_ANALYZER because $(SYNTAX_TOOLS_PREFIX)/ccc-analyzer does not exist)
     WITH_STATIC_ANALYZER :=
-  endif
-endif
-
-# WITH_STATIC_ANALYZER trumps WITH_SYNTAX_CHECK
-ifneq ($(strip $(WITH_STATIC_ANALYZER)),)
-  ifneq ($(strip $(WITH_SYNTAX_CHECK)),)
-    $(warning *** Disable WITH_SYNTAX_CHECK in the presence of static analyzer WITH_STATIC_ANALYZER)
-    WITH_SYNTAX_CHECK :=
   endif
 endif
 
@@ -480,8 +516,9 @@ BUILD_PLATFORM_ZIP := $(filter platform platform-java,$(MAKECMDGOALS))
 #
 # Tools that are prebuilts for TARGET_BUILD_APPS
 #
+prebuilt_sdk_tools := prebuilts/sdk/tools
+prebuilt_sdk_tools_bin := $(prebuilt_sdk_tools)/$(HOST_OS)/bin
 
-ACP := $(HOST_OUT_EXECUTABLES)/acp
 AIDL := $(HOST_OUT_EXECUTABLES)/aidl
 AAPT := $(HOST_OUT_EXECUTABLES)/aapt
 AAPT2 := $(HOST_OUT_EXECUTABLES)/aapt2
@@ -490,18 +527,32 @@ SIGNAPK_JAR := $(HOST_OUT_JAVA_LIBRARIES)/signapk$(COMMON_JAVA_PACKAGE_SUFFIX)
 SIGNAPK_JNI_LIBRARY_PATH := $(HOST_OUT_SHARED_LIBRARIES)
 LLVM_RS_CC := $(HOST_OUT_EXECUTABLES)/llvm-rs-cc
 BCC_COMPAT := $(HOST_OUT_EXECUTABLES)/bcc_compat
+DEPMOD := $(HOST_OUT_EXECUTABLES)/depmod
 
 DX := $(HOST_OUT_EXECUTABLES)/dx
 MAINDEXCLASSES := $(HOST_OUT_EXECUTABLES)/mainDexClasses
+
+SOONG_ZIP := $(SOONG_HOST_OUT_EXECUTABLES)/soong_zip
+ZIP2ZIP := $(SOONG_HOST_OUT_EXECUTABLES)/zip2zip
+FILESLIST := $(SOONG_HOST_OUT_EXECUTABLES)/fileslist
+
+# Always use prebuilts for ckati and makeparallel
+prebuilt_build_tools := prebuilts/build-tools
+ifeq ($(filter address,$(SANITIZE_HOST)),)
+prebuilt_build_tools_bin := $(prebuilt_build_tools)/$(HOST_PREBUILT_TAG)/bin
+else
+prebuilt_build_tools_bin := $(prebuilt_build_tools)/$(HOST_PREBUILT_TAG)/asan/bin
+endif
+ACP := $(prebuilt_build_tools_bin)/acp
+CKATI := $(prebuilt_build_tools_bin)/ckati
+IJAR := $(prebuilt_build_tools_bin)/ijar
+MAKEPARALLEL := $(prebuilt_build_tools_bin)/makeparallel
+ZIPTIME := $(prebuilt_build_tools_bin)/ziptime
 
 USE_PREBUILT_SDK_TOOLS_IN_PLACE := true
 
 # Override the definitions above for unbundled and PDK builds
 ifneq (,$(TARGET_BUILD_APPS)$(filter true,$(TARGET_BUILD_PDK)))
-prebuilt_sdk_tools := prebuilts/sdk/tools
-prebuilt_sdk_tools_bin := $(prebuilt_sdk_tools)/$(HOST_OS)/bin
-
-ACP := $(prebuilt_sdk_tools_bin)/acp
 AIDL := $(prebuilt_sdk_tools_bin)/aidl
 AAPT := $(prebuilt_sdk_tools_bin)/aapt
 AAPT2 := $(prebuilt_sdk_tools_bin)/aapt2
@@ -519,6 +570,8 @@ LLVM_RS_CC := $(prebuilt_sdk_tools_bin)/llvm-rs-cc
 BCC_COMPAT := $(prebuilt_sdk_tools_bin)/bcc_compat
 endif # TARGET_BUILD_PDK
 endif # TARGET_BUILD_APPS || TARGET_BUILD_PDK
+prebuilt_sdk_tools :=
+prebuilt_sdk_tools_bin :=
 
 
 # ---------------------------------------------------------------
@@ -537,11 +590,11 @@ endif
 BISON_PKGDATADIR := $(PWD)/external/bison/data
 BISON := prebuilts/misc/$(BUILD_OS)-$(HOST_PREBUILT_ARCH)/bison/bison
 YACC := $(BISON) -d
+BISON_DATA := $(wildcard external/bison/data/* external/bison/data/*/*)
 
 YASM := prebuilts/misc/$(BUILD_OS)-$(HOST_PREBUILT_ARCH)/yasm/yasm
 
 DOXYGEN:= doxygen
-AIDL_CPP := $(HOST_OUT_EXECUTABLES)/aidl-cpp$(HOST_EXECUTABLE_SUFFIX)
 ifeq ($(HOST_OS),linux)
 BREAKPAD_DUMP_SYMS := $(HOST_OUT_EXECUTABLES)/dump_syms
 else
@@ -549,8 +602,11 @@ else
 BREAKPAD_GENERATE_SYMBOLS := false
 endif
 PROTOC := $(HOST_OUT_EXECUTABLES)/aprotoc$(HOST_EXECUTABLE_SUFFIX)
+NANOPB_SRCS := external/nanopb-c/generator/protoc-gen-nanopb \
+    $(wildcard external/nanopb-c/generator/*.py \
+               external/nanopb-c/generator/google/*.py \
+               external/nanopb-c/generator/proto/*.py)
 VTSC := $(HOST_OUT_EXECUTABLES)/vtsc$(HOST_EXECUTABLE_SUFFIX)
-DBUS_GENERATOR := $(HOST_OUT_EXECUTABLES)/dbus-binding-generator
 MKBOOTFS := $(HOST_OUT_EXECUTABLES)/mkbootfs$(HOST_EXECUTABLE_SUFFIX)
 MINIGZIP := $(HOST_OUT_EXECUTABLES)/minigzip$(HOST_EXECUTABLE_SUFFIX)
 ifeq (,$(strip $(BOARD_CUSTOM_MKBOOTIMG)))
@@ -558,13 +614,28 @@ MKBOOTIMG := $(HOST_OUT_EXECUTABLES)/mkbootimg$(HOST_EXECUTABLE_SUFFIX)
 else
 MKBOOTIMG := $(BOARD_CUSTOM_MKBOOTIMG)
 endif
-MKYAFFS2 := $(HOST_OUT_EXECUTABLES)/mkyaffs2image$(HOST_EXECUTABLE_SUFFIX)
+ifeq (,$(strip $(BOARD_CUSTOM_BPTTOOL)))
+BPTTOOL := $(HOST_OUT_EXECUTABLES)/bpttool$(HOST_EXECUTABLE_SUFFIX)
+else
+BPTTOOL := $(BOARD_CUSTOM_BPTTOOL)
+endif
+ifeq (,$(strip $(BOARD_CUSTOM_AVBTOOL)))
+AVBTOOL := $(HOST_OUT_EXECUTABLES)/avbtool$(HOST_EXECUTABLE_SUFFIX)
+else
+AVBTOOL := $(BOARD_CUSTOM_AVBTOOL)
+endif
 APICHECK := $(HOST_OUT_EXECUTABLES)/apicheck$(HOST_EXECUTABLE_SUFFIX)
-MKIMAGE :=  $(HOST_OUT_EXECUTABLES)/mkimage$(HOST_EXECUTABLE_SUFFIX)
 FS_GET_STATS := $(HOST_OUT_EXECUTABLES)/fs_get_stats$(HOST_EXECUTABLE_SUFFIX)
+ifeq ($(TARGET_USES_MKE2FS),true)
+MAKE_EXT4FS := $(HOST_OUT_EXECUTABLES)/mke2fs$(HOST_EXECUTABLE_SUFFIX)
+MKEXTUSERIMG := $(HOST_OUT_EXECUTABLES)/mkuserimg_mke2fs.sh
+MKE2FS_CONF := system/extras/ext4_utils/mke2fs.conf
+else
 MAKE_EXT4FS := $(HOST_OUT_EXECUTABLES)/make_ext4fs$(HOST_EXECUTABLE_SUFFIX)
-BLK_ALLOC_TO_BASE_FS := $(HOST_OUT_EXECUTABLES)/blk_alloc_to_base_fs$(HOST_EXECUTABLE_SUFFIX)
 MKEXTUSERIMG := $(HOST_OUT_EXECUTABLES)/mkuserimg.sh
+MKE2FS_CONF :=
+endif
+BLK_ALLOC_TO_BASE_FS := $(HOST_OUT_EXECUTABLES)/blk_alloc_to_base_fs$(HOST_EXECUTABLE_SUFFIX)
 MAKE_SQUASHFS := $(HOST_OUT_EXECUTABLES)/mksquashfs$(HOST_EXECUTABLE_SUFFIX)
 MKSQUASHFSUSERIMG := $(HOST_OUT_EXECUTABLES)/mksquashfsimage.sh
 MAKE_F2FS := $(HOST_OUT_EXECUTABLES)/make_f2fs$(HOST_EXECUTABLE_SUFFIX)
@@ -574,9 +645,11 @@ IMG2SIMG := $(HOST_OUT_EXECUTABLES)/img2simg$(HOST_EXECUTABLE_SUFFIX)
 E2FSCK := $(HOST_OUT_EXECUTABLES)/e2fsck$(HOST_EXECUTABLE_SUFFIX)
 MKTARBALL := build/tools/mktarball.sh
 TUNE2FS := $(HOST_OUT_EXECUTABLES)/tune2fs$(HOST_EXECUTABLE_SUFFIX)
-E2FSCK := $(HOST_OUT_EXECUTABLES)/e2fsck$(HOST_EXECUTABLE_SUFFIX)
 JARJAR := $(HOST_OUT_JAVA_LIBRARIES)/jarjar.jar
+DESUGAR := $(HOST_OUT_JAVA_LIBRARIES)/desugar.jar
 DATA_BINDING_COMPILER := $(HOST_OUT_JAVA_LIBRARIES)/databinding-compiler.jar
+FAT16COPY := build/tools/fat16copy.py
+CHECK_LINK_TYPE := build/tools/check_link_type.py
 
 ifeq ($(ANDROID_COMPILE_WITH_JACK),true)
 DEFAULT_JACK_ENABLED:=full
@@ -584,16 +657,17 @@ else
 DEFAULT_JACK_ENABLED:=
 endif
 ifneq ($(ANDROID_JACK_EXTRA_ARGS),)
+JACK_DEFAULT_ARGS :=
 DEFAULT_JACK_EXTRA_ARGS := $(ANDROID_JACK_EXTRA_ARGS)
 else
-DEFAULT_JACK_EXTRA_ARGS := @$(BUILD_SYSTEM)/jack-default.args
+JACK_DEFAULT_ARGS := $(BUILD_SYSTEM)/jack-default.args
+DEFAULT_JACK_EXTRA_ARGS := @$(JACK_DEFAULT_ARGS)
 endif
-# Turn off jack warnings by default.
-DEFAULT_JACK_EXTRA_ARGS += --verbose error
 
 PROGUARD := external/proguard/bin/proguard.sh
 JAVATAGS := build/tools/java-event-log-tags.py
-RMTYPEDEFS := $(HOST_OUT_EXECUTABLES)/rmtypedefs
+MERGETAGS := build/tools/merge-event-log-tags.py
+BUILD_IMAGE_SRCS := $(wildcard build/tools/releasetools/*.py)
 APPEND2SIMG := $(HOST_OUT_EXECUTABLES)/append2simg
 VERITY_SIGNER := $(HOST_OUT_EXECUTABLES)/verity_signer
 BUILD_VERITY_TREE := $(HOST_OUT_EXECUTABLES)/build_verity_tree
@@ -602,14 +676,8 @@ FUTILITY := $(HOST_OUT_EXECUTABLES)/futility-host
 VBOOT_SIGNER := prebuilts/misc/scripts/vboot_signer/vboot_signer.sh
 FEC := $(HOST_OUT_EXECUTABLES)/fec
 
-ifndef TARGET_BUILD_APPS
-ZIPTIME := $(HOST_OUT_EXECUTABLES)/ziptime$(HOST_EXECUTABLE_SUFFIX)
-endif
-
-# ijar converts a .jar file to a smaller .jar file which only has its
-# interfaces.
-IJAR := $(HOST_OUT_EXECUTABLES)/ijar$(BUILD_EXECUTABLE_SUFFIX)
 DEXDUMP := $(HOST_OUT_EXECUTABLES)/dexdump2$(BUILD_EXECUTABLE_SUFFIX)
+PROFMAN := $(HOST_OUT_EXECUTABLES)/profman
 
 # relocation packer
 RELOCATION_PACKER := prebuilts/misc/$(BUILD_OS)-$(HOST_PREBUILT_ARCH)/relocation_packer/relocation_packer
@@ -652,6 +720,16 @@ APICHECK_CLASSPATH := $(APICHECK_CLASSPATH):$(HOST_OUT_JAVA_LIBRARIES)/doclava$(
 APICHECK_CLASSPATH := $(APICHECK_CLASSPATH):$(HOST_OUT_JAVA_LIBRARIES)/jsilver$(COMMON_JAVA_PACKAGE_SUFFIX)
 APICHECK_COMMAND := $(APICHECK) -JXmx1024m -J"classpath $(APICHECK_CLASSPATH)"
 
+# Boolean variable determining if Treble is fully enabled
+PRODUCT_FULL_TREBLE := false
+ifneq ($(PRODUCT_FULL_TREBLE_OVERRIDE),)
+  PRODUCT_FULL_TREBLE := $(PRODUCT_FULL_TREBLE_OVERRIDE)
+else ifeq ($(PRODUCT_SHIPPING_API_LEVEL),)
+  #$(warning no product shipping level defined)
+else ifneq ($(call math_gt_or_eq,$(PRODUCT_SHIPPING_API_LEVEL),26),)
+  PRODUCT_FULL_TREBLE := true
+endif
+
 # The default key if not set as LOCAL_CERTIFICATE
 ifdef PRODUCT_DEFAULT_DEV_CERTIFICATE
   DEFAULT_SYSTEM_DEV_CERTIFICATE := $(PRODUCT_DEFAULT_DEV_CERTIFICATE)
@@ -659,50 +737,12 @@ else
   DEFAULT_SYSTEM_DEV_CERTIFICATE := build/target/product/security/testkey
 endif
 
-# Rules for QCOM targets
-include vendor/vanir/build/core/qcom_target.mk
-
-# Rules for MTK targets
-include vendor/vanir/build/core/mtk_target.mk
+FRAMEWORK_MANIFEST_FILE := system/libhidl/manifest.xml
+FRAMEWORK_COMPATIBILITY_MATRIX_FILE := hardware/interfaces/compatibility_matrix.xml
 
 # ###############################################################
 # Set up final options.
 # ###############################################################
-
-ifneq ($(COMMON_GLOBAL_CFLAGS)$(COMMON_GLOBAL_CPPFLAGS),)
-$(warning COMMON_GLOBAL_C(PP)FLAGS changed)
-$(info *** Device configurations are no longer allowed to change the global flags.)
-$(info *** COMMON_GLOBAL_CFLAGS: $(COMMON_GLOBAL_CFLAGS))
-$(info *** COMMON_GLOBAL_CPPFLAGS: $(COMMON_GLOBAL_CPPFLAGS))
-$(error bailing...)
-endif
-
-# These can be changed to modify both host and device modules.
-COMMON_GLOBAL_CFLAGS:= -DANDROID -fmessage-length=0 -W -Wall -Wno-unused -Winit-self -Wpointer-arith
-COMMON_RELEASE_CFLAGS:= -DNDEBUG -UDEBUG
-
-# Force gcc to always output color diagnostics.  Ninja will strip the ANSI
-# color codes if it is not running in a terminal.
-ifdef BUILDING_WITH_NINJA
-COMMON_GLOBAL_CFLAGS += -fdiagnostics-color
-endif
-
-COMMON_GLOBAL_CPPFLAGS:= -Wsign-promo
-COMMON_RELEASE_CPPFLAGS:=
-
-GLOBAL_CFLAGS_NO_OVERRIDE := \
-    -Werror=int-to-pointer-cast \
-    -Werror=pointer-to-int-cast \
-
-GLOBAL_CLANG_CFLAGS_NO_OVERRIDE := \
-    -Werror=address-of-temporary \
-    -Werror=null-dereference \
-    -Werror=return-type \
-
-GLOBAL_CPPFLAGS_NO_OVERRIDE :=
-
-# list of flags to turn specific warnings in to errors
-TARGET_ERROR_FLAGS := -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Werror=date-time
 
 # We run gcc/clang with PWD=/proc/self/cwd to remove the $TOP
 # from the debug output. That way two builds in two different
@@ -710,118 +750,23 @@ TARGET_ERROR_FLAGS := -Werror=return-type -Werror=non-virtual-dtor -Werror=addre
 # /proc doesn't exist on Darwin.
 ifeq ($(HOST_OS),linux)
 RELATIVE_PWD := PWD=/proc/self/cwd
-# Remove this useless prefix from the debug output.
-COMMON_GLOBAL_CFLAGS += -fdebug-prefix-map=/proc/self/cwd=
 else
 RELATIVE_PWD :=
 endif
 
-# Allow the C/C++ macros __DATE__ and __TIME__ to be set to the
-# build date and time, so that a build may be repeated.
-# Write the date and time to a file so that the command line
-# doesn't change every time, which would cause ninja to rebuild
-# the files.
-$(shell mkdir -p $(OUT_DIR) && \
-    $(DATE) "+%b %_d %Y" > $(OUT_DIR)/build_c_date.txt && \
-    $(DATE) +%T > $(OUT_DIR)/build_c_time.txt)
-BUILD_DATETIME_C_DATE := $$(cat $(OUT_DIR)/build_c_date.txt)
-BUILD_DATETIME_C_TIME := $$(cat $(OUT_DIR)/build_c_time.txt)
-ifeq ($(OVERRIDE_C_DATE_TIME),true)
-COMMON_GLOBAL_CFLAGS += -Wno-builtin-macro-redefined -D__DATE__="\"$(BUILD_DATETIME_C_DATE)\"" -D__TIME__=\"$(BUILD_DATETIME_C_TIME)\"
-endif
-
-HOST_GLOBAL_CFLAGS += $(COMMON_GLOBAL_CFLAGS)
-HOST_RELEASE_CFLAGS += $(COMMON_RELEASE_CFLAGS)
-
-HOST_GLOBAL_CPPFLAGS += $(COMMON_GLOBAL_CPPFLAGS)
-HOST_RELEASE_CPPFLAGS += $(COMMON_RELEASE_CPPFLAGS)
-
-TARGET_GLOBAL_CFLAGS += $(COMMON_GLOBAL_CFLAGS)
-TARGET_RELEASE_CFLAGS += $(COMMON_RELEASE_CFLAGS)
-
-TARGET_GLOBAL_CPPFLAGS += $(COMMON_GLOBAL_CPPFLAGS)
-TARGET_RELEASE_CPPFLAGS += $(COMMON_RELEASE_CPPFLAGS)
-
-HOST_GLOBAL_LD_DIRS += -L$(HOST_OUT_INTERMEDIATE_LIBRARIES)
-TARGET_GLOBAL_LD_DIRS += -L$(TARGET_OUT_INTERMEDIATE_LIBRARIES)
-
-HOST_PROJECT_INCLUDES:= $(SRC_HEADERS) $(SRC_HOST_HEADERS) $(HOST_OUT_HEADERS)
-TARGET_PROJECT_INCLUDES:= $(SRC_HEADERS) $(TOPDIR)$(call project-path-for,ril)/include \
-		$(TARGET_OUT_HEADERS) \
+TARGET_PROJECT_INCLUDES :=
+TARGET_PROJECT_SYSTEM_INCLUDES := \
 		$(TARGET_DEVICE_KERNEL_HEADERS) $(TARGET_BOARD_KERNEL_HEADERS) \
 		$(TARGET_PRODUCT_KERNEL_HEADERS)
 
-# Many host compilers don't support these flags, so we have to make
-# sure to only specify them for the target compilers checked in to
-# the source tree.
-TARGET_GLOBAL_CFLAGS += $(TARGET_ERROR_FLAGS)
-
-HOST_GLOBAL_CFLAGS += $(HOST_RELEASE_CFLAGS)
-HOST_GLOBAL_CPPFLAGS += $(HOST_RELEASE_CPPFLAGS)
-
-TARGET_GLOBAL_CFLAGS += $(TARGET_RELEASE_CFLAGS)
-TARGET_GLOBAL_CPPFLAGS += $(TARGET_RELEASE_CPPFLAGS)
-
 ifdef TARGET_2ND_ARCH
-$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_CFLAGS += $(COMMON_GLOBAL_CFLAGS)
-$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_RELEASE_CFLAGS += $(COMMON_RELEASE_CFLAGS)
-$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_CPPFLAGS += $(COMMON_GLOBAL_CPPFLAGS)
-$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_RELEASE_CPPFLAGS += $(COMMON_RELEASE_CPPFLAGS)
-$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_LD_DIRS += -L$($(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_OUT_INTERMEDIATE_LIBRARIES)
 $(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_PROJECT_INCLUDES := $(TARGET_PROJECT_INCLUDES)
-$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_CFLAGS += $(TARGET_ERROR_FLAGS)
-$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_CFLAGS += $($(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_RELEASE_CFLAGS)
-$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_CPPFLAGS += $($(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_RELEASE_CPPFLAGS)
-endif
-
-ifdef HOST_2ND_ARCH
-$(HOST_2ND_ARCH_VAR_PREFIX)HOST_GLOBAL_CFLAGS += $(COMMON_GLOBAL_CFLAGS)
-$(HOST_2ND_ARCH_VAR_PREFIX)HOST_RELEASE_CFLAGS += $(COMMON_RELEASE_CFLAGS)
-$(HOST_2ND_ARCH_VAR_PREFIX)HOST_GLOBAL_CPPFLAGS += $(COMMON_GLOBAL_CPPFLAGS)
-$(HOST_2ND_ARCH_VAR_PREFIX)HOST_RELEASE_CPPFLAGS += $(COMMON_RELEASE_CPPFLAGS)
-$(HOST_2ND_ARCH_VAR_PREFIX)HOST_GLOBAL_LD_DIRS += -L$($(HOST_2ND_ARCH_VAR_PREFIX)HOST_OUT_INTERMEDIATE_LIBRARIES)
-$(HOST_2ND_ARCH_VAR_PREFIX)HOST_PROJECT_INCLUDES := $(HOST_PROJECT_INCLUDES)
-$(HOST_2ND_ARCH_VAR_PREFIX)HOST_GLOBAL_CFLAGS += $($(HOST_2ND_ARCH_VAR_PREFIX)HOST_RELEASE_CFLAGS)
-$(HOST_2ND_ARCH_VAR_PREFIX)HOST_GLOBAL_CPPFLAGS += $($(HOST_2ND_ARCH_VAR_PREFIX)HOST_RELEASE_CPPFLAGS)
-endif
-
-ifdef HOST_CROSS_OS
-HOST_CROSS_GLOBAL_CFLAGS += $(filter-out $(HOST_CROSS_UNKNOWN_CFLAGS),$(COMMON_GLOBAL_CFLAGS))
-HOST_CROSS_RELEASE_CFLAGS += $(COMMON_RELEASE_CFLAGS)
-HOST_CROSS_GLOBAL_CPPFLAGS += $(COMMON_GLOBAL_CPPFLAGS)
-HOST_CROSS_RELEASE_CPPFLAGS += $(COMMON_RELEASE_CPPFLAGS)
-HOST_CROSS_GLOBAL_LD_DIRS += -L$(HOST_CROSS_OUT_INTERMEDIATE_LIBRARIES)
-HOST_CROSS_PROJECT_INCLUDES:= $(SRC_HEADERS) $(SRC_HOST_HEADERS) $(HOST_CROSS_OUT_HEADERS)
-HOST_CROSS_GLOBAL_CFLAGS += $(HOST_CROSS_RELEASE_CFLAGS)
-HOST_CROSS_GLOBAL_CPPFLAGS += $(HOST_CROSS_RELEASE_CPPFLAGS)
-
-ifdef HOST_CROSS_2ND_ARCH
-$(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_GLOBAL_CFLAGS += $(filter-out $($(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_UNKNOWN_CFLAGS),$(COMMON_GLOBAL_CFLAGS))
-$(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_RELEASE_CFLAGS += $(COMMON_RELEASE_CFLAGS)
-$(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_GLOBAL_CPPFLAGS += $(COMMON_GLOBAL_CPPFLAGS)
-$(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_RELEASE_CPPFLAGS += $(COMMON_RELEASE_CPPFLAGS)
-$(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_GLOBAL_LD_DIRS += -L$($(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_OUT_INTERMEDIATE_LIBRARIES)
-$(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_PROJECT_INCLUDES:= $(SRC_HEADERS) $(SRC_HOST_HEADERS) $($(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_OUT_HEADERS)
-$(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_GLOBAL_CFLAGS += $($(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_RELEASE_CFLAGS)
-$(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_GLOBAL_CPPFLAGS += $($(HOST_CROSS_2ND_ARCH_VAR_PREFIX)HOST_CROSS_RELEASE_CPPFLAGS)
-endif
-endif
-
-ifdef BRILLO
-# Add a C define that identifies Brillo targets. __BRILLO__ should only be used
-# to differentiate between Brillo and non-Brillo-but-Android environments. Use
-# __ANDROID__ instead to test if something is being built in an Android-derived
-# environment (including Brillo) as opposed to an entirely different
-# environment (e.g. Chrome OS).
-TARGET_GLOBAL_CFLAGS += -D__BRILLO__
-ifdef TARGET_2ND_ARCH
-$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_GLOBAL_CFLAGS += -D__BRILLO__
-endif
+$(TARGET_2ND_ARCH_VAR_PREFIX)TARGET_PROJECT_SYSTEM_INCLUDES := $(TARGET_PROJECT_SYSTEM_INCLUDES)
 endif
 
 # allow overriding default Java libraries on a per-target basis
 ifeq ($(TARGET_DEFAULT_JAVA_LIBRARIES),)
-  TARGET_DEFAULT_JAVA_LIBRARIES := core-oj core-libart core-junit ext framework okhttp
+  TARGET_DEFAULT_JAVA_LIBRARIES := core-oj core-libart ext framework okhttp
 endif
 
 # Flags for DEX2OAT
@@ -836,8 +781,11 @@ $(TARGET_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_CPU_VARIANT := $(call first_non_empt
 $(TARGET_2ND_ARCH_VAR_PREFIX)DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES := default
 endif
 
-# define clang/llvm tools and global flags
-include $(BUILD_SYSTEM)/clang/config.mk
+# These will come from Soong, drop the environment versions
+unexport CLANG
+unexport CLANG_CXX
+unexport CCC_CC
+unexport CCC_CXX
 
 # ###############################################################
 # Collect a list of the SDK versions that we could compile against
@@ -881,8 +829,10 @@ INTERNAL_PLATFORM_API_FILE := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/publi
 INTERNAL_PLATFORM_REMOVED_API_FILE := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/removed.txt
 INTERNAL_PLATFORM_SYSTEM_API_FILE := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/system-api.txt
 INTERNAL_PLATFORM_SYSTEM_REMOVED_API_FILE := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/system-removed.txt
+INTERNAL_PLATFORM_SYSTEM_EXACT_API_FILE := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/system-exact.txt
 INTERNAL_PLATFORM_TEST_API_FILE := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/test-api.txt
 INTERNAL_PLATFORM_TEST_REMOVED_API_FILE := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/test-removed.txt
+INTERNAL_PLATFORM_TEST_EXACT_API_FILE := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/test-exact.txt
 
 # This is the standard way to name a directory containing prebuilt target
 # objects. E.g., prebuilt/$(TARGET_PREBUILT_TAG)/libc.so
@@ -906,21 +856,76 @@ endif
 RSCOMPAT_32BIT_ONLY_API_LEVELS := 8 9 10 11 12 13 14 15 16 17 18 19 20
 RSCOMPAT_NO_USAGEIO_API_LEVELS := 8 9 10 11 12 13
 
-# We might want to skip items listed in PRODUCT_COPY_FILES based on
-# various target flags. This is useful for replacing a binary module with one
-# built from source. This should be a list of destination files under $OUT
-#
-TARGET_COPY_FILES_OVERRIDES := \
-    $(addprefix %:, $(strip $(TARGET_COPY_FILES_OVERRIDES)))
-
-ifneq ($(TARGET_COPY_FILES_OVERRIDES),)
-    PRODUCT_COPY_FILES := $(filter-out $(TARGET_COPY_FILES_OVERRIDES), $(PRODUCT_COPY_FILES))
+ifeq ($(JAVA_NOT_REQUIRED),true)
+# Remove java and tools from our path so that we make sure nobody uses them.
+unexport ANDROID_JAVA_HOME
+unexport JAVA_HOME
+export ANDROID_BUILD_PATHS:=$(abspath $(BUILD_SYSTEM)/no_java_path):$(ANDROID_BUILD_PATHS)
+export PATH:=$(abspath $(BUILD_SYSTEM)/no_java_path):$(PATH)
 endif
 
-#ifneq ($(CM_BUILD),)
+# Projects clean of compiler warnings should be compiled with -Werror.
+# If most modules in a directory such as external/ have warnings,
+# the directory should be in ANDROID_WARNING_ALLOWED_PROJECTS list.
+# When some of its subdirectories are cleaned up, the subdirectories
+# can be added into ANDROID_WARNING_DISALLOWED_PROJECTS list, e.g.
+# external/fio/.
+ANDROID_WARNING_DISALLOWED_PROJECTS := \
+    art/% \
+    bionic/% \
+    external/fio/% \
+    hardware/interfaces/% \
+
+define find_warning_disallowed_projects
+    $(filter $(ANDROID_WARNING_DISALLOWED_PROJECTS),$(1)/)
+endef
+
+# Projects with compiler warnings are compiled without -Werror.
+ANDROID_WARNING_ALLOWED_PROJECTS := \
+    bootable/% \
+    cts/% \
+    dalvik/% \
+    development/% \
+    device/% \
+    external/% \
+    frameworks/% \
+    hardware/% \
+    packages/% \
+    system/% \
+    test/vts/% \
+    tools/adt/idea/android/ultimate/get_modification_time/jni/% \
+    vendor/% \
+
+define find_warning_allowed_projects
+    $(filter $(ANDROID_WARNING_ALLOWED_PROJECTS),$(1)/)
+endef
+
+# These goals don't need to collect and include Android.mks/CleanSpec.mks
+# in the source tree.
+dont_bother_goals := clean clobber dataclean installclean \
+    help out \
+    snod systemimage-nodeps \
+    stnod systemtarball-nodeps \
+    userdataimage-nodeps userdatatarball-nodeps \
+    cacheimage-nodeps \
+    bptimage-nodeps \
+    vnod vendorimage-nodeps \
+    systemotherimage-nodeps \
+    ramdisk-nodeps \
+    bootimage-nodeps \
+    recoveryimage-nodeps \
+    vbmetaimage-nodeps \
+    product-graph dump-products
+
+ifndef KATI
+include $(BUILD_SYSTEM)/ninja_config.mk
+include $(BUILD_SYSTEM)/soong_config.mk
+endif
+
+ifneq ($(LINEAGE_BUILD),)
 ## We need to be sure the global selinux policies are included
 ## last, to avoid accidental resetting by device configs
-$(eval include vendor/vanir/sepolicy/sepolicy.mk)
+$(eval include device/lineage/sepolicy/common/sepolicy.mk)
 
 # Include any vendor specific config.mk file
 -include $(TOPDIR)vendor/*/build/core/config.mk
@@ -928,6 +933,11 @@ $(eval include vendor/vanir/sepolicy/sepolicy.mk)
 # Include any vendor specific apicheck.mk file
 -include $(TOPDIR)vendor/*/build/core/apicheck.mk
 
-#endif
+# Rules for QCOM targets
+-include $(TOPDIR)vendor/lineage/build/core/qcom_target.mk
+
+# Rules for MTK targets
+-include $(TOPDIR)vendor/lineage/build/core/mtk_target.mk
+endif
 
 include $(BUILD_SYSTEM)/dumpvar.mk
