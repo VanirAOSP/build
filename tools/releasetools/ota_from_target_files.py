@@ -137,6 +137,10 @@ Usage:  ota_from_target_files [flags] input_target_files output_ota_package
 
   --override_device <device>
       Override device-specific asserts. Can be a comma-separated list.
+
+  --backup <boolean>
+      Enable or disable the execution of backuptool.sh.
+      Disabled by default.
 """
 
 from __future__ import print_function
@@ -189,6 +193,7 @@ OPTIONS.payload_signer = None
 OPTIONS.payload_signer_args = []
 OPTIONS.extracted_input = None
 OPTIONS.override_device = 'auto'
+OPTIONS.backuptool = False
 
 METADATA_NAME = 'META-INF/com/android/metadata'
 UNZIP_PATTERN = ['IMAGES/*', 'META/*']
@@ -380,6 +385,16 @@ def AddCompatibilityArchive(target_zip, output_zip, system_included=True,
                     compress_type=zipfile.ZIP_STORED)
 
 
+def CopyInstallTools(output_zip):
+  oldcwd = os.getcwd()
+  os.chdir(os.getenv('OUT'))
+  for root, subdirs, files in os.walk("install"):
+    for f in files:
+      p = os.path.join(root, f)
+      output_zip.write(p, p)
+  os.chdir(oldcwd)
+
+
 def WriteFullOTAPackage(input_zip, output_zip):
   # TODO: how to determine this?  We don't know what version it will
   # be installed on top of. For now, we expect the API just won't
@@ -475,13 +490,10 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.Unmount("/system")
   device_specific.FullOTA_InstallBegin()
 
-  script.Unmount("/system")
-
   CopyInstallTools(output_zip)
   script.UnpackPackageDir("install", "/tmp/install")
-  script.SetPermissionsRecursive("/tmp/install", 0, 0, 0o755, 0o644, None, None)
-  script.SetPermissionsRecursive("/tmp/install/bin", 0, 0, 0o755, 0o755, None, None)
-  script.RunInstallScript("updatertext.sh", "header")
+  script.SetPermissionsRecursive("/tmp/install", 0, 0, 0755, 0644, None, None)
+  script.SetPermissionsRecursive("/tmp/install/bin", 0, 0, 0755, 0755, None, None)
 
   if OPTIONS.backuptool:
     script.Mount("/system")
@@ -531,16 +543,11 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
 
-  device_specific.FullOTA_PostValidate()
-
   if OPTIONS.backuptool:
-    script.Print("Resurrecting gapps from pre-flash backup")
     script.ShowProgress(0.02, 10)
-    if block_based:
-      script.Mount("/system")
+    script.Mount("/system")
     script.RunBackup("restore")
-    if block_based:
-      script.Unmount("/system")
+    script.Unmount("/system")
 
   script.ShowProgress(0.05, 5)
   script.WriteRawImage("/boot", "boot.img")
@@ -1369,6 +1376,8 @@ def main(argv):
       OPTIONS.extracted_input = a
     elif o in ("--override_device"):
       OPTIONS.override_device = a
+    elif o in ("--backup"):
+      OPTIONS.backuptool = bool(a.lower() == 'true')
     else:
       return False
     return True
@@ -1401,6 +1410,7 @@ def main(argv):
                                  "payload_signer_args=",
                                  "extracted_input_target_files=",
                                  "override_device=",
+                                 "backup=",
                              ], extra_option_handler=option_handler)
 
   if len(args) != 2:

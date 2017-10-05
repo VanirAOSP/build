@@ -79,6 +79,13 @@ ifeq ($(BOARD_PROPERTY_OVERRIDES_SPLIT_ENABLED), true)
 endif
 
 # -----------------------------------------------------------------
+# skip_fingerprint_from_file
+skip_fingerprint_from_file :=
+ifeq ($(PRODUCT_SKIP_FINGERPRINT_FROM_FILE), true)
+  skip_fingerprint_from_file := true
+endif
+
+# -----------------------------------------------------------------
 # prop.default
 ifdef property_overrides_split_enabled
 INSTALLED_DEFAULT_PROP_TARGET := $(TARGET_OUT)/etc/prop.default
@@ -112,6 +119,9 @@ $(INSTALLED_DEFAULT_PROP_TARGET): $(intermediate_system_build_prop)
 	        echo "#" >> $@;
 	$(hide) echo ro.bootimage.build.date=`$(DATE_FROM_FILE)`>>$@
 	$(hide) echo ro.bootimage.build.date.utc=`$(DATE_FROM_FILE) +%s`>>$@
+ifndef skip_fingerprint_from_file
+	$(hide) echo ro.bootimage.build.fingerprint="$(BUILD_FINGERPRINT_FROM_FILE)">>$@
+endif
 	$(hide) build/tools/post_process_props.py $@
 ifdef property_overrides_split_enabled
 	$(hide) ln -sf system/etc/prop.default $(TARGET_ROOT_OUT)/default.prop
@@ -372,7 +382,9 @@ $(INSTALLED_VENDOR_BUILD_PROP_TARGET): $(VENDOR_BUILDINFO_SH)
 	$(hide) echo > $@
 	$(hide) echo ro.vendor.build.date=`$(DATE_FROM_FILE)`>>$@
 	$(hide) echo ro.vendor.build.date.utc=`$(DATE_FROM_FILE) +%s`>>$@
+ifndef skip_fingerprint_from_file
 	$(hide) echo ro.vendor.build.fingerprint="$(BUILD_FINGERPRINT_FROM_FILE)">>$@
+endif
 ifdef property_overrides_split_enabled
 	$(hide) TARGET_BOOTLOADER_BOARD_NAME="$(TARGET_BOOTLOADER_BOARD_NAME)" \
 			TARGET_BOARD_PLATFORM="$(TARGET_BOARD_PLATFORM)" \
@@ -1159,7 +1171,7 @@ endif
 #   b) We build a single image that contains boot and recovery both
 #      (BOARD_USES_RECOVERY_AS_BOOT = true).
 
-ifeq (,$(filter true, $(BOARD_USES_FULL_RECOVERY_IMAGE) $(BOARD_USES_RECOVERY_AS_BOOT)))
+ifeq (,$(filter true, $(BOARD_USES_FULL_RECOVERY_IMAGE) $(BOARD_USES_RECOVERY_AS_BOOT) $(TARGET_NOT_USE_GZIP_RECOVERY_RAMDISK)))
 # Named '.dat' so we don't attempt to use imgdiff for patching it.
 RECOVERY_RESOURCE_ZIP := $(TARGET_OUT)/etc/recovery-resource.dat
 else
@@ -1440,6 +1452,18 @@ $(hide) ln -sf /vendor $(TARGET_OUT)/vendor
 endef
 else
 define create-system-vendor-symlink
+endef
+endif
+
+# Only Create symlink /system/vendor to /vendor if necessary.
+ifdef BOARD_NEEDS_VENDORIMAGE_SYMLINK
+define create-system-vendor-symlink
+$(hide) if [ -d $(TARGET_OUT)/vendor ] && [ ! -h $(TARGET_OUT)/vendor ]; then \
+  echo 'Non-symlink $(TARGET_OUT)/vendor detected!' 1>&2; \
+  echo 'You cannot install files to $(TARGET_OUT)/vendor while building a separate vendor.img!' 1>&2; \
+  exit 1; \
+fi
+$(hide) ln -sf /vendor $(TARGET_OUT)/vendor
 endef
 endif
 
@@ -2030,6 +2054,7 @@ endif
 ifeq ($(build_ota_package),true)
 OTATOOLS :=  $(HOST_OUT_EXECUTABLES)/minigzip \
   $(HOST_OUT_EXECUTABLES)/aapt \
+  $(HOST_OUT_EXECUTABLES)/adb \
   $(HOST_OUT_EXECUTABLES)/mkbootfs \
   $(HOST_OUT_EXECUTABLES)/mkbootimg \
   $(HOST_OUT_EXECUTABLES)/fs_config \
@@ -2392,6 +2417,7 @@ ifdef PRODUCT_EXTRA_RECOVERY_KEYS
 endif
 	$(hide) echo 'mkbootimg_args=$(BOARD_MKBOOTIMG_ARGS)' >> $(zip_root)/META/misc_info.txt
 	$(hide) echo 'mkbootimg_version_args=$(INTERNAL_MKBOOTIMG_VERSION_ARGS)' >> $(zip_root)/META/misc_info.txt
+	$(hide) echo "use_set_metadata=1" >> $(zip_root)/META/misc_info.txt
 	$(hide) echo "multistage_support=1" >> $(zip_root)/META/misc_info.txt
 	$(hide) echo "blockimgdiff_versions=3,4" >> $(zip_root)/META/misc_info.txt
 ifneq ($(OEM_THUMBPRINT_PROPERTIES),)
@@ -2413,6 +2439,9 @@ endif
 ifeq ($(BOARD_USES_FULL_RECOVERY_IMAGE),true)
 	$(hide) echo "full_recovery_image=true" >> $(zip_root)/META/misc_info.txt
 endif
+ifeq ($(TARGET_NOT_USE_GZIP_RECOVERY_RAMDISK),true)
+	$(hide) echo "no_gzip_recovery_ramdisk=true" >> $(zip_root)/META/misc_info.txt
+endif
 ifeq ($(BOARD_AVB_ENABLE),true)
 	$(hide) echo "board_avb_enable=true" >> $(zip_root)/META/misc_info.txt
 	$(hide) echo "board_avb_rollback_index=$(BOARD_AVB_ROLLBACK_INDEX)" >> $(zip_root)/META/misc_info.txt
@@ -2432,8 +2461,13 @@ ifdef BOARD_BPT_DISK_SIZE
 endif
 	$(call generate-userimage-prop-dictionary, $(zip_root)/META/misc_info.txt)
 ifneq ($(INSTALLED_RECOVERYIMAGE_TARGET),)
+ifeq ($(TARGET_RELEASETOOL_MAKE_RECOVERY_PATCH_SCRIPT),)
 	$(hide) PATH=$(foreach p,$(INTERNAL_USERIMAGES_BINARY_PATHS),$(p):)$$PATH MKBOOTIMG=$(MKBOOTIMG) \
 	    ./build/tools/releasetools/make_recovery_patch $(zip_root) $(zip_root)
+else
+	$(hide) PATH=$(foreach p,$(INTERNAL_USERIMAGES_BINARY_PATHS),$(p):)$$PATH MKBOOTIMG=$(MKBOOTIMG) \
+	    $(TARGET_RELEASETOOL_MAKE_RECOVERY_PATCH_SCRIPT) $(zip_root) $(zip_root)
+endif
 endif
 ifeq ($(AB_OTA_UPDATER),true)
 	@# When using the A/B updater, include the updater config files in the zip.
@@ -2547,6 +2581,16 @@ else
     OTA_SCRIPT_OVERRIDE_DEVICE := $(TARGET_OTA_ASSERT_DEVICE)
 endif
 
+ifeq ($(WITH_GMS),true)
+    $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := false
+else
+ifneq ($(LINEAGE_BUILD),)
+    $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := true
+else
+    $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := false
+endif
+endif
+
 $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) \
 		build/tools/releasetools/ota_from_target_files
 	@echo "Package OTA: $@"
@@ -2556,6 +2600,7 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) \
 	   --extracted_input_target_files $(patsubst %.zip,%,$(BUILT_TARGET_FILES_PACKAGE)) \
 	   -p $(HOST_OUT) \
 	   -k $(KEY_CERT_PAIR) \
+	   --backup=$(backuptool) \
 	   $(if $(OEM_OTA_CONFIG), -o $(OEM_OTA_CONFIG)) \
 	   $(BUILT_TARGET_FILES_PACKAGE) $@
 

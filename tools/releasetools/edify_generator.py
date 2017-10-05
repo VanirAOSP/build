@@ -154,35 +154,18 @@ class EdifyGenerator(object):
     self.script.append(self.WordWrap(cmd))
 
   def AssertSomeBootloader(self, *bootloaders):
-    """Asert that the bootloader version is one of *bootloaders."""
+    """Assert that the bootloader version is one of *bootloaders."""
     cmd = ("assert(" +
            " ||\0".join(['getprop("ro.bootloader") == "%s"' % (b,)
                          for b in bootloaders]) +
+           ' || abort("This package supports bootloader(s): ' +
+           ", ".join(["%s" % (b,) for b in bootloaders]) +
+           '; this device has bootloader " + getprop("ro.bootloader") + ".");' +
            ");")
-    self.script.append(self.WordWrap(cmd))
-
-  def AssertSomeBaseband(self, *basebands):
-    """Assert that the baseband version is one of *basebands."""
-    cmd = ("assert(" +
-           " || ".join(['getprop("ro.baseband") == "%s"' % (b,)
-                         for b in basebands]) +
-           ' || abort("This package supports baseband(s): ' +
-           ", ".join(["%s" % (b,) for b in basebands]) +
-           '; this device has baseband " + getprop("ro.baseband") + ".");' +
-           ");")
-    self.script.append(self.WordWrap(cmd))
-
-  def RunInstallScript(self, scriptname, *args):
-    cmd = ('run_program("/tmp/install/bin/%s"%s);' % (scriptname, ("" if not args else (', '+(', '.join(['"%s"' % (a,) for a in args]))))))
     self.script.append(self.WordWrap(cmd))
 
   def RunBackup(self, command):
-    self.RunInstallScript("backuptool.sh", command)
-
-  def ValidateSignatures(self, command):
-    self.script.append('package_extract_file("META-INF/org/lineageos/releasekey", "/tmp/releasekey");')
-    # Exit code 124 == abort. run_program returns raw, so left-shift 8bit
-    self.script.append('run_program("/tmp/install/bin/otasigcheck.sh") != "31744" || abort("Can\'t install this package on top of incompatible data. Please try another package or run a factory reset");')
+    self.script.append(('run_program("/tmp/install/bin/backuptool.sh", "%s");' % command))
 
   def ShowProgress(self, frac, dur):
     """Update the progress bar, advancing it over 'frac' over the next
@@ -257,11 +240,10 @@ class EdifyGenerator(object):
       self.mounts.add(p.mount_point)
 
   def Unmount(self, mount_point):
-    """Unmount the partiiton with the given mount_point."""
+    """Unmount the partition with the given mount_point."""
     if mount_point in self.mounts:
       self.mounts.remove(mount_point)
-    self.script.append('if is_mounted("%s") then unmount("%s") endif;' %
-         (mount_point, mount_point))
+      self.script.append('unmount("%s");' % (mount_point,))
 
   def UnpackPackageDir(self, src, dst):
     """Unpack a given directory from the OTA package into the given
@@ -323,6 +305,25 @@ class EdifyGenerator(object):
         common.ErrorCode.APPLY_PATCH_FAILURE, srcfile))
     cmd = "".join(cmd)
     self.script.append(self.WordWrap(cmd))
+
+  def SetPermissionsRecursive(self, fn, uid, gid, dmode, fmode, selabel,
+                              capabilities):
+    """Recursively set path ownership and permissions."""
+    if not self.info.get("use_set_metadata", False):
+      self.script.append('set_perm_recursive(%d, %d, 0%o, 0%o, "%s");'
+                         % (uid, gid, dmode, fmode, fn))
+    else:
+      if capabilities is None:
+        capabilities = "0x0"
+      cmd = 'set_metadata_recursive("%s", "uid", %d, "gid", %d, ' \
+          '"dmode", 0%o, "fmode", 0%o' \
+          % (fn, uid, gid, dmode, fmode)
+      if not fn.startswith("/tmp"):
+        cmd += ', "capabilities", "%s"' % capabilities
+      if selabel is not None:
+        cmd += ', "selabel", "%s"' % selabel
+      cmd += ');'
+      self.script.append(cmd)
 
   def WriteRawImage(self, mount_point, fn, mapfn=None):
     """Write the given package file into the partition for the given
