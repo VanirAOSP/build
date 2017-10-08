@@ -192,7 +192,7 @@ FIND_LEAVES_EXCLUDES := $(addprefix --prune=, $(SCAN_EXCLUDE_DIRS) .repo .git)
 $(call project-set-path-variant,recovery,RECOVERY_VARIANT,bootable/recovery)
 
 -include vendor/extra/BoardConfigExtra.mk
--include vendor/lineage/config/BoardConfigLineage.mk
+-include vendor/vanir/config/BoardConfigLineage.mk
 
 # The build system exposes several variables for where to find the kernel
 # headers:
@@ -905,10 +905,10 @@ $(eval include device/lineage/sepolicy/common/sepolicy.mk)
 -include $(TOPDIR)vendor/*/build/core/apicheck.mk
 
 # Rules for QCOM targets
--include $(TOPDIR)vendor/lineage/build/core/qcom_target.mk
+-include $(TOPDIR)vendor/vanir/build/core/qcom_target.mk
 
 # Rules for MTK targets
--include $(TOPDIR)vendor/lineage/build/core/mtk_target.mk
+-include $(TOPDIR)vendor/vanir/build/core/mtk_target.mk
 endif
 
 include $(BUILD_SYSTEM)/dumpvar.mk
