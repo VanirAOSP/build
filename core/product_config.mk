@@ -180,6 +180,7 @@ include $(BUILD_SYSTEM)/product.mk
 include $(BUILD_SYSTEM)/device.mk
 
 # A Lineage build needs only the Lineage product makefiles.
+# TAG FIX ME LATER
 ifneq ($(VANIR_BUILD),)
   all_product_configs := $(shell find device -path "*/$(VANIR_BUILD)/lineage.mk")
 else
