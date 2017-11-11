@@ -181,9 +181,9 @@ include $(BUILD_SYSTEM)/device.mk
 
 # A Lineage build needs only the Lineage product makefiles.
 # TAG FIX ME LATER
-ifneq ($(VANIR_BUILD),)
-  all_product_configs := $(shell find device -path "*/$(VANIR_BUILD)/lineage.mk")
-else
+#ifneq ($(VANIR_BUILD),)
+#  all_product_configs := $(shell find device -path "*/$(VANIR_BUILD)/lineage.mk")
+#else
   ifneq ($(strip $(TARGET_BUILD_APPS)),)
   # An unbundled app build needs only the core product makefiles.
   all_product_configs := $(call get-product-makefiles,\
@@ -193,9 +193,9 @@ else
   # files in the tree.
   all_product_configs := $(get-all-product-makefiles)
   endif # TARGET_BUILD_APPS
-endif # VANIR_BUILD
+#endif # VANIR_BUILD
 
-ifeq ($(VANIR_BUILD),)
+#ifeq ($(VANIR_BUILD),)
 all_named_products :=
 
 # Find the product config makefile for the current product.
@@ -221,10 +221,10 @@ $(foreach f, $(all_product_configs),\
 _cpm_words :=
 _cpm_word1 :=
 _cpm_word2 :=
-else
-    current_product_makefile := $(strip $(all_product_configs))
-    all_product_makefiles := $(strip $(all_product_configs))
-endif
+#else
+#    current_product_makefile := $(strip $(all_product_configs))
+#    all_product_makefiles := $(strip $(all_product_configs))
+#endif
 current_product_makefile := $(strip $(current_product_makefile))
 all_product_makefiles := $(strip $(all_product_makefiles))
 
